@@ -1,0 +1,216 @@
+---
+title: "RecursionAnalysis"
+author: "Rose Schneider"
+date: "7/19/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+rm(list = ls())
+require("knitr")
+opts_knit$set(root.dir = "~/Documents/Projects/recursion/") #this is specific to RMS, change accordingly
+library(tidyverse)
+library(magrittr)
+library(langcog)
+library(lme4)
+library(stringr)
+library(RColorBrewer)
+library(ggthemes)
+```
+
+#Setup
+###Loading data
+```{r}
+full.data <- read.csv('data/Recursion_infinityTripleCoded_071918.csv')
+```
+
+First, let's remove anyone who should not be included in the final dataset.
+```{r}
+full.data %<>%
+  filter(ExclusionGroup == "include")
+```
+
+TO-DO for RMS: Make sure that ages, genders match across tasks
+```{r}
+
+```
+
+Now divide the data up into separate data frames for each task for ease of analysis within each one.
+```{r}
+hc.data <- full.data %>%
+  filter(Task == "HC")
+
+wcn.data <- full.data %>%
+  filter(Task == "WCN")
+
+infinity.data <- full.data %>%
+  filter(Task != "HC", 
+         Task != "WCN")
+```
+
+Checking to make sure that everything is correctly coded for WCN
+```{r}
+tmp <- wcn.data %>%
+  mutate(Response_num = as.numeric(as.character(Response)), 
+         TaskItem_num = as.numeric(as.character(TaskItem)), 
+         Accuracy_check = ifelse(Response_num == (TaskItem_num + 1), 1, 0), 
+         Accuracy_valid = ifelse(Accuracy == Accuracy_check, TRUE, FALSE))
+
+validate <- function(){
+  validation <- tmp %>%
+  filter(Accuracy_valid == FALSE)
+  if(length(validation$LadlabID) > 0) {
+    print("WARNING: CHECK CODING")
+  } else {
+    print("All coding correct")
+  }
+}
+
+validate()
+```
+
+For some reason, Responses and Task Items for WCN are being read in as factors. Change to numeric.
+TO-DO for RMS: Write a test to make sure there's no weird factor translation here
+```{r}
+tmp <- wcn.data %>%
+  mutate(Response_num = as.numeric(as.character(Response)), 
+         TaskItem_num = as.numeric(as.character(TaskItem)))
+```
+
+#Analyses
+##1: Counting, Productivity, and Infinity Battery (Successor)
+To identify whether there is connection between counting experience and Successor Task performance, we will conduct three initial analyses, predicting Successor Task performance from either (1) Initial Highest Count, (2) Productivity for Decade Rule (defined above), or (3) performance on the Next Number task. 
+
+glmer(infsucc_correct ~ (predictor) + age + (1|subject), family = binomial).
+
+Simple Models
+Model 1: Successor.Infinity ~ Initial.Count + Age + (1|subject)
+Model 2: Successor.Infinity ~ Productivity.Decade + Age + (1|subject)
+Model 3: Successor.Infinity ~ Highest.Next.Number  + Age + (1|subject)
+
+---
+First, we need to make a model data frame that readily has all of this information
+
+Initial Count
+```{r}
+#model base
+model.df <- full.data %>%
+  select(LadlabID, Age, AgeGroup, Gender, Task, Response, SuccessorKnower, EndlessKnower)
+
+#create a lookup
+lookup <- full.data %>%
+  filter(TaskItem == "IHC")%>%
+  distinct(LadlabID, Response)
+
+#spread to model df 
+add_ihc <- function(){
+  subjects <- as.vector(lookup$LadlabID)
+  tmp <- model.df 
+  for (row in 1:nrow(tmp)){
+    current_sub = as.character(tmp[row, "LadlabID"])
+    ihc = subset(lookup, LadlabID == current_sub)$Response
+    tmp[row, "IHC"] = ihc
+  }
+  return(tmp)
+}
+
+#change this later to model df
+model.df <- add_ihc()
+```
+
+Highest Next Number
+```{r}
+lookup <- full.data %>%
+  filter(Task == "WCN", 
+         Accuracy == 1)%>%
+  group_by(LadlabID)%>%
+  summarise(max = max(as.numeric(as.character(TaskItem)))) 
+
+#Add highest NN to model df
+add_highest_num <- function() {
+  tmp <- model.df
+  for (row in 1:nrow(tmp)) {
+    sub = as.character(tmp[row, "LadlabID"])
+    highest_num = subset(lookup, LadlabID == sub)$max
+    tmp[row, "Highest_NN"] = highest_num
+  }
+  return(tmp)
+}
+
+#run this function on model df
+model.df <- add_highest_num()
+```
+
+Productivity classification
+TO-DO for RMS: Only some kids will have productivity classifications, so this will need to be a separate dataset
+```{r}
+lookup <- full.data %>%
+  filter(TaskType == "productivity")%>%
+  distinct(LadlabID, Response)
+
+add_productivity <- function() {
+  tmp <- model.df
+  for (row in 1:nrow(tmp)) {
+    sub = as.character(tmp[row, "LadlabID"])
+    productivity = subset(lookup, LadlabID == sub)$Response
+    tmp[row, "Prod_Class"] = productivity
+  }
+  return(tmp)
+}
+
+z <- add_productivity()
+
+```
+
+
+```{r}
+#each participant only needs one row here
+distinct_model.df <- model.df %>%
+  distinct(LadlabID, Age, AgeGroup, Gender, SuccessorKnower, EndlessKnower, 
+           IHC, Highest_NN)%>%
+  mutate(SuccessorKnower = factor(SuccessorKnower, levels = c(0,1)), 
+         EndlessKnower = factor(EndlessKnower, levels = c(0,1)), 
+         IHC = as.numeric(as.character(IHC)))
+
+#base model
+base.model <- glmer(SuccessorKnower ~ Age + (1|LadlabID), family = "binomial", 
+                    data = distinct_model.df)
+#IHC
+model1.sf <- glmer(SuccessorKnower ~ IHC + Age + (1|LadlabID), family = "binomial", 
+                   data = distinct_model.df)
+#convergence warnings, is this an issue?
+with(model1.sf@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)
+
+#compare
+anova(base.model, model1.sf, test = 'LRT') #IHC not significant
+
+#highest nn
+model2.sf <- glmer(SuccessorKnower ~ Highest_NN + Age + (1|LadlabID), family = "binomial", 
+                   data = distinct_model.df)
+#convergence warnings, is this an issue?
+with(model2.sf@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)
+
+#compare
+anova(base.model, model2.sf, test = 'LRT')#highest NN not significant
+
+#TO-DO for RMS: Need to do productivity
+```
+
+Endless Knower
+```{r}
+base.endless <- glmer(EndlessKnower ~ Age + (1|LadlabID), family = "binomial", 
+                      data = distinct_model.df)
+model1.endless <- glmer(EndlessKnower ~ IHC + Age + (1|LadlabID), family = "binomial", 
+                        data = distinct_model.df)
+#convergence warnings, is this an issue?
+with(model1.endless@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)
+
+#compare
+anova(base.endless, model1.endless, test = 'LRT') #IHC significant
+
+model2.endless <- glmer(EndlessKnower ~ Highest_NN + Age + (1|LadlabID), family = "binomial", 
+                        data = distinct_model.df, control=glmerControl(optimizer="bobyqa",
+                            optCtrl=list(maxfun=2e5))) #this is failing to converge, change optimizer, but check
+#convergence warnings, is this an issue?
+with(model2.endless@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#False, yes, model is failing to converge...
+```
