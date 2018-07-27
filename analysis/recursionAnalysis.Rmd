@@ -40,6 +40,17 @@ full.data %<>%
   filter(ExclusionGroup == "include")
 ```
 
+Reasons for exclusion and their numbers
+```{r}
+# will not report "pilot order" as a reason since it's piloting
+full.data %>%
+  filter(ExclusionGroup != "include") %>%
+  distinct(LadlabID, .keep_all = TRUE) %>%
+  group_by(ExclusionGroup) %>%
+  summarize(countN = n_distinct(LadlabID)) %>%
+  kable()
+```
+
 Number of kids by age group and average age
 ```{r}
 full.data %>%
@@ -101,6 +112,34 @@ hc.datawide <- hc.datawide %>%
   mutate_cond(ihc > 100, ihc = 100) #function copied from stackoverflow
 ```
 
+Overall average on IHC, DCE, and Decade-supported highest count, collapse across kids
+```{r}
+hc.datawide %>%
+  select(LadlabID, Age, productivity, ihc, dce, sup.noerror) %>%
+  gather(hcprogression, hc, ihc:sup.noerror) %>%
+  mutate(hcprogression = factor(hcprogression, 
+                                levels = c("ihc", "dce", "sup.noerror"))) %>%
+  group_by(hcprogression) %>%
+  summarize(mean = mean(hc, na.rm=TRUE),
+            sd = sd(hc, na.rm=TRUE),
+            count=n())
+```
+
+Same data but by decade productivity group status
+```{r}
+# same data but by group
+hc.datawide %>%
+  select(LadlabID, Age, productivity, ihc, dce, sup.noerror) %>%
+  gather(hcprogression, hc, ihc:sup.noerror) %>%
+  mutate(hcprogression = factor(hcprogression, 
+         levels = c("ihc", "dce", "sup.noerror"))) %>%
+  group_by(productivity, hcprogression) %>%
+  summarize(mean = mean(hc, na.rm=TRUE),
+            sd = sd(hc, na.rm=TRUE),
+            count=n()) %>%
+  kable()
+```
+
 Plotting distribution of IHC, as a function of productivity (~ junyi's graph)
 ```{r}
 ggplot(hc.datawide, aes(x=ihc, colour = productivity)) + 
@@ -146,13 +185,59 @@ hc.dev.data$hcprogression <-
 ggplot(hc.dev.data, aes(x = LadlabID, y = hc)) + 
   facet_grid(rows = vars(productivity)) +
   geom_line() + 
-  geom_point(aes(shape = hcprogression, colour = hcprogression), size = 2) +
+  geom_point(aes(shape = hcprogression, colour = hcprogression), 
+             size = 2, stroke = 1.5) +
   scale_color_brewer(palette="Dark2") +
-  labs(title="Highest Count Development by Decade Productivity Group",
+  labs(title="Highest Count Progression by Decade Productivity",
        x = "Each line = individual kids",
        y="Highest Count by Count Type") +
   theme_bw() + 
   theme(legend.position="bottom")
+```
+
+Number of decade prompts provided. M = 3.5 (SD = 1.7), range 1 to 7, N = 31. 40 kids counted to 100 on their own
+```{r}
+hc.datawide %>%
+  filter(productivity == "prod") %>%
+  group_by(HCReceivedSupport) %>%
+  summarize(mean = mean(sup.times, na.rm=TRUE),
+            sd = sd(sup.times, na.rm=TRUE),
+            min = min(sup.times, na.rm=TRUE),
+            max = max(sup.times, na.rm=TRUE),
+            count=n())
+# there're 5 kids with blank HCReceivedSupport. why?
+# check Excel, seems like these kids spon counted past 100 on their own. coded as NA under HCRecSupport
+# some inconsistencies wrt how it's coded. assume 0 = NA
+# need to clean this upfront
+```
+
+Detective work 1a: For kids without prod status (NA), why do some of them have DCE and sup.noerror? 1a focuses on DCE
+```{r}
+test1a <- hc.datawide %>%
+  filter(is.na(productivity)) %>%
+  filter(!is.na(dce))
+# 3 kids: PC missed two kids. AL (also coded by RMS) and BH. NEED TO FIX RAW SHEET. UGH
+# E error on OM (should've provided prompt but didn't)
+```
+
+Detective work 1b: focus on sup.noerror
+```{r}
+test1b <- hc.datawide %>%
+  filter(is.na(productivity)) %>%
+  filter(!is.na(sup.noerror))
+# results: in most cases, E shouldn't have provided a decade prompt but s/he did, and
+# not entirely clear how sup.noerror was coded. error-free in most but not all cases
+# thought: ignore sup.noerror for these kids who didn't have DCE?
+```
+
+Detective work 2: For those classified as productive, why were IHC < 99 but no DCE?
+```{r}
+test2 <- hc.datawide %>%
+  filter(productivity == "prod") %>%
+  filter(ihc < 99 & is.na(dce))
+# these kids seem fine. had a lower ihc but made less than 3 errors before reaching final count, which is the criterion we used for those who had DCE. 
+# for these kids, their final count can be taken from spon.consec
+# because they didn't recieve decade support so nothing under sup.noerror
 ```
 
 TO-DO for RMS: Make sure that ages, genders match across tasks
