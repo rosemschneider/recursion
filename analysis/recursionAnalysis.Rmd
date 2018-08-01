@@ -373,8 +373,7 @@ WCN accuracy, within and outside of IHC
 wcn.wide %>%
   group_by(WithinOutsideIHC) %>%
   summarize(mean = mean(immediate, na.rm = TRUE), 
-            sd = sd(immediate, na.rm = TRUE), 
-            median = median(immediate, na.rm = TRUE))
+            sd = sd(immediate, na.rm = TRUE))
 ```
      
 Now WCN by within/outside count range and productivity
@@ -399,9 +398,17 @@ wcn.wide <- add_productivity()
 wcn.wide %>%
   group_by(WithinOutsideIHC, Prod_Class) %>%
   summarize(mean = mean(immediate, na.rm = TRUE), 
-            sd = sd(immediate, na.rm = TRUE), 
-            median = median(immediate, na.rm = TRUE))
+            sd = sd(immediate, na.rm = TRUE))
 ```
+
+How many trials do kids have beyond their IHC?
+```{r}
+wcn.wide %>%
+  select(-momentum)%>%
+  group_by(Prod_Class, WithinOutsideIHC)%>%
+  summarise(n = n())
+```
+
 
 Now divide the data up into separate data frames for each task for ease of analysis within each one.
 ```{r}
