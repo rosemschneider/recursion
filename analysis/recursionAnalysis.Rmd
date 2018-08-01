@@ -304,6 +304,16 @@ wcn.wide <- full.data %>%
   spread(TaskType, Accuracy)
 
 # data check: there shouldn't be any kids who got 1 for immediate but 0 for momentum or 1 for immediate and 1 for momentum (less of a problem)
+##pulling out these kids below
+wcn.check <- full.data %>%
+  filter(Task == "WCN", 
+         TaskType == "momentum" | TaskType == "immediate")%>%
+  select(LadlabID, Age, AgeGroup, TaskType, TaskItem, Accuracy) %>%
+  spread(TaskType, Accuracy)%>%
+  mutate(issue_immediate1Momentum0 = ifelse(immediate == 1 & momentum == 0, TRUE, FALSE), 
+         issue_immediate1Momentum1 = ifelse(immediate == 1 & momentum == 1, TRUE, FALSE))%>%
+  filter(issue_immediate1Momentum0 == TRUE | 
+           issue_immediate1Momentum1 == TRUE)
 
 # how many kids show improved performance
 xtabs(~immediate + momentum, data = wcn.wide, na.action = na.pass, exclude = NULL)
