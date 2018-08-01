@@ -377,6 +377,31 @@ wcn.wide %>%
             median = median(immediate, na.rm = TRUE))
 ```
      
+Now WCN by within/outside count range and productivity
+```{r}
+#Need to pull productivity into wcn.wide data
+lookup <- full.data %>%
+  filter(TaskType == "productivity")%>%
+  distinct(LadlabID, Response)
+
+add_productivity <- function() {
+  tmp <- wcn.wide
+  for (row in 1:nrow(tmp)) {
+    sub = as.character(tmp[row, "LadlabID"])
+    productivity = subset(lookup, LadlabID == sub)$Response
+    tmp[row, "Prod_Class"] = productivity
+  }
+  return(tmp)
+}
+
+wcn.wide <- add_productivity()
+
+wcn.wide %>%
+  group_by(WithinOutsideIHC, Prod_Class) %>%
+  summarize(mean = mean(immediate, na.rm = TRUE), 
+            sd = sd(immediate, na.rm = TRUE), 
+            median = median(immediate, na.rm = TRUE))
+```
 
 Now divide the data up into separate data frames for each task for ease of analysis within each one.
 ```{r}
