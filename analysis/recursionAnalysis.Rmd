@@ -28,27 +28,25 @@ mutate_cond <- function(.data, condition, ..., envir = parent.frame()) {
 }
 ```
 
-#Setup
-###Loading data
+Loading data
 ```{r}
-full.data <- read.csv('data/Recursion_infinityTripleCoded_071918.csv')
-```
-
-First, let's remove anyone who should not be included in the final dataset.
-```{r}
-full.data %<>%
-  filter(ExclusionGroup == "include")
+full.data <- read.csv('data/recursionData.csv', na.strings=c(""," ","NA"))
 ```
 
 Reasons for exclusion and their numbers
 ```{r}
-# will not report "pilot order" as a reason since it's piloting
 full.data %>%
   filter(ExclusionGroup != "include") %>%
   distinct(LadlabID, .keep_all = TRUE) %>%
   group_by(ExclusionGroup) %>%
   summarize(countN = n_distinct(LadlabID)) %>%
   kable()
+```
+
+First, let's remove anyone who should not be included in the final dataset.
+```{r}
+full.data %<>%
+  filter(ExclusionGroup == "include")
 ```
 
 Number of kids by age group and average age
@@ -188,6 +186,7 @@ ggplot(hc.dev.data, aes(x = LadlabID, y = hc)) +
   geom_point(aes(shape = hcprogression, colour = hcprogression), 
              size = 2, stroke = 1.5) +
   scale_color_brewer(palette="Dark2") +
+  scale_shape_manual(values = c(4,5,20)) +
   labs(title="Highest Count Progression by Decade Productivity",
        x = "Each line = individual kids",
        y="Highest Count by Count Type") +
@@ -240,6 +239,38 @@ test2 <- hc.datawide %>%
 # because they didn't recieve decade support so nothing under sup.noerror
 ```
 
+WCH: Children were provided with momentum trials if they got wrong on immediate trials. Check %trials where immediate = wrong, momentum = right
+```{r}
+wcn.wide <- full.data %>%
+  filter(ExclusionGroup == "include") %>%
+  filter(Task == "WCN") %>%
+  filter(TaskType != "practice") %>%
+  filter(TaskItem != 3) %>% # a trial on 3 for momentum that doesn't exist for immediate
+  select(LadlabID, Age, AgeGroup, TaskType, TaskItem, Accuracy) %>%
+  spread(TaskType, Accuracy)
+
+# data check: there shouldn't be any kids who got 1 for immediate but 0 for momentum or 1 for immediate and 1 for momentum (less of a problem)
+
+# how many kids show improved performance
+xtabs(~immediate + momentum, data = wcn.wide, na.action = na.pass, exclude = NULL)
+# answer: 191 / 1048 trials = ~ 18%
+```
+
+Percent Correct on WCH
+```{r}
+wcn.average <- wcn.wide %>%
+  group_by(LadlabID) %>%
+  summarize(avg.wcn = mean(immediate, na.rm=TRUE),
+            sd.wch = sd(immediate, na.rm=TRUE))
+
+hc.datawide <- left_join(wcn.average, hc.datawide)
+
+hc.datawide %>%
+  group_by(productivity) %>%
+  summarize(mean = mean(avg.wcn))
+```
+
+                                                     
 TO-DO for RMS: Make sure that ages, genders match across tasks
 ```{r}
 
@@ -335,6 +366,17 @@ lookup <- full.data %>%
          Accuracy == 1)%>%
   group_by(LadlabID)%>%
   summarise(max = max(as.numeric(as.character(TaskItem)))) 
+
+# Descriptives on WCN max
+hc.datawide <- left_join(lookup, hc.datawide)
+
+hc.datawide %>%
+  select(LadlabID, Age, AgeGroup, productivity, max, 
+    HCReceivedSupport, ihc, dce, sup.noerror) %>%
+  group_by(productivity) %>%
+  summarize(median = median(max, na.rm=TRUE),
+            count = n())
+#median is 86 for all groups
 
 #Add highest NN to model df
 add_highest_num <- function() {
