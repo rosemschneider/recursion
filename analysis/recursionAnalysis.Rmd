@@ -294,6 +294,8 @@ test2 <- hc.datawide %>%
 ```
 
 WCH: Children were provided with momentum trials if they got wrong on immediate trials. Check %trials where immediate = wrong, momentum = right
+
+
 ```{r}
 wcn.wide <- full.data %>%
   filter(ExclusionGroup == "include") %>%
@@ -321,6 +323,38 @@ xtabs(~immediate + momentum, data = wcn.wide, na.action = na.pass, exclude = NUL
 # answer: 191 / 1048 trials = ~ 18%
 ```
 
+Add whether the Task Item was within or outside of the kid's initial highest count. 
+```{r}
+#first, get initial highest count for each kiddo
+#Make a lookup table with SID and initial highest count
+lookup <- full.data %>%
+  filter(TaskItem == "IHC")%>%
+  droplevels()%>%
+  distinct(LadlabID, Response)
+
+wcn.wide %<>%
+  mutate(TaskItem = as.numeric(as.character(TaskItem)))
+
+#This is a function that, for each trial, checks the number queried. If number queried is above the child's initial highest count, marks that trial as beyond count range.
+determine_count_range <- function(df) {
+  tmp <- df
+  for (row in 1:nrow(tmp)) {
+    sub = as.character(tmp[row, "LadlabID"])
+    count_range = as.numeric(as.character(subset(lookup, LadlabID == sub)$Response))
+    tmp[row, "IHC"] = as.numeric(as.character(count_range))
+    if (tmp[row, "TaskItem"] > count_range) {
+      tmp[row, "WithinOutsideIHC"] = "outside"
+    } else {
+      tmp[row, "WithinOutsideIHC"] = "within"
+    }
+  }
+  return(tmp)
+}
+
+#Run for wcn
+wcn.wide <- determine_count_range(wcn.wide)
+```
+
 Percent Correct on WCH
 ```{r}
 wcn.average <- wcn.wide %>%
@@ -334,8 +368,15 @@ hc.datawide %>%
   group_by(productivity) %>%
   summarize(mean = mean(avg.wcn))
 ```
-
-                                                  
+WCN accuracy, within and outside of IHC
+```{r}
+wcn.wide %>%
+  group_by(WithinOutsideIHC) %>%
+  summarize(mean = mean(immediate, na.rm = TRUE), 
+            sd = sd(immediate, na.rm = TRUE), 
+            median = median(immediate, na.rm = TRUE))
+```
+     
 
 Now divide the data up into separate data frames for each task for ease of analysis within each one.
 ```{r}
@@ -379,6 +420,11 @@ wcn.test <- wcn.data %>%
          TaskItem_check = ifelse(TaskItem == TaskItem_num, TRUE, FALSE))%>%
   filter(Response_check == FALSE | TaskItem_check == FALSE)
 ```
+
+
+
+
+
 
 #Analyses
 ##1: Counting, Productivity, and Infinity Battery (Successor)
