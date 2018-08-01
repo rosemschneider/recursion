@@ -314,6 +314,7 @@ wcn.check <- full.data %>%
          issue_immediate1Momentum1 = ifelse(immediate == 1 & momentum == 1, TRUE, FALSE))%>%
   filter(issue_immediate1Momentum0 == TRUE | 
            issue_immediate1Momentum1 == TRUE)
+#7 kids with this issue - exclude??
 
 # how many kids show improved performance
 xtabs(~immediate + momentum, data = wcn.wide, na.action = na.pass, exclude = NULL)
@@ -351,14 +352,14 @@ infinity.data <- full.data %>%
 
 Checking to make sure that everything is correctly coded for WCN
 ```{r}
-tmp <- wcn.data %>%
+wcn.data %<>%
   mutate(Response_num = as.numeric(as.character(Response)), 
          TaskItem_num = as.numeric(as.character(TaskItem)), 
          Accuracy_check = ifelse(Response_num == (TaskItem_num + 1), 1, 0), 
          Accuracy_valid = ifelse(Accuracy == Accuracy_check, TRUE, FALSE))
 
 validate <- function(){
-  validation <- tmp %>%
+  validation <- wcn.data %>%
   filter(Accuracy_valid == FALSE)
   if(length(validation$LadlabID) > 0) {
     print("WARNING: CHECK CODING")
@@ -370,12 +371,13 @@ validate <- function(){
 validate()
 ```
 
-For some reason, Responses and Task Items for WCN are being read in as factors. Change to numeric.
-TO-DO for RMS: Write a test to make sure there's no weird factor translation here
 ```{r}
-tmp <- wcn.data %>%
+wcn.test <- wcn.data %>%
   mutate(Response_num = as.numeric(as.character(Response)), 
-         TaskItem_num = as.numeric(as.character(TaskItem)))
+         TaskItem_num = as.numeric(as.character(TaskItem)), 
+         Response_check = ifelse(Response == Response_num, TRUE, FALSE), 
+         TaskItem_check = ifelse(TaskItem == TaskItem_num, TRUE, FALSE))%>%
+  filter(Response_check == FALSE | TaskItem_check == FALSE)
 ```
 
 #Analyses
