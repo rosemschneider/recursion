@@ -8,7 +8,7 @@ output: html_document
 ```{r setup, include=FALSE}
 rm(list = ls())
 require("knitr")
-opts_knit$set(root.dir = "~/Documents/Projects/recursion/") #this is specific to RMS, change accordingly
+opts_knit$set(root.dir = "~/Documents/Projects/recursion/") #this is specific to RMS, change accordinglyz
 library(tidyverse)
 library(magrittr)
 library(langcog)
@@ -84,7 +84,7 @@ Prepare data for some highest count graphs
 ```{r}
 hc.data <- full.data %>%
   filter(Task == "HC") %>%
-  select(LadlabID, Gender, Age, AgeGroup, HCReceivedSupport, TaskType, TaskItem, Response)
+  dplyr::select(LadlabID, Gender, Age, AgeGroup, HCReceivedSupport, TaskType, TaskItem, Response)
 
 hc.datawide <- hc.data %>% 
   unite(hcItem, TaskType, TaskItem, sep=".") %>% 
@@ -115,7 +115,7 @@ hc.datawide <- hc.datawide %>%
 Overall average on IHC, DCE, and Decade-supported highest count, collapse across kids
 ```{r}
 hc.datawide %>%
-  select(LadlabID, Age, productivity, ihc, dce, sup.noerror) %>%
+  dplyr::select(LadlabID, Age, productivity, ihc, dce, sup.noerror) %>%
   gather(hcprogression, hc, ihc:sup.noerror) %>%
   mutate(hcprogression = factor(hcprogression, 
                                 levels = c("ihc", "dce", "sup.noerror"))) %>%
@@ -129,7 +129,7 @@ Same data but by decade productivity group status
 ```{r}
 # same data but by group
 hc.datawide %>%
-  select(LadlabID, Age, productivity, ihc, dce, sup.noerror) %>%
+  dplyr::select(LadlabID, Age, productivity, ihc, dce, sup.noerror) %>%
   gather(hcprogression, hc, ihc:sup.noerror) %>%
   mutate(hcprogression = factor(hcprogression, 
          levels = c("ihc", "dce", "sup.noerror"))) %>%
@@ -176,7 +176,7 @@ ggplot(hc.datawide, aes(x=Age, colour = productivity)) +
 Restruture data to plot distance between ihc, dce, and final count
 ```{r}
 hc.dev.data <- hc.datawide %>%
-  select(LadlabID, Age, productivity, ihc, dce, sup.noerror) %>%
+  dplyr::select(LadlabID, Age, productivity, ihc, dce, sup.noerror) %>%
   gather(hcprogression, hc, ihc:sup.noerror)
 
 hc.dev.data$hcprogression <- 
@@ -302,7 +302,7 @@ wcn.wide <- full.data %>%
   filter(Task == "WCN") %>%
   filter(TaskType != "practice") %>%
   filter(TaskItem != 3) %>% # a trial on 3 for momentum that doesn't exist for immediate
-  select(LadlabID, Age, AgeGroup, TaskType, TaskItem, Accuracy) %>%
+  dplyr::select(LadlabID, Age, AgeGroup, TaskType, TaskItem, Accuracy) %>%
   spread(TaskType, Accuracy)
 
 # data check: there shouldn't be any kids who got 1 for immediate but 0 for momentum or 1 for immediate and 1 for momentum (less of a problem)
@@ -310,7 +310,7 @@ wcn.wide <- full.data %>%
 wcn.check <- full.data %>%
   filter(Task == "WCN", 
          TaskType == "momentum" | TaskType == "immediate")%>%
-  select(LadlabID, Age, AgeGroup, TaskType, TaskItem, Accuracy) %>%
+  dplyr::select(LadlabID, Age, AgeGroup, TaskType, TaskItem, Accuracy) %>%
   spread(TaskType, Accuracy)%>%
   mutate(issue_immediate1Momentum0 = ifelse(immediate == 1 & momentum == 0, TRUE, FALSE), 
          issue_immediate1Momentum1 = ifelse(immediate == 1 & momentum == 1, TRUE, FALSE))%>%
@@ -353,6 +353,54 @@ determine_count_range <- function(df) {
 
 #Run for wcn
 wcn.wide <- determine_count_range(wcn.wide)
+```
+
+Highest contiguous NN
+```{r}
+unique.nn <- as.vector(wcn.wide$LadlabID)
+#get the task items from wcn
+nextnums <- as.vector(unique(wcn.wide$TaskItem))
+
+##Okay so it looks like there are 16 participants who did not pass both practice trials for WCN. I may need to hardcode their Highest contiguous, but to be continued
+x <- full.data %>%
+  filter(Task == "WCN" &
+           (TaskItem == 1 | TaskItem == 5))%>%
+  group_by(LadlabID)%>%
+  summarise(sum = sum(Accuracy))%>%
+  filter(sum != 2)
+
+#this is a function that pulls out the largest number for which a participant had a correct consecutive
+get_contiguous <- function(){
+  contig <- data.frame()
+  for (sub in unique.nn) {
+    tmp <- wcn.wide %>%
+      filter(LadlabID == sub, 
+             correct == 0)%>%
+      mutate(TaskItem = sort(TaskItem))
+    if (length(tmp$LadlabID) == 0) {
+      highest_contig = 86
+      sub_contig <- data.frame(sub, highest_contig)
+      contig <- bind_rows(contig, sub_contig)
+    } else if (length(tmp$TaskItem) > 0 & min(tmp$TaskItem) == 23) {
+      highest_contig = 1
+      sub_contig <- data.frame(sub, highest_contig)
+      contig <- bind_rows(contig, sub_contig)
+    } else {
+      min.nn <- min(tmp$num_queried)
+      prev_correct <- nextnums[nextnums < min.nn]
+      highest_contig <- max(prev_correct)
+    
+      sub_contig <- data.frame(sub,
+                             highest_contig)
+      contig <- bind_rows(contig, sub_contig)
+    }
+  }
+  return(contig)
+}
+
+highest_contiguous_nn <- get_contiguous()%>%
+  dplyr::rename(SID = sub)
+
 ```
 
 Percent Correct on WCH
@@ -404,7 +452,7 @@ wcn.wide %>%
 How many trials do kids have beyond their IHC?
 ```{r}
 wcn.wide %>%
-  select(-momentum)%>%
+ dplyr:: select(-momentum)%>%
   group_by(Prod_Class, WithinOutsideIHC)%>%
   summarise(n = n())
 ```
@@ -476,7 +524,7 @@ Initial Count
 ```{r}
 #model base
 model.df <- full.data %>%
-  select(LadlabID, Age, AgeGroup, Gender, Task, Response, SuccessorKnower, EndlessKnower)
+  dplyr::select(LadlabID, Age, AgeGroup, Gender, Task, Response, SuccessorKnower, EndlessKnower)
 
 #create a lookup
 lookup <- full.data %>%
@@ -511,7 +559,7 @@ lookup <- full.data %>%
 hc.datawide <- left_join(lookup, hc.datawide)
 
 hc.datawide %>%
-  select(LadlabID, Age, AgeGroup, productivity, max, 
+  dplyr::select(LadlabID, Age, AgeGroup, productivity, max, 
     HCReceivedSupport, ihc, dce, sup.noerror) %>%
   group_by(productivity) %>%
   summarize(median = median(max, na.rm=TRUE),
@@ -554,6 +602,15 @@ z <- add_productivity()
 
 ```
 
+Get mean WCN for everyone
+```{r}
+lookup <- wcn.wide %>%
+  group_by(LadlabID)%>%
+  summarise(mean.NN = mean(immediate, na.rm = TRUE))
+
+
+```
+
 
 ```{r}
 #each participant only needs one row here
@@ -563,6 +620,9 @@ distinct_model.df <- model.df %>%
   mutate(SuccessorKnower = factor(SuccessorKnower, levels = c(0,1)), 
          EndlessKnower = factor(EndlessKnower, levels = c(0,1)), 
          IHC = as.numeric(as.character(IHC)))
+
+#add to model df
+distinct_model.df <- right_join(distinct_model.df, lookup, by = "LadlabID")
 
 #base model
 base.model <- glmer(SuccessorKnower ~ Age + (1|LadlabID), family = "binomial", 
@@ -585,8 +645,15 @@ with(model2.sf@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)
 #compare
 anova(base.model, model2.sf, test = 'LRT')#highest NN not significant
 
+#what about mean NN
+model2a.sf <- glmer(SuccessorKnower ~ mean.NN + Age + (1|LadlabID), family = "binomial", 
+                   data = distinct_model.df)
+anova(base.model, model2a.sf, test = 'LRT')#highest NN not significant
+
 #TO-DO for RMS: Need to do productivity
 ```
+
+
 
 Endless Knower
 ```{r}
@@ -605,4 +672,15 @@ model2.endless <- glmer(EndlessKnower ~ Highest_NN + Age + (1|LadlabID), family 
                             optCtrl=list(maxfun=2e5))) #this is failing to converge, change optimizer, but check
 #convergence warnings, is this an issue?
 with(model2.endless@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#False, yes, model is failing to converge...
+
+##what does the data look like here?
+ggplot(model.df, aes(x = IHC, y = EndlessKnower)) +
+  geom_point()
+
+hist(model.df$EndlessKnower)
+
+#okay with about mean NN
+model2.endless <- glmer(EndlessKnower ~ mean.NN + Age + (1|LadlabID), family = "binomial", 
+                        data = distinct_model.df)
+anova(model2.endless, base.endless, test = 'LRT')
 ```
