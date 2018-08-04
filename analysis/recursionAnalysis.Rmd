@@ -302,6 +302,7 @@ wcn.wide <- full.data %>%
   filter(Task == "WCN") %>%
   filter(TaskType != "practice") %>%
   filter(TaskItem != 3) %>% # a trial on 3 for momentum that doesn't exist for immediate
+  droplevels()%>%
   dplyr::select(LadlabID, Age, AgeGroup, TaskType, TaskItem, Accuracy) %>%
   spread(TaskType, Accuracy)
 
@@ -357,7 +358,7 @@ wcn.wide <- determine_count_range(wcn.wide)
 
 Highest contiguous NN
 ```{r}
-unique.nn <- as.vector(wcn.wide$LadlabID)
+unique.nn <- as.vector(unique(wcn.wide$LadlabID))
 #get the task items from wcn
 nextnums <- as.vector(unique(wcn.wide$TaskItem))
 
@@ -369,24 +370,46 @@ x <- full.data %>%
   summarise(sum = sum(Accuracy))%>%
   filter(sum != 2)
 
+#just hardcoding kids because it's easier than going back to the full data frame
+#These kids got 1 right, 5 wrong: 
+one.corr <- as.vector(c("012316-BO", "022616-JM", "030216-ED", 
+              "030817-ZI", "031516-A", "032216-JH", 
+              "032216-RC", "040317-AL", "040317-SL", 
+              "041316-AR", "041316-NC", "041316-VN", 
+              "062416-MC"))
+
+five.corr <- as.vector("050617-Z1")
+
+zero.corr <- as.vector(c("030216-AD", "040616-K"))
 #this is a function that pulls out the largest number for which a participant had a correct consecutive
 get_contiguous <- function(){
   contig <- data.frame()
   for (sub in unique.nn) {
     tmp <- wcn.wide %>%
+      dplyr::select(LadlabID, Age, AgeGroup, TaskItem, immediate)%>%
       filter(LadlabID == sub, 
-             correct == 0)%>%
+             immediate == 0)%>%
       mutate(TaskItem = sort(TaskItem))
     if (length(tmp$LadlabID) == 0) {
       highest_contig = 86
       sub_contig <- data.frame(sub, highest_contig)
       contig <- bind_rows(contig, sub_contig)
     } else if (length(tmp$TaskItem) > 0 & min(tmp$TaskItem) == 23) {
-      highest_contig = 1
-      sub_contig <- data.frame(sub, highest_contig)
-      contig <- bind_rows(contig, sub_contig)
+      if(sub %in% one.corr){
+        highest_contig = 1
+        sub_contig <- data.frame(sub, highest_contig)
+        contig <- bind_rows(contig, sub_contig)
+      } else if(sub %in% five.corr | sub %in% zero.corr){
+        highest_contig = 0
+        sub_contig <- data.frame(sub, highest_contig)
+        contig <- bind_rows(contig, sub_contig)
+      } else {
+        highest_contig = 5
+        sub_contig <- data.frame(sub, highest_contig)
+        contig <- bind_rows(contig, sub_contig)
+      }
     } else {
-      min.nn <- min(tmp$num_queried)
+      min.nn <- min(tmp$TaskItem)
       prev_correct <- nextnums[nextnums < min.nn]
       highest_contig <- max(prev_correct)
     
@@ -399,7 +422,9 @@ get_contiguous <- function(){
 }
 
 highest_contiguous_nn <- get_contiguous()%>%
-  dplyr::rename(SID = sub)
+  dplyr::rename(LadlabID = sub)%>%
+  distinct(LadlabID, highest_contig)%>%
+  rename(Highest_Contig_NN = highest_contig)
 
 ```
 
@@ -581,8 +606,23 @@ add_highest_num <- function() {
 model.df <- add_highest_num()
 ```
 
+Add highest contiguous next number to model.df 
+```{r}
+model.df <- right_join(model.df, highest_contiguous_nn, by = "LadlabID")
+
+hc.datawide <- right_join(hc.datawide, highest_contiguous_nn, by = "LadlabID")
+
+hc.datawide %>%
+  dplyr::select(LadlabID, Age, AgeGroup, productivity, max, 
+    HCReceivedSupport, ihc, dce, sup.noerror) %>%
+  group_by(productivity) %>%
+  summarize(median = median(max, na.rm=TRUE),
+            count = n())
+#median is 86 for all groups
+```
+
 Productivity classification
-TO-DO for RMS: Only some kids will have productivity classifications, so this will need to be a separate dataset
+
 ```{r}
 lookup <- full.data %>%
   filter(TaskType == "productivity")%>%
@@ -607,8 +647,6 @@ Get mean WCN for everyone
 lookup <- wcn.wide %>%
   group_by(LadlabID)%>%
   summarise(mean.NN = mean(immediate, na.rm = TRUE))
-
-
 ```
 
 
@@ -616,12 +654,12 @@ lookup <- wcn.wide %>%
 #each participant only needs one row here
 distinct_model.df <- model.df %>%
   distinct(LadlabID, Age, AgeGroup, Gender, SuccessorKnower, EndlessKnower, 
-           IHC, Highest_NN)%>%
+           IHC, Highest_NN, Highest_Contig_NN)%>%
   mutate(SuccessorKnower = factor(SuccessorKnower, levels = c(0,1)), 
          EndlessKnower = factor(EndlessKnower, levels = c(0,1)), 
          IHC = as.numeric(as.character(IHC)))
 
-#add to model df
+#add mean_nn to model df
 distinct_model.df <- right_join(distinct_model.df, lookup, by = "LadlabID")
 
 #base model
@@ -631,13 +669,13 @@ base.model <- glmer(SuccessorKnower ~ Age + (1|LadlabID), family = "binomial",
 model1.sf <- glmer(SuccessorKnower ~ IHC + Age + (1|LadlabID), family = "binomial", 
                    data = distinct_model.df)
 #convergence warnings, is this an issue?
-with(model1.sf@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)
+with(model1.sf@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#True, so no issues
 
 #compare
 anova(base.model, model1.sf, test = 'LRT') #IHC not significant
 
 #highest nn
-model2.sf <- glmer(SuccessorKnower ~ Highest_NN + Age + (1|LadlabID), family = "binomial", 
+model2.sf <- glmer(SuccessorKnower ~ Highest_Contig_NN + Age + (1|LadlabID), family = "binomial", 
                    data = distinct_model.df)
 #convergence warnings, is this an issue?
 with(model2.sf@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)
@@ -648,7 +686,7 @@ anova(base.model, model2.sf, test = 'LRT')#highest NN not significant
 #what about mean NN
 model2a.sf <- glmer(SuccessorKnower ~ mean.NN + Age + (1|LadlabID), family = "binomial", 
                    data = distinct_model.df)
-anova(base.model, model2a.sf, test = 'LRT')#highest NN not significant
+anova(base.model, model2a.sf, test = 'LRT')#ns
 
 #TO-DO for RMS: Need to do productivity
 ```
@@ -667,20 +705,15 @@ with(model1.endless@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)
 #compare
 anova(base.endless, model1.endless, test = 'LRT') #IHC significant
 
-model2.endless <- glmer(EndlessKnower ~ Highest_NN + Age + (1|LadlabID), family = "binomial", 
-                        data = distinct_model.df, control=glmerControl(optimizer="bobyqa",
-                            optCtrl=list(maxfun=2e5))) #this is failing to converge, change optimizer, but check
+model2.endless <- glmer(EndlessKnower ~ Highest_Contig_NN + Age + (1|LadlabID), family = "binomial", 
+                        data = distinct_model.df) 
 #convergence warnings, is this an issue?
-with(model2.endless@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#False, yes, model is failing to converge...
+with(model2.endless@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#True, model converging
 
-##what does the data look like here?
-ggplot(model.df, aes(x = IHC, y = EndlessKnower)) +
-  geom_point()
-
-hist(model.df$EndlessKnower)
+anova(model2.endless, base.endless, test = 'LRT')#Highest contig NN significant
 
 #okay with about mean NN
 model2.endless <- glmer(EndlessKnower ~ mean.NN + Age + (1|LadlabID), family = "binomial", 
                         data = distinct_model.df)
-anova(model2.endless, base.endless, test = 'LRT')
+anova(model2.endless, base.endless, test = 'LRT')#mean NN significant
 ```
