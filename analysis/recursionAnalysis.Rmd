@@ -30,7 +30,8 @@ mutate_cond <- function(.data, condition, ..., envir = parent.frame()) {
 
 Loading data
 ```{r}
-full.data <- read.csv('data/recursionData.csv', na.strings=c(""," ","NA"))
+#original data
+full.data <- read.csv('data/recursion_full.csv', na.strings=c(""," ","NA"))
 ```
 
 Reasons for exclusion and their numbers
@@ -47,6 +48,24 @@ First, let's remove anyone who should not be included in the final dataset.
 ```{r}
 full.data %<>%
   filter(ExclusionGroup == "include")
+```
+
+Now, add in the Productivity classification, IHC, and FHC from PC, JC, and RMS coding
+```{r}
+#productivity, fhc, ihc coding from pc, jc, and rms
+hc.data <- read.csv('data/HC-datawide-forcoding - hc.datawide.csv')%>%
+  dplyr::select(LadlabID, prod_tomerge, ihc_tomerge, fhc_tomerge, dce)
+
+full.data <- right_join(full.data, hc.data, by = "LadlabID")
+
+full.data %<>%
+  dplyr::rename(Productivity = prod_tomerge, 
+                IHC = ihc_tomerge, 
+                FHC = fhc_tomerge, 
+                DCE = dce)%>%
+  mutate(Productivity = factor(Productivity, levels = c("nonprod", "prod"), 
+                               labels = c("Nonproductive", "Productive")), 
+         IHC = ifelse(IHC > 100, 100, IHC))
 ```
 
 Number of kids by age group and average age
@@ -66,6 +85,15 @@ full.data %>%
 
 Number of kids who were classified as prod, nonprod, NA
 ```{r}
+
+full.data %>%
+  distinct(LadlabID, Productivity)%>%
+  group_by(Productivity)%>%
+  summarise(n = n())
+```
+
+Just for reference, this is the number of kids who switched classifications from PC, JC, RMS recode
+```{r}
 library(naniar)
 # discovered a typo
 full.data %<>%
@@ -74,85 +102,127 @@ full.data %<>%
 full.data %>%
   filter(TaskType == "productivity") %>%
   droplevels()%>%
-  distinct(LadlabID, .keep_all = TRUE) %>%
-  group_by(Response) %>%
-  summarize(sumProd = n_distinct(LadlabID)) %>%
-  kable()
+  distinct(LadlabID, Response, Productivity) %>%
+  mutate(Response = factor(Response, levels = c("nonprod", "prod"), 
+                           labels = c("Nonproductive", "Productive")))%>%
+  mutate(changed_classification = ifelse((is.na(Response) & Productivity == "Nonproductive"),
+                                         "NA_toNonprod",
+                                         ifelse((is.na(Response) & Productivity == "Productive"), 
+                                                "NA_toProd", 
+                                                ifelse((Response == "Nonproductive" & Productivity == "Productive"), 
+                                                       "Nonprod_toProd", 
+                                                       ifelse((Response == "Productive" & Productivity == "Nonproductive"),
+                                                              "Prod_toNonprod", "no_change")))))%>%
+  group_by(changed_classification)%>%
+  summarise(n =n())
+
 ```
 
 Prepare data for some highest count graphs
 ```{r}
-hc.data <- full.data %>%
-  filter(Task == "HC") %>%
-  dplyr::select(LadlabID, Gender, Age, AgeGroup, HCReceivedSupport, TaskType, TaskItem, Response)
-
-hc.datawide <- hc.data %>% 
-  unite(hcItem, TaskType, TaskItem, sep=".") %>% 
-  spread(hcItem, Response)
-
-# I did some cleaning to shorten variable names and convert to numeric
-# because of how excel datasheet is structued. string and numeric are in one column in full.data
-hc.datawide <- hc.datawide %>%
-  rename(productivity = productivity.classification) %>%
-  rename(spon.consec = spontaneous.consecutive) %>%
-  rename(dce = spontaneous.decchangeerror) %>%
-  rename(ihc = spontaneous.IHC) %>%
-  rename(junyi.ihc = spontaneous.noerror) %>%
-  rename(sup.noerror = supported.noerror) %>%
-  rename(sup.times = supported.times) %>%
-  mutate(spon.consec = as.numeric(levels(spon.consec)[spon.consec])) %>%
-  mutate(dce = as.numeric(levels(dce)[dce])) %>%
-  mutate(ihc = as.numeric(levels(ihc)[ihc])) %>%
-  mutate(junyi.ihc = as.numeric(levels(junyi.ihc)[junyi.ihc])) %>%
-  mutate(sup.noerror = as.numeric(levels(sup.noerror)[sup.noerror])) %>%
-  mutate(sup.times = as.numeric(levels(sup.times)[sup.times]))
-
-# to make it cleaner, cap ihc > 100 to 100
-hc.datawide <- hc.datawide %>%
-  mutate_cond(ihc > 100, ihc = 100) #function copied from stackoverflow
+# hc.data <- full.data %>%
+#   filter(Task == "HC") %>%
+#   dplyr::select(LadlabID, Gender, Age, AgeGroup, HCReceivedSupport, TaskType, TaskItem, Response, Productivity, FHC, IHC, DCE)
+# 
+# hc.datawide <- hc.data %>% 
+#   unite(hcItem, TaskType, TaskItem, sep=".") %>% 
+#   spread(hcItem, Response)
+# 
+# # I did some cleaning to shorten variable names and convert to numeric
+# # because of how excel datasheet is structued. string and numeric are in one column in full.data
+# hc.datawide <- hc.datawide %>%
+#   rename(productivity = productivity.classification) %>%
+#   rename(spon.consec = spontaneous.consecutive) %>%
+#   rename(dce = spontaneous.decchangeerror) %>%
+#   rename(ihc = spontaneous.IHC) %>%
+#   rename(junyi.ihc = spontaneous.noerror) %>%
+#   rename(sup.noerror = supported.noerror) %>%
+#   rename(sup.times = supported.times) %>%
+#   mutate(spon.consec = as.numeric(levels(spon.consec)[spon.consec])) %>%
+#   mutate(dce = as.numeric(levels(dce)[dce])) %>%
+#   mutate(ihc = as.numeric(levels(ihc)[ihc])) %>%
+#   mutate(junyi.ihc = as.numeric(levels(junyi.ihc)[junyi.ihc])) %>%
+#   mutate(sup.noerror = as.numeric(levels(sup.noerror)[sup.noerror])) %>%
+#   mutate(sup.times = as.numeric(levels(sup.times)[sup.times]))
+# 
+# # to make it cleaner, cap ihc > 100 to 100
+# hc.datawide <- hc.datawide %>%
+#   mutate_cond(ihc > 100, ihc = 100) #function copied from stackoverflow
 ```
 
 Overall average on IHC, DCE, and Decade-supported highest count, collapse across kids
 ```{r}
-hc.datawide %>%
-  dplyr::select(LadlabID, Age, productivity, ihc, dce, sup.noerror) %>%
-  gather(hcprogression, hc, ihc:sup.noerror) %>%
-  mutate(hcprogression = factor(hcprogression, 
-                                levels = c("ihc", "dce", "sup.noerror"))) %>%
-  group_by(hcprogression) %>%
-  summarize(mean = mean(hc, na.rm=TRUE),
-            sd = sd(hc, na.rm=TRUE),
-            count=n())
+# hc.datawide %>%
+#   dplyr::select(LadlabID, Age, productivity, ihc, dce, sup.noerror) %>%
+#   gather(hcprogression, hc, ihc:sup.noerror) %>%
+#   mutate(hcprogression = factor(hcprogression, 
+#                                 levels = c("ihc", "dce", "sup.noerror"))) %>%
+#   group_by(hcprogression) %>%
+#   summarize(mean = mean(hc, na.rm=TRUE),
+#             sd = sd(hc, na.rm=TRUE),
+#             count=n())
 ```
 
 Same data but by decade productivity group status
 ```{r}
-# same data but by group
-hc.datawide %>%
-  dplyr::select(LadlabID, Age, productivity, ihc, dce, sup.noerror) %>%
-  gather(hcprogression, hc, ihc:sup.noerror) %>%
-  mutate(hcprogression = factor(hcprogression, 
-         levels = c("ihc", "dce", "sup.noerror"))) %>%
-  group_by(productivity, hcprogression) %>%
-  summarize(mean = mean(hc, na.rm=TRUE),
-            sd = sd(hc, na.rm=TRUE),
-            count=n()) %>%
-  kable()
+# # same data but by group
+# hc.datawide %>%
+#   dplyr::select(LadlabID, Age, productivity, ihc, dce, sup.noerror) %>%
+#   gather(hcprogression, hc, ihc:sup.noerror) %>%
+#   mutate(hcprogression = factor(hcprogression, 
+#          levels = c("ihc", "dce", "sup.noerror"))) %>%
+#   group_by(productivity, hcprogression) %>%
+#   summarize(mean = mean(hc, na.rm=TRUE),
+#             sd = sd(hc, na.rm=TRUE),
+#             count=n()) %>%
+#   kable()
 ```
 
-Plotting distribution of IHC, as a function of productivity (~ junyi's graph)
+Average of IHC, DCE, and FHC for all kids
 ```{r}
-ggplot(hc.datawide, aes(x=ihc, colour = productivity)) + 
-  geom_dotplot(aes(fill = productivity),
+full.data %>%
+  distinct(LadlabID, IHC, FHC, DCE)%>%
+  summarise(mean_IHC = mean(IHC),
+            sd_IHC = sd(IHC),
+            mean_FHC = mean(FHC),
+            sd_FHC = sd(FHC), 
+            mean_DCE = mean(DCE, na.rm = TRUE), 
+            sd_DCE = sd(DCE, na.rm = TRUE))
+```
+
+Finally, same data by productivity
+```{r}
+full.data %>%
+  distinct(LadlabID, Productivity, FHC, IHC, DCE)%>%
+  group_by(Productivity)%>%
+  summarise(mean_IHC = mean(IHC),
+            sd_IHC = sd(IHC),
+            mean_FHC = mean(FHC),
+            sd_FHC = sd(FHC), 
+            mean_DCE = mean(DCE, na.rm = TRUE), 
+            sd_DCE = sd(DCE, na.rm = TRUE))
+```
+
+
+Plotting distribution of IHC, as a function of productivity (~ junyi's graph)
+Note from RMS: This doesn't look right based on a histogram of the IHC data, but I'm moving onto analyses with a flag to fix this later, because I'm not quite sure what's going wrong - looks like there might be weirdness translating between count (proportion) and frequency??
+```{r}
+unique.hc.data <- full.data %>%
+  distinct(LadladID, Gender, Age, AgeGroup, HCReceivedSupport, IHC, DCE, FHC, Productivity)
+
+ggplot(unique.hc.data, aes(x=IHC, colour = Productivity)) + 
+  geom_dotplot(aes(fill = Productivity),
     binwidth=1.5, stackgroups=TRUE, binpositions="all",
     brewerPalette="Set2") +
-  scale_y_continuous(breaks=seq(0,50,10), lim=c(0,50)) +
+  scale_y_continuous(breaks=seq(0,60,10), lim=c(0,60)) +
   scale_x_continuous(breaks=seq(0,100,by=10)) +
   labs(title="Initial Highest Count",  
        x="IHC (no error)", 
        y="Frequency") +
   theme_bw() + 
   theme(legend.position="bottom")
+
+hist(unique.hc.data$IHC)
 ```
 
 Plotting productivity as a function of age in months (need some fixing)
