@@ -1,6 +1,6 @@
 ---
 title: "RecursionAnalysis"
-author: "Pierina Cheung, Rose M. Schneider, Junyi Chu"
+author: "Junyi Chu, Rose M. Schneider, Pierina Cheung"
 date: "7/19/2018"
 output: 
   html_document:
@@ -17,7 +17,7 @@ require("knitr")
 opts_knit$set(root.dir = "/Users/MotherTao/Documents/junyidata/recursion")
 library(tidyverse)
 library(magrittr)
-library(langcog)
+#library(langcog)
 library(lme4)
 library(stringr)
 library(RColorBrewer)
@@ -64,7 +64,8 @@ full.data %<>%
                 DCE = dce)%>%
   dplyr::mutate(Productivity = factor(Productivity, levels = c("nonprod", "prod"), 
                                labels = c("Nonproductive", "Productive")), 
-         IHC = ifelse(IHC > 100, 100, IHC))
+         IHC = ifelse(IHC > 100, 100, IHC),
+         FHC = ifelse(FHC > 100, 100, FHC))
 ```
 
 Number of kids by age group and average age
@@ -323,6 +324,7 @@ wcn.check <- full.data %>%
   filter(issue_immediate1Momentum0 == TRUE | 
            issue_immediate1Momentum1 == TRUE)
 #7 kids with this issue - exclude??
+#PC: I think we can keep them but we should check the coding sheet. Can keep because presumaly they shouldn't be tested on momentum if they got immeidate right.
 
 # how many kids show improved performance
 xtabs(~immediate + momentum, data = wcn.wide, na.action = na.pass, exclude = NULL)
@@ -415,7 +417,8 @@ wcn.wide %>%
             sd = sd(immediate, na.rm = TRUE))
 ```
 
-Plotting WCN as within vs. beyond by productivity (error bars don't work?!)
+Plotting WCN as within vs. beyond by productivity 
+<span style="color:red"> error bars don't work?! PC
 ```{r}
 wcn.wide %>%
   group_by(Productivity, WithinOutsideIHC) %>%
@@ -698,7 +701,7 @@ base.successor <- glmer(SuccessorKnower ~ Age + (1|LadlabID), family = "binomial
 model.ihc.successor <- glmer(SuccessorKnower ~ IHC + Age + (1|LadlabID), family = "binomial", 
                    data = distinct_model.df)
 #convergence warnings, is this an issue?
-with(model.ihc.sf@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#True, so we're okay
+with(model.ihc.successor@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#True, so we're okay
 
 #compare
 anova(base.successor, model.ihc.successor, test = 'LRT') #IHC not significant
