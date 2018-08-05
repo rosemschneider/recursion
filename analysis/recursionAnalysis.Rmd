@@ -264,6 +264,42 @@ full.data %>%
 
 # What Comes Next Descriptives
 
+First check if Accuracy column in full.data is coded correctly. Good to go.
+```{r}
+wcn.data <- full.data %>%
+   filter(Task == "WCN")
+
+wcn.data %<>%
+  mutate(Response_num = as.numeric(as.character(Response)), 
+         TaskItem_num = as.numeric(as.character(TaskItem)), 
+         Accuracy_check = ifelse(Response_num == (TaskItem_num + 1), 1, 0), 
+         Accuracy_valid = ifelse(Accuracy == Accuracy_check, TRUE, FALSE))
+
+validate <- function(){
+  validation <- wcn.data %>%
+  filter(Accuracy_valid == FALSE)
+  if(length(validation$LadlabID) > 0) {
+    print("WARNING: CHECK CODING")
+  } else {
+    print("All coding correct")
+  }
+}
+
+validate()
+```
+
+
+```{r}
+# PC ask: do we need this?
+
+# wcn.test <- wcn.data %>%
+#  mutate(Response_num = as.numeric(as.character(Response)), 
+#         TaskItem_num = as.numeric(as.character(TaskItem)), 
+#         Response_check = ifelse(Response == Response_num, TRUE, FALSE), 
+#         TaskItem_check = ifelse(TaskItem == TaskItem_num, TRUE, FALSE))%>%
+#  filter(Response_check == FALSE | TaskItem_check == FALSE)
+```
+
 WCN: Children were provided with momentum trials if they got wrong on immediate trials. Check %trials where immediate = wrong, momentum = right
 ```{r}
 wcn.wide <- full.data %>%
@@ -272,7 +308,7 @@ wcn.wide <- full.data %>%
   filter(TaskType != "practice") %>%
   filter(TaskItem != 3) %>% # a trial on 3 for momentum that doesn't exist for immediate
   droplevels()%>%
-  dplyr::select(LadlabID, Age, AgeGroup, TaskType, TaskItem, Accuracy) %>%
+  dplyr::select(LadlabID, Age, AgeGroup, TaskType, TaskItem, Accuracy, Productivity) %>%
   spread(TaskType, Accuracy)
 
 # data check: there shouldn't be any kids who got 1 for immediate but 0 for momentum or 1 for immediate and 1 for momentum (less of a problem)
@@ -291,6 +327,24 @@ wcn.check <- full.data %>%
 # how many kids show improved performance
 xtabs(~immediate + momentum, data = wcn.wide, na.action = na.pass, exclude = NULL)
 # answer: 191 / 1048 trials = ~ 18%
+```
+
+Percent Correct on WCN
+```{r}
+wcn.wide %>%
+  group_by(LadlabID) %>%
+  summarize(avg.wcn = mean(immediate, na.rm=TRUE),
+            sd.wcn = sd(immediate, na.rm=TRUE)) %>%
+  summarize(avg = mean(avg.wcn),
+            sd = sd(sd.wcn))
+
+wcn.wide %>%
+  group_by(LadlabID, Productivity) %>%
+  summarize(avg.wcn = mean(immediate, na.rm=TRUE),
+            sd.wcn = sd(immediate, na.rm=TRUE)) %>%
+  group_by(Productivity) %>%
+  summarize(avg = mean(avg.wcn),
+            sd = sd(sd.wcn))
 ```
 
 Add whether the Task Item was within or outside of the kid's initial highest count.
@@ -321,6 +375,30 @@ determine_count_range <- function(df) {
 
 #Run for wcn
 wcn.wide <- determine_count_range(wcn.wide)
+```
+
+WCN accuracy, within and outside of IHC
+```{r}
+wcn.wide %>%
+  group_by(WithinOutsideIHC) %>%
+  summarize(mean = mean(immediate, na.rm = TRUE), 
+            sd = sd(immediate, na.rm = TRUE))
+```
+     
+Now WCN by within/outside count range and productivity
+```{r}
+wcn.wide %>%
+  group_by(Productivity, WithinOutsideIHC) %>%
+  summarize(mean = mean(immediate, na.rm = TRUE), 
+            sd = sd(immediate, na.rm = TRUE))
+```
+
+How many trials do kids have beyond their IHC?
+```{r}
+wcn.wide %>%
+ dplyr:: select(-momentum)%>%
+  group_by(Productivity, WithinOutsideIHC)%>%
+  summarise(n = n())
 ```
 
 Highest contiguous NN
@@ -396,85 +474,6 @@ highest_contiguous_nn <- get_contiguous()%>%
   rename(Highest_Contig_NN = highest_contig)
 
 ```
-
-Percent Correct on WCN
-```{r}
-wcn.average <- wcn.wide %>%
-  group_by(LadlabID) %>%
-  summarize(avg.wcn = mean(immediate, na.rm=TRUE),
-            sd.wcn = sd(immediate, na.rm=TRUE))
-
-hc.datawide <- right_join(full.data, wcn.average, by = "LadlabID")
-
-hc.datawide %>%
-  group_by(Productivity) %>%
-  summarize(mean = mean(avg.wcn))
-```
-
-WCN accuracy, within and outside of IHC
-```{r}
-wcn.wide %>%
-  group_by(WithinOutsideIHC) %>%
-  summarize(mean = mean(immediate, na.rm = TRUE), 
-            sd = sd(immediate, na.rm = TRUE))
-```
-     
-Now WCN by within/outside count range and productivity
-```{r}
-tmp <- full.data%>%
-  distinct(LadlabID, Productivity)%>%
-  select(LadlabID, Productivity)
-
-wcn.wide <- right_join(wcn.wide, tmp, by = "LadlabID")
-
-wcn.wide %>%
-  group_by(WithinOutsideIHC, Productivity) %>%
-  summarize(mean = mean(immediate, na.rm = TRUE), 
-            sd = sd(immediate, na.rm = TRUE))
-```
-
-How many trials do kids have beyond their IHC?
-```{r}
-wcn.wide %>%
- dplyr:: select(-momentum)%>%
-  group_by(Productivity, WithinOutsideIHC)%>%
-  summarise(n = n())
-```
-
-
-Checking to make sure that everything is correctly coded for WCN
-```{r}
-wcn.data <- full.data %>%
-   filter(Task == "WCN")
-
-wcn.data %<>%
-  mutate(Response_num = as.numeric(as.character(Response)), 
-         TaskItem_num = as.numeric(as.character(TaskItem)), 
-         Accuracy_check = ifelse(Response_num == (TaskItem_num + 1), 1, 0), 
-         Accuracy_valid = ifelse(Accuracy == Accuracy_check, TRUE, FALSE))
-
-validate <- function(){
-  validation <- wcn.data %>%
-  filter(Accuracy_valid == FALSE)
-  if(length(validation$LadlabID) > 0) {
-    print("WARNING: CHECK CODING")
-  } else {
-    print("All coding correct")
-  }
-}
-
-validate()
-```
-
-```{r}
-wcn.test <- wcn.data %>%
-  mutate(Response_num = as.numeric(as.character(Response)), 
-         TaskItem_num = as.numeric(as.character(TaskItem)), 
-         Response_check = ifelse(Response == Response_num, TRUE, FALSE), 
-         TaskItem_check = ifelse(TaskItem == TaskItem_num, TRUE, FALSE))%>%
-  filter(Response_check == FALSE | TaskItem_check == FALSE)
-```
-
 
 
 
