@@ -23,20 +23,10 @@ library(RColorBrewer)
 library(ggthemes)
 ```
 
-```{r functions, include = FALSE}
-# copied from stackoverflow
-# https://stackoverflow.com/questions/34096162/dplyr-mutate-replace-on-a-subset-of-rows
-mutate_cond <- function(.data, condition, ..., envir = parent.frame()) {
-  condition <- eval(substitute(condition), .data, envir)
-  .data[condition, ] <- .data[condition, ] %>% mutate(...)
-  .data
-}
-```
-
 ## Loading data
 ```{r}
 #original data
-full.data <- read.csv('data/recursion_full.csv', na.strings=c(""," ","NA"))
+full.data <- read.csv('data/recursion_full.csv', na.strings=c(""," ","NA", "NA "))
 ```
 
 Reasons for exclusion and their numbers
@@ -87,7 +77,8 @@ full.data %>%
   dplyr::distinct(LadlabID, .keep_all = TRUE) %>%
   dplyr::summarize(minAge = min(Age),
             maxAge = max(Age),
-            meanAge = mean(Age)) %>%
+            meanAge = mean(Age),
+            sdAge = sd(Age)) %>%
   kable()
 ```
 
@@ -96,15 +87,12 @@ Number of kids who were classified as prod, nonprod, NA
 full.data %>%
   dplyr::distinct(LadlabID, Productivity)%>%
   dplyr::group_by(Productivity)%>%
-  dplyr::summarise(n = n())
+  dplyr::summarise(n = n()) %>%
+  kable()
 ```
 
 Just for reference, this is the number of kids who switched classifications from PC, JC, RMS recode
 ```{r}
-library(naniar)
-# discovered a typo
-full.data %<>%
-  replace_with_na(replace = list(Response = c("NA ", "NA"))) #replacing the typos with NA
 
 full.data %>%
   dplyr::filter(TaskType == "productivity") %>%
@@ -121,72 +109,13 @@ full.data %>%
                                                        ifelse((Response == "Productive" & Productivity == "Nonproductive"),
                                                               "Prod_toNonprod", "no_change")))))%>%
   dplyr::group_by(changed_classification)%>%
-  dplyr::summarise(n =n())
+  dplyr::summarise(n =n()) &>&
+  kable()
 
 ```
 
 ***
-# Highest count data
-
-Prepare data for some highest count graphs
-```{r}
-# hc.data <- full.data %>%
-#   filter(Task == "HC") %>%
-#   dplyr::select(LadlabID, Gender, Age, AgeGroup, HCReceivedSupport, TaskType, TaskItem, Response, Productivity, FHC, IHC, DCE)
-# 
-# hc.datawide <- hc.data %>% 
-#   unite(hcItem, TaskType, TaskItem, sep=".") %>% 
-#   spread(hcItem, Response)
-# 
-# # I did some cleaning to shorten variable names and convert to numeric
-# # because of how excel datasheet is structued. string and numeric are in one column in full.data
-# hc.datawide <- hc.datawide %>%
-#   rename(productivity = productivity.classification) %>%
-#   rename(spon.consec = spontaneous.consecutive) %>%
-#   rename(dce = spontaneous.decchangeerror) %>%
-#   rename(ihc = spontaneous.IHC) %>%
-#   rename(junyi.ihc = spontaneous.noerror) %>%
-#   rename(sup.noerror = supported.noerror) %>%
-#   rename(sup.times = supported.times) %>%
-#   mutate(spon.consec = as.numeric(levels(spon.consec)[spon.consec])) %>%
-#   mutate(dce = as.numeric(levels(dce)[dce])) %>%
-#   mutate(ihc = as.numeric(levels(ihc)[ihc])) %>%
-#   mutate(junyi.ihc = as.numeric(levels(junyi.ihc)[junyi.ihc])) %>%
-#   mutate(sup.noerror = as.numeric(levels(sup.noerror)[sup.noerror])) %>%
-#   mutate(sup.times = as.numeric(levels(sup.times)[sup.times]))
-# 
-# # to make it cleaner, cap ihc > 100 to 100
-# hc.datawide <- hc.datawide %>%
-#   mutate_cond(ihc > 100, ihc = 100) #function copied from stackoverflow
-```
-
-Overall average on IHC, DCE, and Decade-supported highest count, collapse across kids
-```{r}
-# hc.datawide %>%
-#   dplyr::select(LadlabID, Age, productivity, ihc, dce, sup.noerror) %>%
-#   gather(hcprogression, hc, ihc:sup.noerror) %>%
-#   mutate(hcprogression = factor(hcprogression, 
-#                                 levels = c("ihc", "dce", "sup.noerror"))) %>%
-#   group_by(hcprogression) %>%
-#   summarize(mean = mean(hc, na.rm=TRUE),
-#             sd = sd(hc, na.rm=TRUE),
-#             count=n())
-```
-
-Same data but by decade productivity group status
-```{r}
-# # same data but by group
-# hc.datawide %>%
-#   dplyr::select(LadlabID, Age, productivity, ihc, dce, sup.noerror) %>%
-#   gather(hcprogression, hc, ihc:sup.noerror) %>%
-#   mutate(hcprogression = factor(hcprogression, 
-#          levels = c("ihc", "dce", "sup.noerror"))) %>%
-#   group_by(productivity, hcprogression) %>%
-#   summarize(mean = mean(hc, na.rm=TRUE),
-#             sd = sd(hc, na.rm=TRUE),
-#             count=n()) %>%
-#   kable()
-```
+# Highest Count Descriptives
 
 Average of IHC, DCE, and FHC for all kids
 ```{r}
@@ -197,7 +126,8 @@ full.data %>%
             mean_FHC = mean(FHC),
             sd_FHC = sd(FHC), 
             mean_DCE = mean(DCE, na.rm = TRUE), 
-            sd_DCE = sd(DCE, na.rm = TRUE))
+            sd_DCE = sd(DCE, na.rm = TRUE)) %>%
+  kable()
 ```
 
 Same data by productivity
@@ -210,13 +140,11 @@ full.data %>%
             mean_FHC = mean(FHC),
             sd_FHC = sd(FHC), 
             mean_DCE = mean(DCE, na.rm = TRUE), 
-            sd_DCE = sd(DCE, na.rm = TRUE))
+            sd_DCE = sd(DCE, na.rm = TRUE)) %>%
+  kable()
 ```
 
 Plotting distribution of IHC, as a function of productivity (~ junyi's graph)
-
-<span style="color:red">Note from RMS: This doesn't look right based on a histogram of the IHC data, but I'm moving onto analyses with a flag to fix this later, because I'm not quite sure what's going wrong - looks like there might be weirdness translating between count (proportion) and frequency??</span>
-<span style="color:blue">Note from JC: Fix by changing binwidth=1 (from 1.5) and adding coord_fixed(ratio=1) so that 1 dot is 1 on the y-axis.</span>
 
 ```{r}
 unique.hc.data <- full.data %>%
@@ -236,17 +164,12 @@ ggplot(unique.hc.data, aes(x=IHC, color=Productivity)) +
   theme_bw() + 
   theme(legend.position="bottom")
 
-hist(unique.hc.data$IHC)
+# hist(unique.hc.data$IHC)
 ```
 
-Plotting productivity as a function of age in months (need some fixing)
+Plotting productivity as a function of age in months
 
-<span style="color:red">Note from RMS: make sure this doesn't have the same issue as above</span>
-<span style="color:blue">Note from JC: Added AgeMonths variable, added coord_fixed etc. just like previous graph. </span>
 ```{r}
-# need some FIXING FOR THIS ONE
-# y axis doesn't seem right? change scale_y_continuous to 0,40,10 
-# and shape of distribution remains. Wondering whether it's P density
 unique.hc.data$AgeMonths = floor(unique.hc.data$Age*12)
 
 ggplot(unique.hc.data, aes(x=AgeMonths, colour = Productivity)) + 
@@ -323,7 +246,7 @@ ggplot(subset(hc.dev.data, Productivity == "Nonproductive"), aes(x = LadlabID, y
   labs(title = "Distance, Nonproductive")
 ```
 
-Number of decade prompts provided. M = 3.5 (SD = 1.7), range 1 to 7, N = 31. 40 kids counted to 100 on their own
+Average number of decade prompts provided. M = 3.5 (SD = 1.7), range 1 to 7, N = 31. 40 kids counted to 100 on their own
 
 <span style="color:red">Note from RMS: I haven't fixed this yet</span>
 ```{r}
@@ -341,38 +264,8 @@ Number of decade prompts provided. M = 3.5 (SD = 1.7), range 1 to 7, N = 31. 40 
 # need to clean this upfront
 ```
 
-### PC detective work
 
-Detective work 1a: For kids without prod status (NA), why do some of them have DCE and sup.noerror? 1a focuses on DCE
-```{r}
-# test1a <- hc.datawide %>%
-#   filter(is.na(productivity)) %>%
-#   filter(!is.na(dce))
-# 3 kids: PC missed two kids. AL (also coded by RMS) and BH. NEED TO FIX RAW SHEET. UGH
-# E error on OM (should've provided prompt but didn't)
-```
-
-Detective work 1b: focus on sup.noerror
-```{r}
-# test1b <- hc.datawide %>%
-#   filter(is.na(productivity)) %>%
-#   filter(!is.na(sup.noerror))
-# results: in most cases, E shouldn't have provided a decade prompt but s/he did, and
-# not entirely clear how sup.noerror was coded. error-free in most but not all cases
-# thought: ignore sup.noerror for these kids who didn't have DCE?
-```
-
-Detective work 2: For those classified as productive, why were IHC < 99 but no DCE?
-```{r}
-# test2 <- hc.datawide %>%
-#   filter(productivity == "prod") %>%
-#   filter(ihc < 99 & is.na(dce))
-# these kids seem fine. had a lower ihc but made less than 3 errors before reaching final count, which is the criterion we used for those who had DCE. 
-# for these kids, their final count can be taken from spon.consec
-# because they didn't recieve decade support so nothing under sup.noerror
-```
-
-# What comes next
+# What Comes Next Descriptives
 
 WCN: Children were provided with momentum trials if they got wrong on immediate trials. Check %trials where immediate = wrong, momentum = right
 ```{r}
