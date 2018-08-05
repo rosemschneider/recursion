@@ -1,6 +1,6 @@
 ---
 title: "RecursionAnalysis"
-author: "Rose Schneider"
+author: "Pierina Cheung, Rose M. Schneider, Junyi Chu"
 date: "7/19/2018"
 output: html_document
 ---
