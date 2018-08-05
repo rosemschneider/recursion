@@ -719,3 +719,27 @@ anova(model.prod.endless, base.endless, test = 'LRT')#Prod significant
 #                         data = distinct_model.df)
 # anova(model2.endless, base.endless, test = 'LRT')#mean NN significant
 ```
+
+###Endless: Large model comparison
+Put all significant Endless predictors into large model, run model comparison
+```{r}
+large.endless.base <- glmer(EndlessKnower ~ IHC + Age + (1|LadlabID), 
+                            family = "binomial", data = distinct_model.df)
+
+##add highest contig
+large.endless.nn <- glmer(EndlessKnower ~ Highest_Contig_NN + IHC + (1|LadlabID), 
+                          family = "binomial", data = distinct_model.df)
+
+#compare
+anova(large.endless.base, large.endless.nn, test = 'LRT')#Apparently ns?
+
+##add productivity
+large.endless.prod <- glmer(EndlessKnower ~ Productivity + IHC + (1|LadlabID), 
+                          family = "binomial", data = distinct_model.df)
+#convergence warnings, is this an issue?
+with(large.endless.prod@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#True, we're okay
+
+#compare 
+anova(large.endless.base, large.endless.prod, test = 'LRT')#Productivity is significant
+
+```
