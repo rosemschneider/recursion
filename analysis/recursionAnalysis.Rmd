@@ -346,7 +346,28 @@ wcn.wide %>%
   summarize(avg = mean(avg.wcn),
             sd = sd(sd.wcn))
 ```
-
+Plotting %corr on WCN as function of productivity
+```{r}
+wcn.wide %>%
+  group_by(LadlabID, Productivity) %>%
+  summarize(avg.wcn = mean(immediate, na.rm=TRUE),
+            sd.wcn = sd(immediate, na.rm=TRUE)) %>%
+  ggplot(aes(x = Productivity, y = avg.wcn, fill=factor(Productivity))) +
+  stat_summary(fun.y = mean, position = position_dodge(width = .95), 
+                      geom="bar", alpha = .5, colour = "black") +
+  stat_summary(fun.data = mean_se, geom="errorbar", 
+               position = position_dodge(width=0.90), width = 0.2)+
+  scale_fill_discrete(name = "Decade Productivity") +
+  ylab("Proportion Correct") + 
+  xlab('') + 
+  theme_bw() + 
+  theme(legend.position = "none") +
+  ggtitle("Overall proportion correct on the What Comes Next Task") +
+  theme(text = element_text(size = 12)) +
+  ylim(0, 1.0) +
+  geom_violin(alpha = .1)
+```
+     
 Add whether the Task Item was within or outside of the kid's initial highest count.
 ```{r}
 #first, get initial highest count for each kiddo
@@ -385,34 +406,33 @@ wcn.wide %>%
             sd = sd(immediate, na.rm = TRUE))
 ```
      
-Plotting %corr on WCN as function of productivity
-```{r}
-wcn.wide %>%
-  group_by(LadlabID, Productivity) %>%
-  summarize(avg.wcn = mean(immediate, na.rm=TRUE),
-            sd.wcn = sd(immediate, na.rm=TRUE)) %>%
-  ggplot(aes(x = Productivity, y = avg.wcn, fill=factor(Productivity))) +
-  stat_summary(fun.y = mean, position = position_dodge(width = .95), 
-                      geom="bar", alpha = .5, colour = "black") +
-  stat_summary(fun.data = mean_se, geom="errorbar", 
-               position = position_dodge(width=0.90), width = 0.2)+
-  scale_fill_discrete(name = "Decade Productivity") +
-  ylab("Proportion Correct") + 
-  xlab('') + 
-  theme_bw() + 
-  theme(legend.position = "none") +
-  ggtitle("Overall proportion correct on the What Comes Next Task") +
-  theme(text = element_text(size = 12)) +
-  ylim(0, 1.0) +
-  geom_violin(alpha = .1)
-```
-     
+
 Now WCN by within/outside count range and productivity
 ```{r}
 wcn.wide %>%
   group_by(Productivity, WithinOutsideIHC) %>%
   summarize(mean = mean(immediate, na.rm = TRUE), 
             sd = sd(immediate, na.rm = TRUE))
+```
+
+Plotting WCN as within vs. beyond by productivity
+```{r}
+wcn.wide %>%
+  group_by(Productivity, WithinOutsideIHC) %>%
+  summarize(mean = mean(immediate, na.rm = TRUE), 
+            sd = sd(immediate, na.rm = TRUE)) %>%
+  ggplot(aes(x=Productivity, y=mean, fill=WithinOutsideIHC)) +
+  stat_summary(fun.y = mean, position = position_dodge(width = .95), 
+                      geom="bar", alpha = .5, colour = "black") +
+  stat_summary(fun.data = mean_se, geom="errorbar", 
+               position = position_dodge(width=0.90), width = 0.2) +
+  scale_fill_discrete(name = "Within vs. Beyond IHC") +
+  scale_y_continuous(lim=c(0,1)) +
+  labs(title="Within vs. Beyond WCN by Productivity", 
+       y="Proportion Correct", 
+       fill="Item type") +
+  theme_bw() +
+  theme(text = element_text(size = 12))
 ```
 
 How many trials do kids have beyond their IHC?
@@ -522,11 +542,22 @@ full.data %>%
 
 # Infinity Descriptives
 ```{r}
+full.data %>%
+  dplyr::distinct(LadlabID, Category)%>%
+  dplyr::group_by(Category)%>%
+  dplyr::summarise(n = n())
 
+full.data %>%
+  dplyr::distinct(LadlabID, SuccessorKnower, Productivity)%>%
+  dplyr::group_by(SuccessorKnower, Productivity)%>%
+  dplyr::summarise(n = n()) %>%
+  spread(Productivity, n)
 
-
-
-
+full.data %>%
+  dplyr::distinct(LadlabID, EndlessKnower, Productivity)%>%
+  dplyr::group_by(EndlessKnower, Productivity)%>%
+  dplyr::summarise(n = n()) %>%
+  spread(Productivity, n)
 
 ````
 
@@ -534,7 +565,7 @@ full.data %>%
 
 # Analyses
 ## 1: Counting, Productivity, and Infinity Battery
-To identify whether there is connection between counting experience and Successor Task performance, we will conduct three initial analyses, predicting Successor Task performance from either (1) Initial Highest Count, (2) Productivity for Decade Rule (defined above), or (3) performance on the Next Number task. 
+To identify whether there is connection between counting experience and Infinity Task performance, we will conduct three initial analyses, predicting Infinity Task performance from either (1) Initial Highest Count, (2) Productivity for Decade Rule (defined above), or (3) performance on the Next Number task. 
 
 glmer(inf.0/1 ~ (predictor) + age + (1|subject), family = binomial).
 
