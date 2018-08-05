@@ -540,7 +540,7 @@ full.data %>%
 
 ```
 
-Check 
+Check kids who didn't get both practice trials right on WCN
 ```{r}
 wcn.prac.chk <- full.data %>%
   filter(LadlabID == "012316-BO" |LadlabID == "022616-JM"|LadlabID == "030216-ED"|
@@ -796,7 +796,7 @@ subset_base.successor <- glmer(SuccessorKnower ~ Age + (1|LadlabID), family = "b
 subset_model.ihc.successor <- glmer(SuccessorKnower ~ IHC + Age + (1|LadlabID), family = "binomial", 
                    data = subset_distinct_model.df)
 #convergence warnings, is this an issue?
-with(subset_model.ihc.sf@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#True, so we're okay
+with(subset_model.ihc.successor@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#True, so we're okay
 
 #compare
 anova(subset_base.successor, subset_model.ihc.successor, test = 'LRT') #IHC not significant
