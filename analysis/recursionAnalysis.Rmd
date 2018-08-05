@@ -560,12 +560,32 @@ wcn.prac.chk %>%
 wcn.prac.chk %>%
   distinct(LadlabID, AudioRecorded) %>%
   group_by(AudioRecorded) %>%
-  summarize(count=n())
+  summarize(count=n()) # 2 kids no audio
 
 # who has audio?
 wcn.prac.chk %>%
   distinct(LadlabID, AudioRecorded) %>%
   filter(AudioRecorded == "yes")
+
+# PC checked audio for the following kids. cannot find a few where audiorecorded = yes. 
+# Outcome: some clear include cases. but also a few where kids only passed momentum for "five", immeidate 5 not asked for #a second time. 
+# I'm more inclined to include kids who passed 1outof2 prac trials bc that suggests kid #understood task?
+
+# 1  022616-JM           yes
+# 2  030216-AD           yes - fail both; exclude
+# 3  030216-ED           yes - pass second time on immediate 5; include
+# 4  030817-ZI           yes - pass both on first try; include
+# 5   031516-A           yes
+# 6  032216-JH           yes - pass 1 immediate & 5 momentum; include?
+# 7  040317-AL           yes - pass second time on 5 immediate; include
+# 8  040317-SL           yes - pass second time on 5 immediate; include
+# 9   040616-K           yes - pass second time on 1 immediate, 5 momentum, and 3 immediate; include?
+# 10 041316-AR           yes 
+# 11 041316-NC           yes - pass 1 immediate, fail on 5 momentum; include?
+# 12 041316-VN           yes
+# 13 050617-Z1           yes
+# 14 062416-MC           yes - pass second time on 5 immediate; include
+
 ```
 
 
