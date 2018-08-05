@@ -385,6 +385,28 @@ wcn.wide %>%
             sd = sd(immediate, na.rm = TRUE))
 ```
      
+Plotting %corr on WCN as function of productivity
+```{r}
+wcn.wide %>%
+  group_by(LadlabID, Productivity) %>%
+  summarize(avg.wcn = mean(immediate, na.rm=TRUE),
+            sd.wcn = sd(immediate, na.rm=TRUE)) %>%
+  ggplot(aes(x = Productivity, y = avg.wcn, fill=factor(Productivity))) +
+  stat_summary(fun.y = mean, position = position_dodge(width = .95), 
+                      geom="bar", alpha = .5, colour = "black") +
+  stat_summary(fun.data = mean_se, geom="errorbar", 
+               position = position_dodge(width=0.90), width = 0.2)+
+  scale_fill_discrete(name = "Decade Productivity") +
+  ylab("Proportion Correct") + 
+  xlab('') + 
+  theme_bw() + 
+  theme(legend.position = "none") +
+  ggtitle("Overall proportion correct on the What Comes Next Task") +
+  theme(text = element_text(size = 12)) +
+  ylim(0, 1.0) +
+  geom_violin(alpha = .1)
+```
+     
 Now WCN by within/outside count range and productivity
 ```{r}
 wcn.wide %>%
@@ -475,7 +497,38 @@ highest_contiguous_nn <- get_contiguous()%>%
 
 ```
 
+Plotting freq of highest contiguous as a function of productivity
+``` {r}
+full.data %>%
+  right_join(highest_contiguous_nn) %>%
+  distinct(LadlabID, Highest_Contig_NN, Productivity) %>%
+  ggplot(aes(x=Highest_Contig_NN, color=Productivity)) + 
+  geom_dotplot(aes(fill = Productivity),
+    binwidth=1, stackgroups=TRUE, binpositions="all",method="dotdensity") +
+  scale_color_brewer(palette="Set2") + 
+  scale_fill_brewer(palette="Set2") +
+  coord_fixed(ratio=1) +
+  scale_y_continuous(breaks=seq(0,50,10), lim=c(0,50)) +
+  #scale_x_continuous(breaks=seq(0,100,by=10)) +
+  scale_x_continuous(breaks = c(0, 1, 5, 23, 29, 37, 40, 62, 70, 86),
+                     labels=c("0", "1", "5", "23", "29", "37", "40", "62", "70", "86")) +
+  labs(title="Highest Contiguous Next Number by Decade Productivity",  
+       x="Highest Contiguous Next Number", 
+       y="Frequency") +
+  theme_bw() + 
+  theme(legend.position="bottom")
 
+```
+
+# Infinity Descriptives
+```{r}
+
+
+
+
+
+
+````
 
 
 
