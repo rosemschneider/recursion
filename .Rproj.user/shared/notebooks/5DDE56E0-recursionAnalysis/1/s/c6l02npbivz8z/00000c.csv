@@ -1,0 +1,6 @@
+"0","full.data %>%"
+"0","  dplyr::distinct(LadlabID, .keep_all = TRUE) %>%"
+"0","  dplyr::summarize(minAge = min(Age),"
+"0","            maxAge = max(Age),"
+"0","            meanAge = mean(Age)) %>%"
+"0","  kable()"

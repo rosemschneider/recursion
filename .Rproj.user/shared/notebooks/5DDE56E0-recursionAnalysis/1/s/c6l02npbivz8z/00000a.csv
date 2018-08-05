@@ -1,0 +1,5 @@
+"0","full.data %>%"
+"0","  dplyr::group_by(AgeGroup) %>%"
+"0","  dplyr::summarize(sumAge = n_distinct(LadlabID)) %>%"
+"0","  kable()"
+"2","hybrid evaluation forced for `n_distinct`. Please use dplyr::n_distinct() or library(dplyr) to remove this warning."

@@ -2,14 +2,18 @@
 title: "RecursionAnalysis"
 author: "Pierina Cheung, Rose M. Schneider, Junyi Chu"
 date: "7/19/2018"
-output: html_document
+output: 
+  html_document:
+    toc: yes
+    toc_float: yes
 ---
 
-#Setup
+# Setup
 ```{r setup, include=FALSE}
 rm(list = ls())
 require("knitr")
-opts_knit$set(root.dir = "~/Documents/Projects/recursion/") #this is specific to RMS, change accordinglyz
+# opts_knit$set(root.dir = "~/Documents/Projects/recursion/") #this is specific to RMS, change accordinglyz
+opts_knit$set(root.dir = "~/Sites/jchu.github.io/recursion/")
 library(tidyverse)
 library(magrittr)
 library(langcog)
@@ -29,7 +33,7 @@ mutate_cond <- function(.data, condition, ..., envir = parent.frame()) {
 }
 ```
 
-##Loading data
+## Loading data
 ```{r}
 #original data
 full.data <- read.csv('data/recursion_full.csv', na.strings=c(""," ","NA"))
@@ -38,17 +42,17 @@ full.data <- read.csv('data/recursion_full.csv', na.strings=c(""," ","NA"))
 Reasons for exclusion and their numbers
 ```{r}
 full.data %>%
-  filter(ExclusionGroup != "include") %>%
-  distinct(LadlabID, .keep_all = TRUE) %>%
-  group_by(ExclusionGroup) %>%
-  summarize(countN = n_distinct(LadlabID)) %>%
+  dplyr::filter(ExclusionGroup != "include") %>%
+  dplyr::distinct(LadlabID, .keep_all = TRUE) %>%
+  dplyr::group_by(ExclusionGroup) %>%
+  dplyr::summarize(countN = dplyr::n_distinct(LadlabID)) %>%
   kable()
 ```
 
 First, let's remove anyone who should not be included in the final dataset.
 ```{r}
 full.data %<>%
-  filter(ExclusionGroup == "include")
+  dplyr::filter(ExclusionGroup == "include")
 ```
 
 Now, add in the Productivity classification, IHC, and FHC from PC, JC, and RMS coding
@@ -57,17 +61,17 @@ Now, add in the Productivity classification, IHC, and FHC from PC, JC, and RMS c
 
 ```{r}
 #productivity, fhc, ihc coding from pc, jc, and rms
-hc.data <- read.csv('data/HC-datawide-forcoding - hc.datawide.csv')%>%
+hc.data <- read.csv('data/HC-datawide-forcoding - hc.datawide.csv') %>%
   dplyr::select(LadlabID, prod_tomerge, ihc_tomerge, fhc_tomerge, dce)
 
-full.data <- right_join(full.data, hc.data, by = "LadlabID")
+full.data <- dplyr::right_join(full.data, hc.data, by = "LadlabID")
 
 full.data %<>%
   dplyr::rename(Productivity = prod_tomerge, 
                 IHC = ihc_tomerge, 
                 FHC = fhc_tomerge, 
                 DCE = dce)%>%
-  mutate(Productivity = factor(Productivity, levels = c("nonprod", "prod"), 
+  dplyr::mutate(Productivity = factor(Productivity, levels = c("nonprod", "prod"), 
                                labels = c("Nonproductive", "Productive")), 
          IHC = ifelse(IHC > 100, 100, IHC))
 ```
@@ -75,13 +79,13 @@ full.data %<>%
 Number of kids by age group and average age
 ```{r}
 full.data %>%
-  group_by(AgeGroup) %>%
-  summarize(sumAge = n_distinct(LadlabID)) %>%
+  dplyr::group_by(AgeGroup) %>%
+  dplyr::summarize(sumAge = n_distinct(LadlabID)) %>%
   kable()
 
 full.data %>%
-  distinct(LadlabID, .keep_all = TRUE) %>%
-  summarize(minAge = min(Age),
+  dplyr::distinct(LadlabID, .keep_all = TRUE) %>%
+  dplyr::summarize(minAge = min(Age),
             maxAge = max(Age),
             meanAge = mean(Age)) %>%
   kable()
@@ -89,11 +93,10 @@ full.data %>%
 
 Number of kids who were classified as prod, nonprod, NA
 ```{r}
-
 full.data %>%
-  distinct(LadlabID, Productivity)%>%
-  group_by(Productivity)%>%
-  summarise(n = n())
+  dplyr::distinct(LadlabID, Productivity)%>%
+  dplyr::group_by(Productivity)%>%
+  dplyr::summarise(n = n())
 ```
 
 Just for reference, this is the number of kids who switched classifications from PC, JC, RMS recode
@@ -104,12 +107,12 @@ full.data %<>%
   replace_with_na(replace = list(Response = c("NA ", "NA"))) #replacing the typos with NA
 
 full.data %>%
-  filter(TaskType == "productivity") %>%
+  dplyr::filter(TaskType == "productivity") %>%
   droplevels()%>%
-  distinct(LadlabID, Response, Productivity) %>%
-  mutate(Response = factor(Response, levels = c("nonprod", "prod"), 
+  dplyr::distinct(LadlabID, Response, Productivity) %>%
+  dplyr::mutate(Response = factor(Response, levels = c("nonprod", "prod"), 
                            labels = c("Nonproductive", "Productive")))%>%
-  mutate(changed_classification = ifelse((is.na(Response) & Productivity == "Nonproductive"),
+  dplyr::mutate(changed_classification = ifelse((is.na(Response) & Productivity == "Nonproductive"),
                                          "NA_toNonprod",
                                          ifelse((is.na(Response) & Productivity == "Productive"), 
                                                 "NA_toProd", 
@@ -117,13 +120,13 @@ full.data %>%
                                                        "Nonprod_toProd", 
                                                        ifelse((Response == "Productive" & Productivity == "Nonproductive"),
                                                               "Prod_toNonprod", "no_change")))))%>%
-  group_by(changed_classification)%>%
-  summarise(n =n())
+  dplyr::group_by(changed_classification)%>%
+  dplyr::summarise(n =n())
 
 ```
 
 ***
-#Highest count data
+# Highest count data
 
 Prepare data for some highest count graphs
 ```{r}
@@ -188,8 +191,8 @@ Same data but by decade productivity group status
 Average of IHC, DCE, and FHC for all kids
 ```{r}
 full.data %>%
-  distinct(LadlabID, IHC, FHC, DCE)%>%
-  summarise(mean_IHC = mean(IHC),
+  dplyr::distinct(LadlabID, IHC, FHC, DCE)%>%
+  dplyr::summarise(mean_IHC = mean(IHC),
             sd_IHC = sd(IHC),
             mean_FHC = mean(FHC),
             sd_FHC = sd(FHC), 
@@ -200,9 +203,9 @@ full.data %>%
 Same data by productivity
 ```{r}
 full.data %>%
-  distinct(LadlabID, Productivity, FHC, IHC, DCE)%>%
-  group_by(Productivity)%>%
-  summarise(mean_IHC = mean(IHC),
+  dplyr::distinct(LadlabID, Productivity, FHC, IHC, DCE)%>%
+  dplyr::group_by(Productivity)%>%
+  dplyr::summarise(mean_IHC = mean(IHC),
             sd_IHC = sd(IHC),
             mean_FHC = mean(FHC),
             sd_FHC = sd(FHC), 
@@ -213,15 +216,19 @@ full.data %>%
 Plotting distribution of IHC, as a function of productivity (~ junyi's graph)
 
 <span style="color:red">Note from RMS: This doesn't look right based on a histogram of the IHC data, but I'm moving onto analyses with a flag to fix this later, because I'm not quite sure what's going wrong - looks like there might be weirdness translating between count (proportion) and frequency??</span>
+<span style="color:blue">Note from JC: Fix by changing binwidth=1 (from 1.5) and adding coord_fixed(ratio=1) so that 1 dot is 1 on the y-axis.</span>
+
 ```{r}
 unique.hc.data <- full.data %>%
-  distinct(LadladID, Gender, Age, AgeGroup, HCReceivedSupport, IHC, DCE, FHC, Productivity)
+  dplyr::distinct(LadlabID, Gender, Age, AgeGroup, HCReceivedSupport, IHC, DCE, FHC, Productivity)
 
-ggplot(unique.hc.data, aes(x=IHC, colour = Productivity)) + 
+ggplot(unique.hc.data, aes(x=IHC, color=Productivity)) + 
   geom_dotplot(aes(fill = Productivity),
-    binwidth=1.5, stackgroups=TRUE, binpositions="all",
-    brewerPalette="Set2") +
-  scale_y_continuous(breaks=seq(0,60,10), lim=c(0,60)) +
+    binwidth=1, stackgroups=TRUE, binpositions="all",method="dotdensity") +
+  scale_color_brewer(palette="Set2") + 
+  scale_fill_brewer(palette="Set2") +
+  coord_fixed(ratio=1) +
+  scale_y_continuous(breaks=seq(0,40,10), lim=c(0,35)) +
   scale_x_continuous(breaks=seq(0,100,by=10)) +
   labs(title="Initial Highest Count",  
        x="IHC (no error)", 
@@ -235,16 +242,22 @@ hist(unique.hc.data$IHC)
 Plotting productivity as a function of age in months (need some fixing)
 
 <span style="color:red">Note from RMS: make sure this doesn't have the same issue as above</span>
+<span style="color:blue">Note from JC: Added AgeMonths variable, added coord_fixed etc. just like previous graph. </span>
 ```{r}
 # need some FIXING FOR THIS ONE
 # y axis doesn't seem right? change scale_y_continuous to 0,40,10 
 # and shape of distribution remains. Wondering whether it's P density
-ggplot(unique.hc.data, aes(x=Age, colour = Productivity)) + 
+unique.hc.data$AgeMonths = floor(unique.hc.data$Age*12)
+
+ggplot(unique.hc.data, aes(x=AgeMonths, colour = Productivity)) + 
   geom_dotplot(aes(fill = Productivity),
-               binwidth = .03,
+               binwidth = 1,
                stackgroups=TRUE, binpositions="all") +
-  scale_y_continuous(breaks=seq(0,20,10), lim=c(0,20)) +
-  scale_x_continuous(breaks=seq(4,6,by=.5)) +
+  coord_fixed(ratio=1) +
+  scale_y_continuous(breaks=seq(0,10,5), lim=c(0,12)) +
+  scale_x_continuous(breaks=seq(48,72,by=6)) +
+  scale_color_brewer(palette="Set2") + 
+  scale_fill_brewer(palette="Set2") +
   labs(title="Productivity by Age", 
        x="Age in Months", 
        y="Frequency") +
@@ -252,7 +265,7 @@ ggplot(unique.hc.data, aes(x=Age, colour = Productivity)) +
   theme(legend.position="bottom")
 ```
 
-##Distance between IHC and FHC
+## Distance between IHC and FHC
 
 Restruture data to plot distance between ihc, dce, and final count
 ```{r}
@@ -328,7 +341,7 @@ Number of decade prompts provided. M = 3.5 (SD = 1.7), range 1 to 7, N = 31. 40 
 # need to clean this upfront
 ```
 
-###PC detective work
+### PC detective work
 
 Detective work 1a: For kids without prod status (NA), why do some of them have DCE and sup.noerror? 1a focuses on DCE
 ```{r}
@@ -359,7 +372,7 @@ Detective work 2: For those classified as productive, why were IHC < 99 but no D
 # because they didn't recieve decade support so nothing under sup.noerror
 ```
 
-#What comes next
+# What comes next
 
 WCN: Children were provided with momentum trials if they got wrong on immediate trials. Check %trials where immediate = wrong, momentum = right
 ```{r}
@@ -577,8 +590,8 @@ wcn.test <- wcn.data %>%
 
 
 
-#Analyses
-##1: Counting, Productivity, and Infinity Battery
+# Analyses
+## 1: Counting, Productivity, and Infinity Battery
 To identify whether there is connection between counting experience and Successor Task performance, we will conduct three initial analyses, predicting Successor Task performance from either (1) Initial Highest Count, (2) Productivity for Decade Rule (defined above), or (3) performance on the Next Number task. 
 
 glmer(inf.0/1 ~ (predictor) + age + (1|subject), family = binomial).
@@ -639,7 +652,7 @@ Get mean WCN for everyone <span style="color:red">Not using this anymore - RMS</
 #   summarise(mean.NN = mean(immediate, na.rm = TRUE))
 ```
 
-##Successor models
+## Successor models
 ```{r}
 #each participant only needs one row here, because we only need to know where they are a Successor Knower or Endless Knower
 distinct_model.df <- model.df %>%
@@ -684,7 +697,7 @@ anova(base.model, model.prod.sf, test = 'LRT')#Productivity trending
 ```
 
 
-##Endless Models
+## Endless Models
 ```{r}
 base.endless <- glmer(EndlessKnower ~ Age + (1|LadlabID), family = "binomial", 
                       data = distinct_model.df)
@@ -720,7 +733,7 @@ anova(model.prod.endless, base.endless, test = 'LRT')#Prod significant
 # anova(model2.endless, base.endless, test = 'LRT')#mean NN significant
 ```
 
-###Endless: Large model comparison
+### Endless: Large model comparison
 Put all significant Endless predictors into large model, run model comparison
 ```{r}
 large.endless.base <- glmer(EndlessKnower ~ IHC + Age + (1|LadlabID), 
