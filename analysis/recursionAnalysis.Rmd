@@ -415,7 +415,7 @@ wcn.wide %>%
             sd = sd(immediate, na.rm = TRUE))
 ```
 
-Plotting WCN as within vs. beyond by productivity
+Plotting WCN as within vs. beyond by productivity (error bars don't work?!)
 ```{r}
 wcn.wide %>%
   group_by(Productivity, WithinOutsideIHC) %>%
@@ -540,6 +540,35 @@ full.data %>%
 
 ```
 
+Check 
+```{r}
+wcn.prac.chk <- full.data %>%
+  filter(LadlabID == "012316-BO" |LadlabID == "022616-JM"|LadlabID == "030216-ED"|
+           LadlabID == "030817-ZI"|LadlabID == "031516-A"|LadlabID == "032216-JH"|
+           LadlabID == "032216-RC"|LadlabID == "040317-AL"|LadlabID == "040317-SL"|
+           LadlabID == "041316-AR"|LadlabID == "041316-NC"|LadlabID == "041316-VN"| 
+           LadlabID == "062416-MC"|LadlabID == "050617-Z1" |LadlabID == "030216-AD"|
+           LadlabID == "040616-K") %>%
+  select(LadlabID, Age, AudioRecorded,Task, TaskType, TaskItem,Response, Accuracy, Productivity) %>%
+  filter(Task == "WCN")
+
+wcn.prac.chk %>%
+  distinct(LadlabID, Productivity) %>%
+  group_by(Productivity) %>%
+  summarize(count=n())
+
+wcn.prac.chk %>%
+  distinct(LadlabID, AudioRecorded) %>%
+  group_by(AudioRecorded) %>%
+  summarize(count=n())
+
+# who has audio?
+wcn.prac.chk %>%
+  distinct(LadlabID, AudioRecorded) %>%
+  filter(AudioRecorded == "yes")
+```
+
+
 # Infinity Descriptives
 ```{r}
 full.data %>%
@@ -627,7 +656,7 @@ Get mean WCN for everyone <span style="color:red">Not using this anymore - RMS</
 
 ## Successor models
 ```{r}
-#each participant only needs one row here, because we only need to know where they are a Successor Knower or Endless Knower
+#each participant only needs one row here, because we only need to know whether they are a Successor Knower or Endless Knower
 distinct_model.df <- model.df %>%
   distinct(LadlabID, Age, AgeGroup, Gender, SuccessorKnower, EndlessKnower, 
            IHC, Highest_Contig_NN, FHC, DCE, Productivity)%>%
@@ -642,30 +671,31 @@ distinct_model.df <- model.df %>%
 
 ###MODEL BUILDING AND COMPARISONS###
 #base model for successor knower
-base.model <- glmer(SuccessorKnower ~ Age + (1|LadlabID), family = "binomial", 
+base.successor <- glmer(SuccessorKnower ~ Age + (1|LadlabID), family = "binomial", 
                     data = distinct_model.df)
+
 ##IHC model##
-model.ihc.sf <- glmer(SuccessorKnower ~ IHC + Age + (1|LadlabID), family = "binomial", 
+model.ihc.successor <- glmer(SuccessorKnower ~ IHC + Age + (1|LadlabID), family = "binomial", 
                    data = distinct_model.df)
 #convergence warnings, is this an issue?
 with(model.ihc.sf@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#True, so we're okay
 
 #compare
-anova(base.model, model.ihc.sf, test = 'LRT') #IHC not significant
+anova(base.successor, model.ihc.successor, test = 'LRT') #IHC not significant
 
 ##Highest NN Model##
-model.nn.sf <- glmer(SuccessorKnower ~ Highest_Contig_NN + Age + (1|LadlabID), family = "binomial", 
+model.nn.successor <- glmer(SuccessorKnower ~ Highest_Contig_NN + Age + (1|LadlabID), family = "binomial", 
                    data = distinct_model.df)
 
 #compare
-anova(base.model, model.nn.sf, test = 'LRT')#highest contiguous NN not significant
+anova(base.successor, model.nn.successor, test = 'LRT')#highest contiguous NN not significant
 
 ##Productivity model##
-model.prod.sf <- glmer(SuccessorKnower ~ Productivity + Age + (1|LadlabID), family = "binomial", 
+model.prod.successor <- glmer(SuccessorKnower ~ Productivity + Age + (1|LadlabID), family = "binomial",
                    data = distinct_model.df)
 
 #compare
-anova(base.model, model.prod.sf, test = 'LRT')#Productivity trending
+anova(base.successor, model.prod.successor, test = 'LRT')#Productivity trending
 ```
 
 
@@ -710,6 +740,8 @@ Put all significant Endless predictors into large model, run model comparison
 ```{r}
 large.endless.base <- glmer(EndlessKnower ~ IHC + Age + (1|LadlabID), 
                             family = "binomial", data = distinct_model.df)
+#convergence warnings, is this an issue?
+with(large.endless.base@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#True, we're okay
 
 ##add highest contig
 large.endless.nn <- glmer(EndlessKnower ~ Highest_Contig_NN + IHC + (1|LadlabID), 
@@ -735,35 +767,35 @@ anova(large.endless.base, large.endless.prod, test = 'LRT')#Productivity is sign
 ```{r}
 subset_distinct_model.df <- filter(distinct_model.df, Highest_Contig_NN>1)
 
-# #add mean_nn to model df
-# distinct_model.df <- right_join(distinct_model.df, lookup, by = "LadlabID")
-
 ###MODEL BUILDING AND COMPARISONS###
 #base model for successor knower
-subset_base.model <- glmer(SuccessorKnower ~ Age + (1|LadlabID), family = "binomial", 
+subset_base.successor <- glmer(SuccessorKnower ~ Age + (1|LadlabID), family = "binomial", 
                     data = subset_distinct_model.df)
+
 ##IHC model##
-subset_model.ihc.sf <- glmer(SuccessorKnower ~ IHC + Age + (1|LadlabID), family = "binomial", 
+subset_model.ihc.successor <- glmer(SuccessorKnower ~ IHC + Age + (1|LadlabID), family = "binomial", 
                    data = subset_distinct_model.df)
 #convergence warnings, is this an issue?
 with(subset_model.ihc.sf@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#True, so we're okay
 
 #compare
-anova(subset_base.model, subset_model.ihc.sf, test = 'LRT') #IHC not significant
+anova(subset_base.successor, subset_model.ihc.successor, test = 'LRT') #IHC not significant
 
 ##Highest NN Model##
-subset_model.nn.sf <- glmer(SuccessorKnower ~ Highest_Contig_NN + Age + (1|LadlabID), family = "binomial", 
-                   data = subset_distinct_model.df)
+subset_model.nn.successor <- glmer(SuccessorKnower ~ Highest_Contig_NN + Age + (1|LadlabID), family =
+"binomial", data = subset_distinct_model.df)
+#convergence warnings, is this an issue?
+with(subset_model.nn.successor@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#True, so we're okay
 
 #compare
-anova(subset_base.model, subset_model.nn.sf, test = 'LRT')#highest contiguous NN not significant
+anova(subset_base.successor, subset_model.nn.successor, test = 'LRT')#highest contiguous NN not significant
 
 ##Productivity model##
-subset_model.prod.sf <- glmer(SuccessorKnower ~ Productivity + Age + (1|LadlabID), family = "binomial", 
+subset_model.prod.successor <- glmer(SuccessorKnower ~ Productivity + Age + (1|LadlabID), family = "binomial", 
                    data = subset_distinct_model.df)
 
 #compare
-anova(subset_base.model, subset_model.prod.sf, test = 'LRT')#Productivity trending
+anova(subset_base.successor, subset_model.prod.successor, test = 'LRT')#Productivity trending
 ```
 
 
@@ -775,6 +807,7 @@ subset_base.endless <- glmer(EndlessKnower ~ Age + (1|LadlabID), family = "binom
 ###IHC MODEL###
 subset_model.ihc.endless <- glmer(EndlessKnower ~ IHC + Age + (1|LadlabID), family = "binomial", 
                         data = subset_distinct_model.df)
+
 #convergence warnings, is this an issue?
 with(subset_model.ihc.endless@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#true, so we're okay
 
@@ -785,6 +818,7 @@ anova(subset_base.endless, subset_model.ihc.endless, test = 'LRT') #IHC signific
 ###HIGHEST CONTIG NN MODEL###
 subset_model.nn.endless <- glmer(EndlessKnower ~ Highest_Contig_NN + Age + (1|LadlabID), family = "binomial", 
                         data = subset_distinct_model.df) 
+
 #convergence warnings, is this an issue?
 with(subset_model.nn.endless@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#True, model converging
 
