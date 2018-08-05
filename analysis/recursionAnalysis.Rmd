@@ -13,7 +13,8 @@ output:
 rm(list = ls())
 require("knitr")
 # opts_knit$set(root.dir = "~/Documents/Projects/recursion/") #this is specific to RMS, change accordinglyz
-opts_knit$set(root.dir = "~/Sites/jchu.github.io/recursion/")
+#opts_knit$set(root.dir = "~/Sites/jchu.github.io/recursion/")
+opts_knit$set(root.dir = "/Users/MotherTao/Documents/junyidata/recursion")
 library(tidyverse)
 library(magrittr)
 library(langcog)
@@ -93,10 +94,9 @@ full.data %>%
 
 Just for reference, this is the number of kids who switched classifications from PC, JC, RMS recode
 ```{r}
-
 full.data %>%
   dplyr::filter(TaskType == "productivity") %>%
-  droplevels()%>%
+  #droplevels()%>%
   dplyr::distinct(LadlabID, Response, Productivity) %>%
   dplyr::mutate(Response = factor(Response, levels = c("nonprod", "prod"), 
                            labels = c("Nonproductive", "Productive")))%>%
@@ -109,14 +109,11 @@ full.data %>%
                                                        ifelse((Response == "Productive" & Productivity == "Nonproductive"),
                                                               "Prod_toNonprod", "no_change")))))%>%
   dplyr::group_by(changed_classification)%>%
-  dplyr::summarise(n =n()) &>&
-  kable()
-
+  dplyr::summarise(n =n())
 ```
 
 ***
 # Highest Count Descriptives
-
 Average of IHC, DCE, and FHC for all kids
 ```{r}
 full.data %>%
@@ -246,22 +243,22 @@ ggplot(subset(hc.dev.data, Productivity == "Nonproductive"), aes(x = LadlabID, y
   labs(title = "Distance, Nonproductive")
 ```
 
-Average number of decade prompts provided. M = 3.5 (SD = 1.7), range 1 to 7, N = 31. 40 kids counted to 100 on their own
-
-<span style="color:red">Note from RMS: I haven't fixed this yet</span>
+Average number of decade prompts provided. M = 3.3 (SD = 1.7), range 1 to 7, N = 38. 42 kids counted to 99 on their own
 ```{r}
-# full.data %>%
-#   filter(Productivity == "Productive") %>%
-#   group_by(HCReceivedSupport) %>%
-#   summarize(mean = mean(sup.times, na.rm=TRUE),
-#             sd = sd(sup.times, na.rm=TRUE),
-#             min = min(sup.times, na.rm=TRUE),
-#             max = max(sup.times, na.rm=TRUE),
-#             count=n())
-# there're 5 kids with blank HCReceivedSupport. why?
-# check Excel, seems like these kids spon counted past 100 on their own. coded as NA under HCRecSupport
-# some inconsistencies wrt how it's coded. assume 0 = NA
-# need to clean this upfront
+full.data %>%
+  filter(TaskItem == "times") %>%
+  filter(Productivity == "Productive") %>%
+  distinct(LadlabID, HCReceivedSupport, TaskItem, Response) %>%
+  mutate(Response = as.numeric(levels(Response)[Response])) %>%
+  group_by(HCReceivedSupport) %>%
+  summarize(mean = mean(Response, na.rm=TRUE),
+            sd = sd(Response, na.rm=TRUE),
+            min = min(Response, na.rm=TRUE),
+            max = max(Response, na.rm=TRUE),
+            count=n())
+# assume 0 = NA
+# error in supported.times coding, should only count to 90
+# but one kid got prompted with 100 and 110 and times should be 0
 ```
 
 
