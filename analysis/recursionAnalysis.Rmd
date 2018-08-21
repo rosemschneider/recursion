@@ -14,7 +14,8 @@ rm(list = ls())
 require("knitr")
 # opts_knit$set(root.dir = "~/Documents/Projects/recursion/") #this is specific to RMS, change accordinglyz
 #opts_knit$set(root.dir = "~/Sites/jchu.github.io/recursion/")
-opts_knit$set(root.dir = "/Users/MotherTao/Documents/junyidata/recursion")
+#opts_knit$set(root.dir = "/Users/MotherTao/Documents/junyidata/recursion")
+opts_knit$set(root.dir = "~/Projects/Junyi study/recursiongithub") #Pierina's PC computer
 library(tidyverse)
 library(magrittr)
 #library(langcog)
