@@ -119,17 +119,34 @@ full.data %>%
 Average of IHC, DCE, and FHC for all kids
 ```{r}
 full.data %>%
-  dplyr::distinct(LadlabID, IHC, FHC, DCE)%>%
+  dplyr::distinct(LadlabID, IHC)%>%
   dplyr::summarise(mean_IHC = mean(IHC),
             sd_IHC = sd(IHC),
-            mean_FHC = mean(FHC),
-            sd_FHC = sd(FHC), 
-            mean_DCE = mean(DCE, na.rm = TRUE), 
-            sd_DCE = sd(DCE, na.rm = TRUE)) %>%
+            min_IHC = min(IHC),
+            max_IHC = max(IHC),
+            median_IHC = median(IHC)) %>%
+  kable()
+
+full.data %>%
+  dplyr::distinct(LadlabID, DCE)%>%
+  dplyr::summarise(mean_DCE = mean(DCE, na.rm=TRUE),
+            sd_DCE = sd(DCE, na.rm=TRUE),
+            min_DCE = min(DCE, na.rm=TRUE),
+            max_DCE = max(DCE, na.rm=TRUE),
+            median_DCE = median(DCE, na.rm=TRUE)) %>%
+  kable()
+
+full.data %>%
+  dplyr::distinct(LadlabID, FHC)%>%
+  dplyr::summarise(mean_FHC = mean(FHC),
+            sd_FHC = sd(FHC),
+            min_FHC = min(FHC),
+            max_FHC = max(FHC),
+            median_FHC = median(FHC)) %>%
   kable()
 ```
 
-Same data by productivity
+Similar data by productivity
 ```{r}
 full.data %>%
   dplyr::distinct(LadlabID, Productivity, FHC, IHC, DCE)%>%
@@ -141,6 +158,15 @@ full.data %>%
             mean_DCE = mean(DCE, na.rm = TRUE), 
             sd_DCE = sd(DCE, na.rm = TRUE)) %>%
   kable()
+```
+
+Number of kids who counted to 99 spontaneously
+```{r}
+full.data %>%
+  filter(IHC == 99) %>%
+  distinct(LadlabID, Age) %>%
+  count()
+
 ```
 
 Plotting distribution of IHC, as a function of productivity (~ junyi's graph)
