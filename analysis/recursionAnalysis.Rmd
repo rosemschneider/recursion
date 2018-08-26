@@ -47,6 +47,45 @@ full.data %<>%
   dplyr::filter(ExclusionGroup == "include")
 ```
 
+
+In addition, we will remove kids who failed the What Comes Next Task practice trials.
+```{r eval=FALSE}
+
+# check how many failed both practice trials
+x <- full.data %>%
+  filter(Task == "WCN" &
+           (TaskItem == 1 | TaskItem == 5))%>%
+  group_by(LadlabID)%>%
+  summarise(sum = sum(Accuracy))%>%
+  filter(sum != 2)
+
+#just hardcoding kids because it's easier than going back to the full data frame
+#These kids got 1 right, 5 wrong: 
+one.corr <- as.vector(c("012316-BO", "022616-JM", "030216-ED", 
+              "030817-ZI", "031516-A", "032216-JH", 
+              "032216-RC", "040317-AL", "040317-SL", 
+              "041316-AR", "041316-NC", "041316-VN", 
+              "062416-MC"))
+
+five.corr <- as.vector("050617-Z1")
+
+zero.corr <- as.vector(c("030216-AD", "040616-K"))
+
+
+#final decision: remove kids who fail 1 trial out of 2 trials, with no additional information about whether E reran the failed trial. Removing 8 kids in total
+
+# put "exclude" under "include" for the following kids
+exclude.wcn <- data.frame(LadlabID = c("022616-JM","030216-AD","031516-A",
+                           "041316-AR","041316-VN","032216-RC","012316-BO"))
+
+# exclude.wcn$LadlabID <- as.character(exclude.wcn$LadlabID)
+# full.data$LadlabID <- as.character(full.data$LadlabID)
+
+
+```
+
+
+
 Now, add in the Productivity classification, IHC, and FHC from PC, JC, and RMS coding
 
 <span style="color:red">Question from RMS: is FHC capped at 100 as well?</span>
@@ -88,9 +127,13 @@ full.data %>%
 Number of kids who were classified as prod, nonprod, NA
 ```{r}
 full.data %>%
-  dplyr::distinct(LadlabID, Productivity)%>%
+  dplyr::distinct(LadlabID, Productivity, Age)%>%
   dplyr::group_by(Productivity)%>%
-  dplyr::summarise(n = n()) %>%
+  dplyr::summarise(n = n(),
+                   meanage = mean(Age, na.rm=TRUE),
+                   sdage = sd(Age, na.rm=TRUE),
+                   minage = min(Age, na.rm=TRUE),
+                   maxage = max(Age, na.rm=TRUE)) %>%
   kable()
 ```
 
@@ -149,25 +192,52 @@ full.data %>%
 Similar data by productivity
 ```{r}
 full.data %>%
-  dplyr::distinct(LadlabID, Productivity, FHC, IHC, DCE)%>%
+  dplyr::distinct(LadlabID, Productivity, IHC)%>%
   dplyr::group_by(Productivity)%>%
   dplyr::summarise(mean_IHC = mean(IHC),
             sd_IHC = sd(IHC),
-            mean_FHC = mean(FHC),
-            sd_FHC = sd(FHC), 
-            mean_DCE = mean(DCE, na.rm = TRUE), 
-            sd_DCE = sd(DCE, na.rm = TRUE)) %>%
+            min_IHC = min(IHC),
+            max_IHC = max(IHC),
+            median_IHC = median(IHC)) %>%
+  kable()
+
+full.data %>%
+  dplyr::distinct(LadlabID, Productivity, DCE)%>%
+  dplyr::group_by(Productivity)%>%
+  dplyr::summarise(mean_DCE = mean(DCE, na.rm=TRUE),
+            sd_DCE = sd(DCE, na.rm=TRUE),
+            min_DCE = min(DCE, na.rm=TRUE),
+            max_DCE = max(DCE, na.rm=TRUE),
+            median_DCE = median(DCE, na.rm=TRUE)) %>%
+  kable()
+
+full.data %>%
+  dplyr::distinct(LadlabID, Productivity, FHC)%>%
+  dplyr::group_by(Productivity)%>%
+  dplyr::summarise(mean_FHC = mean(FHC),
+            sd_FHC = sd(FHC),
+            min_FHC = min(FHC),
+            max_FHC = max(FHC),
+            median_FHC = median(FHC)) %>%
   kable()
 ```
 
-Number of kids who counted to 99 spontaneously
+
+Number of kids who counted to 99+ spontaneously on IHC plus those whose FHC = 99+ without prompting
 ```{r}
 full.data %>%
-  filter(IHC == 99) %>%
-  distinct(LadlabID, Age) %>%
-  count()
+  filter(IHC > 98) %>%
+  distinct(LadlabID, IHC, FHC, HCReceivedSupport) %>%
+  count() #n=32
+
+full.data %>%
+  filter(FHC > 98 & (is.na(HCReceivedSupport)|HCReceivedSupport != 1)) %>%
+  distinct(LadlabID, IHC, FHC, HCReceivedSupport) %>%
+  count() #n =42
 
 ```
+
+
 
 Plotting distribution of IHC, as a function of productivity (~ junyi's graph)
 
@@ -287,6 +357,33 @@ full.data %>%
 # assume 0 = NA
 # error in supported.times coding, should only count to 90
 # but one kid got prompted with 100 and 110 and times should be 0
+
+
+full.data %>%
+  filter(Productivity == "Productive") %>%
+  distinct(LadlabID, HCReceivedSupport, IHC, FHC) %>%
+  group_by(HCReceivedSupport) %>%
+  summarize(mean = mean, na.rm=TRUE),
+            sd = sd(Response, na.rm=TRUE),
+```
+
+
+
+```{r}
+full.data %>%
+  filter(TaskItem == "times") %>%
+  filter(Productivity == "Nonproductive") %>%
+  distinct(LadlabID, HCReceivedSupport, TaskItem, Response) %>%
+  mutate(Response = as.numeric(levels(Response)[Response])) %>%
+  group_by(HCReceivedSupport) %>%
+  summarize(mean = mean(Response, na.rm=TRUE),
+            sd = sd(Response, na.rm=TRUE),
+            min = min(Response, na.rm=TRUE),
+            max = max(Response, na.rm=TRUE),
+            count=n())
+# assume 0 = NA
+# error in supported.times coding, should only count to 90
+# but one kid got prompted with 100 and 110 and times should be 0
 ```
 
 
@@ -375,6 +472,7 @@ wcn.wide %>%
   summarize(avg = mean(avg.wcn),
             sd = sd(sd.wcn))
 ```
+
 Plotting %corr on WCN as function of productivity
 ```{r}
 wcn.wide %>%
@@ -475,31 +573,12 @@ wcn.wide %>%
 
 Highest contiguous NN
 
-<span style="color:red">Note from RMS: There are a few kids that did not pass 1 or both of the practice trials for WCN. Are they to be included?</span>
-```{r, warning = FALSE}
+```{r}
+
 unique.nn <- as.vector(unique(wcn.wide$LadlabID))
 #get the task items from wcn
 nextnums <- as.vector(unique(wcn.wide$TaskItem))
 
-##Okay so it looks like there are 16 participants who did not pass both practice trials for WCN. I may need to hardcode their Highest contiguous, but to be continued
-x <- full.data %>%
-  filter(Task == "WCN" &
-           (TaskItem == 1 | TaskItem == 5))%>%
-  group_by(LadlabID)%>%
-  summarise(sum = sum(Accuracy))%>%
-  filter(sum != 2)
-
-#just hardcoding kids because it's easier than going back to the full data frame
-#These kids got 1 right, 5 wrong: 
-one.corr <- as.vector(c("012316-BO", "022616-JM", "030216-ED", 
-              "030817-ZI", "031516-A", "032216-JH", 
-              "032216-RC", "040317-AL", "040317-SL", 
-              "041316-AR", "041316-NC", "041316-VN", 
-              "062416-MC"))
-
-five.corr <- as.vector("050617-Z1")
-
-zero.corr <- as.vector(c("030216-AD", "040616-K"))
 #this is a function that pulls out the largest number for which a participant had a correct consecutive
 get_contiguous <- function(){
   contig <- data.frame()
@@ -570,53 +649,6 @@ full.data %>%
 
 ```
 
-Check kids who didn't get both practice trials right on WCN
-```{r}
-wcn.prac.chk <- full.data %>%
-  filter(LadlabID == "012316-BO" |LadlabID == "022616-JM"|LadlabID == "030216-ED"|
-           LadlabID == "030817-ZI"|LadlabID == "031516-A"|LadlabID == "032216-JH"|
-           LadlabID == "032216-RC"|LadlabID == "040317-AL"|LadlabID == "040317-SL"|
-           LadlabID == "041316-AR"|LadlabID == "041316-NC"|LadlabID == "041316-VN"| 
-           LadlabID == "062416-MC"|LadlabID == "050617-Z1" |LadlabID == "030216-AD"|
-           LadlabID == "040616-K") %>%
-  select(LadlabID, Age, AudioRecorded,Task, TaskType, TaskItem,Response, Accuracy, Productivity) %>%
-  filter(Task == "WCN")
-
-wcn.prac.chk %>%
-  distinct(LadlabID, Productivity) %>%
-  group_by(Productivity) %>%
-  summarize(count=n())
-
-wcn.prac.chk %>%
-  distinct(LadlabID, AudioRecorded) %>%
-  group_by(AudioRecorded) %>%
-  summarize(count=n()) # 2 kids no audio
-
-# who has audio?
-wcn.prac.chk %>%
-  distinct(LadlabID, AudioRecorded) %>%
-  filter(AudioRecorded == "yes")
-
-# PC checked audio for the following kids. cannot find a few where audiorecorded = yes. 
-# Outcome: some clear include cases. but also a few where kids only passed momentum for "five", immeidate 5 not asked for #a second time. 
-# I'm more inclined to include kids who passed 1outof2 prac trials bc that suggests kid #understood task?
-
-# 1  022616-JM           yes
-# 2  030216-AD           yes - fail both; exclude
-# 3  030216-ED           yes - pass second time on immediate 5; include
-# 4  030817-ZI           yes - pass both on first try; include
-# 5   031516-A           yes
-# 6  032216-JH           yes - pass 1 immediate & 5 momentum; include?
-# 7  040317-AL           yes - pass second time on 5 immediate; include
-# 8  040317-SL           yes - pass second time on 5 immediate; include
-# 9   040616-K           yes - pass second time on 1 immediate, 5 momentum, and 3 immediate; include?
-# 10 041316-AR           yes 
-# 11 041316-NC           yes - pass 1 immediate, fail on 5 momentum; include?
-# 12 041316-VN           yes
-# 13 050617-Z1           yes
-# 14 062416-MC           yes - pass second time on 5 immediate; include
-
-```
 
 
 # Infinity Descriptives
