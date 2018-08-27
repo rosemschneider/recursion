@@ -41,15 +41,9 @@ full.data %>%
   kable()
 ```
 
-First, let's remove anyone who should not be included in the final dataset.
-```{r}
-full.data %<>%
-  dplyr::filter(ExclusionGroup == "include")
-```
 
-
-In addition, we will remove kids who failed the What Comes Next Task practice trials.
-```{r eval=FALSE}
+RMS original code for checking who failed practice - do not need to run
+```{r eval = FALSE}
 
 # check how many failed both practice trials
 x <- full.data %>%
@@ -72,18 +66,35 @@ five.corr <- as.vector("050617-Z1")
 zero.corr <- as.vector(c("030216-AD", "040616-K"))
 
 
+```
+
+Set those who failed the What Comes Next Task practice trials to exclude.
+```{r}
+
 #final decision: remove kids who fail 1 trial out of 2 trials, with no additional information about whether E reran the failed trial. Removing 8 kids in total
 
 # put "exclude" under "include" for the following kids
-exclude.wcn <- data.frame(LadlabID = c("022616-JM","030216-AD","031516-A",
-                           "041316-AR","041316-VN","032216-RC","012316-BO"))
+# exclude.wcn <- data.frame(LadlabID = c("022616-JM","030216-AD","031516-A",
+#                            "041316-AR","041316-VN","032216-RC","012316-BO"),
+#                            stringsAsFactors = FALSE)
 
-# exclude.wcn$LadlabID <- as.character(exclude.wcn$LadlabID)
-# full.data$LadlabID <- as.character(full.data$LadlabID)
+full.data %<>%
+  mutate(ExclusionGroup = ifelse(LadlabID == "022616-JM"| LadlabID == "030216-AD"|
+                                   LadlabID == "031516-A" | LadlabID == "041316-AR"|
+                                   LadlabID == "041316-VN" | LadlabID == "032216-RC"|
+                                   LadlabID == "012316-BO", "fail wcn", ExclusionGroup))
 
+#check
+full.data %>%
+  filter(LadlabID == "022616-JM")
 
 ```
 
+Let's remove anyone who should not be included in the final dataset.
+```{r}
+full.data %<>%
+  dplyr::filter(ExclusionGroup == "include")
+```
 
 
 Now, add in the Productivity classification, IHC, and FHC from PC, JC, and RMS coding
