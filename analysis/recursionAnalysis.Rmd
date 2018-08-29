@@ -602,19 +602,19 @@ get_contiguous <- function(){
       sub_contig <- data.frame(sub, highest_contig)
       contig <- bind_rows(contig, sub_contig)
     } else if (length(tmp$TaskItem) > 0 & min(tmp$TaskItem) == 23) {
-      if(sub %in% one.corr){
-        highest_contig = 1
-        sub_contig <- data.frame(sub, highest_contig)
-        contig <- bind_rows(contig, sub_contig)
-      } else if(sub %in% five.corr | sub %in% zero.corr){
-        highest_contig = 0
-        sub_contig <- data.frame(sub, highest_contig)
-        contig <- bind_rows(contig, sub_contig)
-      } else {
+      #if(sub %in% one.corr){
         highest_contig = 5
         sub_contig <- data.frame(sub, highest_contig)
         contig <- bind_rows(contig, sub_contig)
-      }
+      # } else if(sub %in% five.corr | sub %in% zero.corr){
+      #   highest_contig = 0
+      #   sub_contig <- data.frame(sub, highest_contig)
+      #   contig <- bind_rows(contig, sub_contig)
+      # } else {
+      #   highest_contig = 5
+      #   sub_contig <- data.frame(sub, highest_contig)
+      #   contig <- bind_rows(contig, sub_contig)
+      # }
     } else {
       min.nn <- min(tmp$TaskItem)
       prev_correct <- nextnums[nextnums < min.nn]
@@ -772,7 +772,7 @@ model.ihc.successor <- glmer(SuccessorKnower ~ IHC + Age + (1|LadlabID), family 
 with(model.ihc.successor@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#True, so we're okay
 
 #compare
-anova(base.successor, model.ihc.successor, test = 'LRT') #IHC not significant
+anova(base.successor, model.ihc.successor, test = 'LRT') #IHC marginally significant
 
 ##Highest NN Model##
 model.nn.successor <- glmer(SuccessorKnower ~ Highest_Contig_NN + Age + (1|LadlabID), family = "binomial", 
@@ -852,100 +852,3 @@ anova(large.endless.base, large.endless.prod, test = 'LRT')#Productivity is sign
 
 ```
 
-## JC testing removal of WCN failed practice
-### Successor Models
-
-```{r}
-subset_distinct_model.df <- filter(distinct_model.df, Highest_Contig_NN>1)
-
-###MODEL BUILDING AND COMPARISONS###
-#base model for successor knower
-subset_base.successor <- glmer(SuccessorKnower ~ Age + (1|LadlabID), family = "binomial", 
-                    data = subset_distinct_model.df)
-
-##IHC model##
-subset_model.ihc.successor <- glmer(SuccessorKnower ~ IHC + Age + (1|LadlabID), family = "binomial", 
-                   data = subset_distinct_model.df)
-#convergence warnings, is this an issue?
-with(subset_model.ihc.successor@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#True, so we're okay
-
-#compare
-anova(subset_base.successor, subset_model.ihc.successor, test = 'LRT') #IHC not significant
-
-##Highest NN Model##
-subset_model.nn.successor <- glmer(SuccessorKnower ~ Highest_Contig_NN + Age + (1|LadlabID), family =
-"binomial", data = subset_distinct_model.df)
-#convergence warnings, is this an issue?
-with(subset_model.nn.successor@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#True, so we're okay
-
-#compare
-anova(subset_base.successor, subset_model.nn.successor, test = 'LRT')#highest contiguous NN not significant
-
-##Productivity model##
-subset_model.prod.successor <- glmer(SuccessorKnower ~ Productivity + Age + (1|LadlabID), family = "binomial", 
-                   data = subset_distinct_model.df)
-
-#compare
-anova(subset_base.successor, subset_model.prod.successor, test = 'LRT')#Productivity trending
-```
-
-
-## Endless Models
-```{r}
-subset_base.endless <- glmer(EndlessKnower ~ Age + (1|LadlabID), family = "binomial", 
-                      data = subset_distinct_model.df)
-
-###IHC MODEL###
-subset_model.ihc.endless <- glmer(EndlessKnower ~ IHC + Age + (1|LadlabID), family = "binomial", 
-                        data = subset_distinct_model.df)
-
-#convergence warnings, is this an issue?
-with(subset_model.ihc.endless@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#true, so we're okay
-
-#compare
-anova(subset_base.endless, subset_model.ihc.endless, test = 'LRT') #IHC significant
-
-
-###HIGHEST CONTIG NN MODEL###
-subset_model.nn.endless <- glmer(EndlessKnower ~ Highest_Contig_NN + Age + (1|LadlabID), family = "binomial", 
-                        data = subset_distinct_model.df) 
-
-#convergence warnings, is this an issue?
-with(subset_model.nn.endless@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#True, model converging
-
-anova(subset_model.nn.endless, subset_base.endless, test = 'LRT')#Highest contig NN significant
-
-###PRODUCTIVITY MODEL###
-subset_model.prod.endless <- glmer(EndlessKnower ~ Productivity + Age + (1|LadlabID), family = "binomial", 
-                            data = subset_distinct_model.df)
-
-#compare
-anova(subset_model.prod.endless, subset_base.endless, test = 'LRT')#Prod significant
-```
-
-### Endless: Large model comparison
-Put all significant Endless predictors into large model, run model comparison
-<span style="color:red">Question from JC: previous results indistinguishable when the 15 kids are removed; but here the very last comparison is ns. </span>
-```{r}
-subset_large.endless.base <- glmer(EndlessKnower ~ IHC + Age + (1|LadlabID), 
-                            family = "binomial", data = subset_distinct_model.df)
-#convergence warnings, is this an issue?
-with(subset_large.endless.base@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#True, we're okay
-
-##add highest contig
-subset_large.endless.nn <- glmer(EndlessKnower ~ Highest_Contig_NN + IHC + (1|LadlabID), 
-                          family = "binomial", data = subset_distinct_model.df)
-
-#compare
-anova(subset_large.endless.base, subset_large.endless.nn, test = 'LRT')#Apparently ns?
-
-##add productivity
-subset_large.endless.prod <- glmer(EndlessKnower ~ Productivity + IHC + (1|LadlabID), 
-                          family = "binomial", data = subset_distinct_model.df)
-#convergence warnings, is this an issue?
-with(subset_large.endless.prod@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#True, we're okay
-
-#compare 
-anova(subset_large.endless.base, subset_large.endless.prod, test = 'LRT')#Productivity ns?
-
-```
