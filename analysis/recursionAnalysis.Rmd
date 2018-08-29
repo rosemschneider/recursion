@@ -82,9 +82,10 @@ full.data %<>%
   mutate(ExclusionGroup = ifelse(LadlabID == "022616-JM"| LadlabID == "030216-AD"|
                                    LadlabID == "031516-A" | LadlabID == "041316-AR"|
                                    LadlabID == "041316-VN" | LadlabID == "032216-RC"|
-                                   LadlabID == "012316-BO", "fail wcn", ExclusionGroup))
+                                   LadlabID == "012316-BO", "fail wcn", levels(ExclusionGroup)[ExclusionGroup]),
+         ExclusionGroup = as.factor(ExclusionGroup))
 
-#check
+# check. good
 full.data %>%
   filter(LadlabID == "022616-JM")
 
@@ -94,6 +95,7 @@ Let's remove anyone who should not be included in the final dataset.
 ```{r}
 full.data %<>%
   dplyr::filter(ExclusionGroup == "include")
+
 ```
 
 
@@ -106,7 +108,7 @@ Now, add in the Productivity classification, IHC, and FHC from PC, JC, and RMS c
 hc.data <- read.csv('data/HC-datawide-forcoding - hc.datawide.csv') %>%
   dplyr::select(LadlabID, prod_tomerge, ihc_tomerge, fhc_tomerge, dce)
 
-full.data <- dplyr::right_join(full.data, hc.data, by = "LadlabID")
+full.data <- dplyr::left_join(full.data, hc.data, by = "LadlabID")
 
 full.data %<>%
   dplyr::rename(Productivity = prod_tomerge, 
@@ -133,6 +135,9 @@ full.data %>%
             meanAge = mean(Age),
             sdAge = sd(Age)) %>%
   kable()
+
+# full.data %>%
+#   group_b(Age)
 ```
 
 Number of kids who were classified as prod, nonprod, NA
@@ -369,13 +374,6 @@ full.data %>%
 # error in supported.times coding, should only count to 90
 # but one kid got prompted with 100 and 110 and times should be 0
 
-
-full.data %>%
-  filter(Productivity == "Productive") %>%
-  distinct(LadlabID, HCReceivedSupport, IHC, FHC) %>%
-  group_by(HCReceivedSupport) %>%
-  summarize(mean = mean, na.rm=TRUE),
-            sd = sd(Response, na.rm=TRUE),
 ```
 
 
