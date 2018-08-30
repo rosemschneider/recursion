@@ -311,7 +311,7 @@ hc.dev.data <- full.data %>%
 #all kids together
 ggplot(hc.dev.data, aes(x = LadlabID, y = hc)) + 
   facet_grid(rows = vars(Productivity)) +
-  geom_line() + 
+  geom_line(data=hc.dev.data[!is.na(hc.dev.data$hc),]) + 
   geom_point(aes(shape = hcprogression, colour = hcprogression), 
              size = 2, stroke = 1.5) +
   scale_color_brewer(palette="Dark2") +
@@ -321,13 +321,18 @@ ggplot(hc.dev.data, aes(x = LadlabID, y = hc)) +
        y="Highest Count by Count Type") +
   theme_bw() + 
   theme(legend.position="bottom", 
-        axis.text.x = element_text(angle = 270, hjust = 1))
+        axis.text.x = element_text(angle = 270, hjust = 1)) +
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+
+hc.dev.prod <- subset(hc.dev.data, Productivity == "Productive")
+hc.dev.nonprod <- subset(hc.dev.data, Productivity == "Nonproductive")
 
 #for easier viewing, just going to break this up into individual plots
 #productive
-ggplot(subset(hc.dev.data, Productivity == "Productive"), aes(x = LadlabID, y = hc)) + 
+ggplot(hc.dev.prod, aes(x = LadlabID, y = hc)) + 
   facet_grid(rows = vars(Productivity)) +
-  geom_line() + 
+  geom_line(data=hc.dev.prod[!is.na(hc.dev.prod$hc),]) + 
   geom_point(aes(shape = hcprogression, colour = hcprogression), 
              size = 2, stroke = 1.5) +
   scale_color_brewer(palette="Dark2") +
@@ -338,12 +343,14 @@ ggplot(subset(hc.dev.data, Productivity == "Productive"), aes(x = LadlabID, y = 
   theme_bw() + 
   theme(legend.position="bottom", 
         axis.text.x = element_text(angle = 270, hjust = 1)) + 
-  labs(title = "Distance, Productive")
+  labs(title = "Distance, Productive") +
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
 
 #nonproductive
-ggplot(subset(hc.dev.data, Productivity == "Nonproductive"), aes(x = LadlabID, y = hc)) + 
+ggplot(hc.dev.nonprod, aes(x = LadlabID, y = hc)) + 
   facet_grid(rows = vars(Productivity)) +
-  geom_line() + 
+  geom_line(data=hc.dev.nonprod[!is.na(hc.dev.nonprod$hc),]) + 
   geom_point(aes(shape = hcprogression, colour = hcprogression), 
              size = 2, stroke = 1.5) +
   scale_color_brewer(palette="Dark2") +
@@ -354,7 +361,9 @@ ggplot(subset(hc.dev.data, Productivity == "Nonproductive"), aes(x = LadlabID, y
   theme_bw() + 
   theme(legend.position="bottom", 
         axis.text.x = element_text(angle = 270, hjust = 1)) + 
-  labs(title = "Distance, Nonproductive")
+  labs(title = "Distance, Nonproductive") +
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
 ```
 
 Average number of decade prompts provided. M = 3.3 (SD = 1.7), range 1 to 7, N = 38. 42 kids counted to 99 on their own
@@ -679,7 +688,7 @@ full.data %>%
   dplyr::summarise(n = n()) %>%
   spread(Productivity, n)
 
-````
+```
 
 
 
@@ -772,7 +781,7 @@ model.ihc.successor <- glmer(SuccessorKnower ~ IHC + Age + (1|LadlabID), family 
 with(model.ihc.successor@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#True, so we're okay
 
 #compare
-anova(base.successor, model.ihc.successor, test = 'LRT') #IHC marginally significant
+anova(base.successor, model.ihc.successor, test = 'LRT') #IHC not significant
 
 ##Highest NN Model##
 model.nn.successor <- glmer(SuccessorKnower ~ Highest_Contig_NN + Age + (1|LadlabID), family = "binomial", 
@@ -828,6 +837,7 @@ anova(model.prod.endless, base.endless, test = 'LRT')#Prod significant
 
 ### Endless: Large model comparison
 Put all significant Endless predictors into large model, run model comparison
+
 ```{r}
 large.endless.base <- glmer(EndlessKnower ~ IHC + Age + (1|LadlabID), 
                             family = "binomial", data = distinct_model.df)
@@ -842,7 +852,7 @@ large.endless.nn <- glmer(EndlessKnower ~ Highest_Contig_NN + IHC + (1|LadlabID)
 anova(large.endless.base, large.endless.nn, test = 'LRT')#Apparently ns?
 
 ##add productivity
-large.endless.prod <- glmer(EndlessKnower ~ Productivity + IHC + (1|LadlabID), 
+large.endless.prod <- glmer(EndlessKnower ~ Productivity + Highest_Contig_NN + IHC + (1|LadlabID), 
                           family = "binomial", data = distinct_model.df)
 #convergence warnings, is this an issue?
 with(large.endless.prod@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#True, we're okay
@@ -850,5 +860,39 @@ with(large.endless.prod@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#T
 #compare 
 anova(large.endless.base, large.endless.prod, test = 'LRT')#Productivity is significant
 
+# productivity not sig. 
+# Old code didn't add highest_contig_nn to model. only had prod & ihc. doesn't seem right? (PC)
+
 ```
 
+
+#### Pierina exploring using overall %corr as predictor
+```{r}
+###MODEL BUILDING AND COMPARISONS###
+#base model for successor knower
+base.successor <- glmer(SuccessorKnower ~ Age + (1|LadlabID), family = "binomial", 
+                    data = distinct_model.df)
+
+##IHC model##
+model.ihc.successor <- glmer(SuccessorKnower ~ IHC + Age + (1|LadlabID), family = "binomial", 
+                   data = distinct_model.df)
+#convergence warnings, is this an issue?
+with(model.ihc.successor@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#True, so we're okay
+
+#compare
+anova(base.successor, model.ihc.successor, test = 'LRT') #IHC not significant
+
+##Highest NN Model##
+model.nn.successor <- glmer(SuccessorKnower ~ Highest_Contig_NN + Age + (1|LadlabID), family = "binomial", 
+                   data = distinct_model.df)
+
+#compare
+anova(base.successor, model.nn.successor, test = 'LRT')#highest contiguous NN not significant
+
+##Productivity model##
+model.prod.successor <- glmer(SuccessorKnower ~ Productivity + Age + (1|LadlabID), family = "binomial",
+                   data = distinct_model.df)
+
+#compare
+anova(base.successor, model.prod.successor, test = 'LRT')#Productivity trending
+```
