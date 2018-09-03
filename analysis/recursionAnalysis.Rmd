@@ -682,7 +682,7 @@ full.data %>%
 #   filter(LadlabID == "040317-KK")
   
 ```
-
+See if highest contiguous next number underestimates kids' knowledge. Seems to correspond well with # correct data.
 ```{r}
 wcn.data %>%
   dplyr::right_join(highest_contiguous_nn) %>%
@@ -761,7 +761,6 @@ full.data %>%
 ggsave('graphs/highestcontig-by-prod.png')
 
 ```
-
 
 Correlations
 ```{r}
