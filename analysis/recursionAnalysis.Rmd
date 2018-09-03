@@ -73,11 +73,14 @@ Set those who failed the What Comes Next Task practice trials to exclude.
 
 #final decision: remove kids who fail 1 trial out of 2 trials, with no additional information about whether E reran the failed trial. Removing 8 kids in total
 
+# pc added 022516-ML on 2018-09-03 as excluded kid based on fail wcn.
+# kid's data were NA for practice trials on wcn and 0 correct on test. not sure why prac were marked as NA but assume kid fail wcn.
+
 full.data %<>%
   mutate(ExclusionGroup = ifelse(LadlabID == "022616-JM"| LadlabID == "030216-AD"|
                                    LadlabID == "031516-A" | LadlabID == "041316-AR"|
                                    LadlabID == "041316-VN" | LadlabID == "032216-RC"|
-                                   LadlabID == "012316-BO", "fail wcn", levels(ExclusionGroup)[ExclusionGroup]),
+                                   LadlabID == "012316-BO"|LadlabID == "022516-ML", "fail wcn", levels(ExclusionGroup)[ExclusionGroup]),
          ExclusionGroup = as.factor(ExclusionGroup))
 
 # check. good
@@ -410,6 +413,8 @@ full.data %>%
 
 # What Comes Next Descriptives
 
+<span style="color:red">Note practice trials 1 and 5 are included in highest contig NN computation but not in overall percent correct, or within vs. beyond - PC</span>
+
 First check if Accuracy column in full.data is coded correctly. Good to go.
 ```{r}
 wcn.data <- full.data %>%
@@ -476,29 +481,29 @@ xtabs(~immediate + momentum, data = wcn.wide, na.action = na.pass, exclude = NUL
 # 191 / 1048 trials = ~ 18%. NOTE % not by kids but by trials.
 ```
 
-Percent Correct on WCN (note this includes 1 and 5)
+Percent Correct on WCN
 ```{r}
 wcn.wide %>%
-  group_by(LadlabID) %>%
-  summarize(avg.wcn = mean(immediate, na.rm=TRUE),
+  dplyr::group_by(LadlabID) %>%
+  dplyr::summarize(avg.wcn = mean(immediate, na.rm=TRUE),
             sd.wcn = sd(immediate, na.rm=TRUE)) %>%
-  summarize(avg = mean(avg.wcn),
+  dplyr::summarize(avg = mean(avg.wcn),
             sd = sd(sd.wcn))
 
 wcn.wide %>%
-  group_by(LadlabID, Productivity) %>%
-  summarize(avg.wcn = mean(immediate, na.rm=TRUE),
+  dplyr::group_by(LadlabID, Productivity) %>%
+  dplyr::summarize(avg.wcn = mean(immediate, na.rm=TRUE),
             sd.wcn = sd(immediate, na.rm=TRUE)) %>%
-  group_by(Productivity) %>%
-  summarize(avg = mean(avg.wcn),
+  dplyr::group_by(Productivity) %>%
+  dplyr::summarize(avg = mean(avg.wcn),
             sd = sd(sd.wcn))
 ```
 
 Plotting %corr on WCN as function of productivity
 ```{r}
 wcn.wide %>%
-  group_by(LadlabID, Productivity) %>%
-  summarize(avg.wcn = mean(immediate, na.rm=TRUE),
+  dplyr::group_by(LadlabID, Productivity) %>%
+  dplyr::summarize(avg.wcn = mean(immediate, na.rm=TRUE),
             sd.wcn = sd(immediate, na.rm=TRUE)) %>%
   ggplot(aes(x = Productivity, y = avg.wcn, fill=factor(Productivity))) +
   stat_summary(fun.y = mean, position = position_dodge(width = .95), 
@@ -526,7 +531,7 @@ lookup <- full.data %>%
   distinct(LadlabID, IHC)
 
 wcn.wide %<>%
-  mutate(TaskItem = as.numeric(as.character(TaskItem)))
+  dplyr::mutate(TaskItem = as.numeric(as.character(TaskItem)))
 
 #This is a function that, for each trial, checks the number queried. If number queried is above the child's initial highest count, marks that trial as beyond count range.
 determine_count_range <- function(df) {
@@ -551,8 +556,8 @@ wcn.wide <- determine_count_range(wcn.wide)
 WCN accuracy, within and outside of IHC
 ```{r}
 wcn.wide %>%
-  group_by(WithinOutsideIHC) %>%
-  summarize(mean = mean(immediate, na.rm = TRUE), 
+  dplyr::group_by(WithinOutsideIHC) %>%
+  dplyr::summarize(mean = mean(immediate, na.rm = TRUE), 
             sd = sd(immediate, na.rm = TRUE))
 ```
      
@@ -560,16 +565,16 @@ wcn.wide %>%
 Now WCN by within/outside count range and productivity
 ```{r}
 wcn.wide %>%
-  group_by(Productivity, WithinOutsideIHC) %>%
-  summarize(mean = mean(immediate, na.rm = TRUE), 
+  dplyr::group_by(Productivity, WithinOutsideIHC) %>%
+  dplyr::summarize(mean = mean(immediate, na.rm = TRUE), 
             sd = sd(immediate, na.rm = TRUE))
 ```
 
 Plotting WCN as within vs. beyond by productivity 
 ```{r}
 wcn.wide %>%
-  group_by(Productivity, WithinOutsideIHC, LadlabID) %>%
-  summarize(meansubj = mean(immediate, na.rm = TRUE)) %>%
+  dplyr::group_by(Productivity, WithinOutsideIHC, LadlabID) %>%
+  dplyr::summarize(meansubj = mean(immediate, na.rm = TRUE)) %>%
   ggplot(aes(x=Productivity, y=meansubj, fill=WithinOutsideIHC)) +
   stat_summary(fun.y = mean, position = position_dodge(width = .95), 
                       geom="bar", alpha = .5, colour = "black") +
@@ -589,9 +594,9 @@ ggsave('graphs/wcn-within-beyond.png')
 How many trials do kids have beyond their IHC?
 ```{r}
 wcn.wide %>%
- dplyr:: select(-momentum)%>%
-  group_by(Productivity, WithinOutsideIHC)%>%
-  summarise(n = n())
+  dplyr:: select(-momentum)%>%
+  dplyr::group_by(Productivity, WithinOutsideIHC)%>%
+  dplyr::summarise(n = n())
 ```
 
 Highest contiguous NN
@@ -651,21 +656,69 @@ highest_contiguous_nn <- get_contiguous()%>%
 
 Code for checking highest contig NN
 ```{r}
-# full.data %>%
-#   filter(LadlabID == "040317-KK") %>%
-#   filter(TaskType == "immediate"|TaskType == "practice") %>%
-#   select(LadlabID, TaskType, TaskItem, Accuracy)
+full.data %>%
+  filter(LadlabID == "022316-AB") %>%
+  filter(TaskType == "immediate"|TaskType == "practice") %>%
+  select(LadlabID, TaskType, TaskItem, Accuracy)
 
 # these two kids, for example, had the same contig highest NN but diff profile of responses
-#040317-KK
-#022316-AB
+#040317-KK #7 correct out of 10
+#022316-AB #9 correct out of 10
+
+
+# wcn.data %<>%
+#   dplyr::right_join(highest_contiguous_nn) 
+# 
+# wcn.data %>%
+#   filter(LadlabID == "040317-KK")
+  
+```
+
+```{r}
+wcn.data %>%
+  dplyr::right_join(highest_contiguous_nn) %>%
+  dplyr::filter(TaskType == "immediate"|TaskType == "practice") %>% #added prac for 1&5
+  dplyr::group_by(LadlabID, Highest_Contig_NN) %>%
+  dplyr::summarize(n_corr = sum(Accuracy)) %>%
+  dplyr::group_by(Highest_Contig_NN, n_corr, na.rm=TRUE) %>%
+  dplyr::summarize(n_participants = n_distinct(LadlabID)) %>%
+  tidyr::spread(n_corr, n_participants) %>%
+  kable()
+
+
+# 2 kids had NA as n_corr
+
+wcn.data %>%
+  dplyr::right_join(highest_contiguous_nn) %>%
+  dplyr::filter(TaskType == "immediate"|TaskType == "practice") %>% #added prac for 1&5
+  dplyr::group_by(LadlabID, Highest_Contig_NN) %>%
+  dplyr::summarize(n_corr = sum(Accuracy)) %>%
+  dplyr::group_by(Highest_Contig_NN, n_corr) %>%
+  filter(is.na(n_corr))
+# 022516-ML
+# 040317-SL
+
+# this kid got 0 for all test and NA for 1 and 5. Not one of the two kids under zero.corr
+# I know why: only kids with sum < 2 were pulled out. this kid's sum is NA
+full.data %>%
+  filter(LadlabID == "022516-ML") %>%
+  filter(TaskType == "immediate"|TaskType == "practice") %>%
+  select(LadlabID, TaskType, TaskItem, Accuracy)
+
+# this kid has one NA value but otherwise look fine
+# now added na.rm=TRUE for sum(accuracy)
+full.data %>%
+  filter(LadlabID == "040317-SL") %>%
+  filter(TaskType == "immediate"|TaskType == "practice") %>%
+  select(LadlabID, TaskType, TaskItem, Accuracy)
+
 
 ```
 
 Median highest contiguous next number by productivity 
 ```{r}
 full.data %>%
-  right_join(highest_contiguous_nn) %>%
+  dplyr::right_join(highest_contiguous_nn) %>%
   dplyr::distinct(LadlabID, Highest_Contig_NN, Productivity) %>%
   dplyr::group_by(Productivity) %>%
   dplyr::summarise(median = median(Highest_Contig_NN)) %>%
@@ -676,8 +729,8 @@ full.data %>%
 Plotting freq of highest contiguous as a function of productivity
 ``` {r}
 full.data %>%
-  right_join(highest_contiguous_nn) %>%
-  distinct(LadlabID, Highest_Contig_NN, Productivity) %>%
+  dplyr::right_join(highest_contiguous_nn) %>%
+  dplyr::distinct(LadlabID, Highest_Contig_NN, Productivity) %>%
   ggplot(aes(x=Highest_Contig_NN, color=Productivity)) + 
   geom_dotplot(aes(fill = Productivity),
     binwidth=1, stackgroups=TRUE, binpositions="all",method="dotdensity") +
@@ -701,9 +754,9 @@ ggsave('graphs/highestcontig-by-prod.png')
 Correlations
 ```{r}
 corrdf <- full.data %>%
-  right_join(highest_contiguous_nn) %>%
-  distinct(LadlabID, Highest_Contig_NN, Age, IHC, FHC) %>%
-  select(-LadlabID)
+  dplyr::right_join(highest_contiguous_nn) %>%
+  dplyr::distinct(LadlabID, Highest_Contig_NN, Age, IHC, FHC) %>%
+  dplyr::select(-LadlabID)
 
 rcorr(as.matrix(corrdf), type = "pearson")
 ```
