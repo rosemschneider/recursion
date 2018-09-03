@@ -14,8 +14,8 @@ rm(list = ls())
 require("knitr")
 # opts_knit$set(root.dir = "~/Documents/Projects/recursion/") #this is specific to RMS, change accordinglyz
 #opts_knit$set(root.dir = "~/Sites/jchu.github.io/recursion/")
-#opts_knit$set(root.dir = "/Users/MotherTao/Documents/junyidata/recursion")
-opts_knit$set(root.dir = "~/Projects/Junyi study/recursiongithub") #Pierina's PC computer
+opts_knit$set(root.dir = "~/Projects/Junyi study/recursiongithub/") #for PC
+library(Hmisc)
 library(tidyverse)
 library(magrittr)
 #library(langcog)
@@ -42,7 +42,7 @@ full.data %>%
 ```
 
 
-RMS original code for checking who failed practice - do not need to run
+RMS original code for checking who failed practice - do not need to run. EVAL set to FALSE
 ```{r eval = FALSE}
 
 # check how many failed both practice trials
@@ -73,11 +73,6 @@ Set those who failed the What Comes Next Task practice trials to exclude.
 
 #final decision: remove kids who fail 1 trial out of 2 trials, with no additional information about whether E reran the failed trial. Removing 8 kids in total
 
-# put "exclude" under "include" for the following kids
-# exclude.wcn <- data.frame(LadlabID = c("022616-JM","030216-AD","031516-A",
-#                            "041316-AR","041316-VN","032216-RC","012316-BO"),
-#                            stringsAsFactors = FALSE)
-
 full.data %<>%
   mutate(ExclusionGroup = ifelse(LadlabID == "022616-JM"| LadlabID == "030216-AD"|
                                    LadlabID == "031516-A" | LadlabID == "041316-AR"|
@@ -86,8 +81,8 @@ full.data %<>%
          ExclusionGroup = as.factor(ExclusionGroup))
 
 # check. good
-full.data %>%
-  filter(LadlabID == "022616-JM")
+# full.data %>%
+#   filter(LadlabID == "022616-JM")
 
 ```
 
@@ -136,8 +131,6 @@ full.data %>%
             sdAge = sd(Age)) %>%
   kable()
 
-# full.data %>%
-#   group_b(Age)
 ```
 
 Number of kids who were classified as prod, nonprod, NA
@@ -157,7 +150,7 @@ Just for reference, this is the number of kids who switched classifications from
 ```{r}
 full.data %>%
   dplyr::filter(TaskType == "productivity") %>%
-  #droplevels()%>%
+  droplevels()%>%
   dplyr::distinct(LadlabID, Response, Productivity) %>%
   dplyr::mutate(Response = factor(Response, levels = c("nonprod", "prod"), 
                            labels = c("Nonproductive", "Productive")))%>%
@@ -239,19 +232,7 @@ full.data %>%
 ```
 
 
-Number of kids who counted to 99+ spontaneously on IHC plus those whose FHC = 99+ without prompting
-```{r}
-full.data %>%
-  filter(IHC > 98) %>%
-  distinct(LadlabID, IHC, FHC, HCReceivedSupport) %>%
-  count() #n=32
 
-full.data %>%
-  filter(FHC > 98 & (is.na(HCReceivedSupport)|HCReceivedSupport != 1)) %>%
-  distinct(LadlabID, IHC, FHC, HCReceivedSupport) %>%
-  count() #n =42
-
-```
 
 
 
@@ -274,7 +255,7 @@ ggplot(unique.hc.data, aes(x=IHC, color=Productivity)) +
        y="Frequency") +
   theme_bw() + 
   theme(legend.position="bottom")
-
+ggsave('graphs/ihc-by-prod.png')
 # hist(unique.hc.data$IHC)
 ```
 
@@ -297,9 +278,11 @@ ggplot(unique.hc.data, aes(x=AgeMonths, colour = Productivity)) +
        y="Frequency") +
   theme_bw() + 
   theme(legend.position="bottom")
+ggsave('graphs/prod-by-age.png')
+
 ```
 
-## Distance between IHC and FHC
+Distance between IHC and FHC
 
 Restruture data to plot distance between ihc, dce, and final count
 ```{r}
@@ -337,15 +320,16 @@ ggplot(hc.dev.prod, aes(x = LadlabID, y = hc)) +
              size = 2, stroke = 1.5) +
   scale_color_brewer(palette="Dark2") +
   scale_shape_manual(values = c(4,5,20)) +
-  labs(title="Highest Count Progression by Decade Productivity",
+  ylim(0, 100) +
+  labs(title="Distance, productive",
        x = "Each line = individual kids",
        y="Highest Count by Count Type") +
   theme_bw() + 
   theme(legend.position="bottom", 
         axis.text.x = element_text(angle = 270, hjust = 1)) + 
-  labs(title = "Distance, Productive") +
   theme(axis.text.x=element_blank(),
         axis.ticks.x=element_blank())
+ggsave('graphs/distance-prod.png')
 
 #nonproductive
 ggplot(hc.dev.nonprod, aes(x = LadlabID, y = hc)) + 
@@ -355,18 +339,35 @@ ggplot(hc.dev.nonprod, aes(x = LadlabID, y = hc)) +
              size = 2, stroke = 1.5) +
   scale_color_brewer(palette="Dark2") +
   scale_shape_manual(values = c(4,5,20)) +
-  labs(title="Highest Count Progression by Decade Productivity",
+  ylim(0, 100) +
+  labs(title="Distance, Nonproductive",
        x = "Each line = individual kids",
        y="Highest Count by Count Type") +
   theme_bw() + 
   theme(legend.position="bottom", 
-        axis.text.x = element_text(angle = 270, hjust = 1)) + 
-  labs(title = "Distance, Nonproductive") +
+        axis.text.x = element_text(angle = 270, hjust = 1)) +
   theme(axis.text.x=element_blank(),
         axis.ticks.x=element_blank())
+ggsave('graphs/distance-nonprod.png')
+
 ```
 
-Average number of decade prompts provided. M = 3.3 (SD = 1.7), range 1 to 7, N = 38. 42 kids counted to 99 on their own
+Number of kids who counted to 99+ spontaneously on IHC plus those whose FHC = 99+ without prompting
+```{r}
+# full.data %>%
+#   filter(IHC > 98) %>%
+#   distinct(LadlabID, IHC, FHC, HCReceivedSupport) %>%
+#   count() #n=32
+# but some kids made errors past IHC but < 3 so need to account for that
+
+full.data %>%
+  filter(FHC > 98 & (is.na(HCReceivedSupport)|HCReceivedSupport != 1)) %>%
+  distinct(LadlabID, IHC, FHC, HCReceivedSupport) %>%
+  count() #n =42
+
+```
+
+Average number of decade prompts provided. Productive counters first
 ```{r}
 full.data %>%
   filter(TaskItem == "times") %>%
@@ -386,7 +387,7 @@ full.data %>%
 ```
 
 
-
+Then nonproductive counters.
 ```{r}
 full.data %>%
   filter(TaskItem == "times") %>%
@@ -403,6 +404,8 @@ full.data %>%
 # error in supported.times coding, should only count to 90
 # but one kid got prompted with 100 and 110 and times should be 0
 ```
+
+
 
 
 # What Comes Next Descriptives
@@ -470,10 +473,10 @@ wcn.check <- full.data %>%
 
 # how many kids show improved performance
 xtabs(~immediate + momentum, data = wcn.wide, na.action = na.pass, exclude = NULL)
-# answer: 191 / 1048 trials = ~ 18%
+# 191 / 1048 trials = ~ 18%. NOTE % not by kids but by trials.
 ```
 
-Percent Correct on WCN
+Percent Correct on WCN (note this includes 1 and 5)
 ```{r}
 wcn.wide %>%
   group_by(LadlabID) %>%
@@ -511,6 +514,8 @@ wcn.wide %>%
   theme(text = element_text(size = 12)) +
   ylim(0, 1.0) +
   geom_violin(alpha = .1)
+ggsave('graphs/wcn-percentcorr.png')
+
 ```
      
 Add whether the Task Item was within or outside of the kid's initial highest count.
@@ -561,16 +566,14 @@ wcn.wide %>%
 ```
 
 Plotting WCN as within vs. beyond by productivity 
-<span style="color:red"> error bars don't work?! PC
 ```{r}
 wcn.wide %>%
-  group_by(Productivity, WithinOutsideIHC) %>%
-  summarize(mean = mean(immediate, na.rm = TRUE), 
-            sd = sd(immediate, na.rm = TRUE)) %>%
-  ggplot(aes(x=Productivity, y=mean, fill=WithinOutsideIHC)) +
+  group_by(Productivity, WithinOutsideIHC, LadlabID) %>%
+  summarize(meansubj = mean(immediate, na.rm = TRUE)) %>%
+  ggplot(aes(x=Productivity, y=meansubj, fill=WithinOutsideIHC)) +
   stat_summary(fun.y = mean, position = position_dodge(width = .95), 
                       geom="bar", alpha = .5, colour = "black") +
-  stat_summary(fun.data = mean_se, geom="errorbar", 
+  stat_summary(fun.data = mean_se, geom="errorbar",
                position = position_dodge(width=0.90), width = 0.2) +
   scale_fill_discrete(name = "Within vs. Beyond IHC") +
   scale_y_continuous(lim=c(0,1)) +
@@ -579,6 +582,8 @@ wcn.wide %>%
        fill="Item type") +
   theme_bw() +
   theme(text = element_text(size = 12))
+ggsave('graphs/wcn-within-beyond.png')
+
 ```
 
 How many trials do kids have beyond their IHC?
@@ -644,6 +649,30 @@ highest_contiguous_nn <- get_contiguous()%>%
 
 ```
 
+Code for checking highest contig NN
+```{r}
+# full.data %>%
+#   filter(LadlabID == "040317-KK") %>%
+#   filter(TaskType == "immediate"|TaskType == "practice") %>%
+#   select(LadlabID, TaskType, TaskItem, Accuracy)
+
+# these two kids, for example, had the same contig highest NN but diff profile of responses
+#040317-KK
+#022316-AB
+
+```
+
+Median highest contiguous next number by productivity 
+```{r}
+full.data %>%
+  right_join(highest_contiguous_nn) %>%
+  dplyr::distinct(LadlabID, Highest_Contig_NN, Productivity) %>%
+  dplyr::group_by(Productivity) %>%
+  dplyr::summarise(median = median(Highest_Contig_NN)) %>%
+  kable()
+
+```
+
 Plotting freq of highest contiguous as a function of productivity
 ``` {r}
 full.data %>%
@@ -664,10 +693,20 @@ full.data %>%
        y="Frequency") +
   theme_bw() + 
   theme(legend.position="bottom")
+ggsave('graphs/highestcontig-by-prod.png')
 
 ```
 
 
+Correlations
+```{r}
+corrdf <- full.data %>%
+  right_join(highest_contiguous_nn) %>%
+  distinct(LadlabID, Highest_Contig_NN, Age, IHC, FHC) %>%
+  select(-LadlabID)
+
+rcorr(as.matrix(corrdf), type = "pearson")
+```
 
 # Infinity Descriptives
 ```{r}
