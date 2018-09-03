@@ -74,7 +74,7 @@ Set those who failed the What Comes Next Task practice trials to exclude.
 #final decision: remove kids who fail 1 trial out of 2 trials, with no additional information about whether E reran the failed trial. Removing 8 kids in total
 
 # pc added 022516-ML on 2018-09-03 as excluded kid based on fail wcn.
-# kid's data were NA for practice trials on wcn and 0 correct on test. not sure why prac were marked as NA but assume kid fail wcn.
+# kid's data were NA for wcn practice trials nd 0 correct on test. not sure why prac were marked as NA but assume kid fail wcn.
 
 full.data %<>%
   mutate(ExclusionGroup = ifelse(LadlabID == "022616-JM"| LadlabID == "030216-AD"|
@@ -292,13 +292,14 @@ Restruture data to plot distance between ihc, dce, and final count
 hc.dev.data <- full.data %>%
   dplyr::select(LadlabID, Age, Productivity, IHC, DCE, FHC) %>%
   gather(hcprogression, hc, IHC:FHC)%>%
-  mutate(hcprogression = factor(hcprogression, levels = c("IHC", "DCE", "FHC")))
+  mutate(hcprogression = factor(hcprogression, levels = c("IHC", "DCE", "FHC"))) %>%
+  rename(`Highest Count Coding` = hcprogression)
 
 #all kids together
 ggplot(hc.dev.data, aes(x = LadlabID, y = hc)) + 
   facet_grid(rows = vars(Productivity)) +
   geom_line(data=hc.dev.data[!is.na(hc.dev.data$hc),]) + 
-  geom_point(aes(shape = hcprogression, colour = hcprogression), 
+  geom_point(aes(shape = `Highest Count Coding`, colour = `Highest Count Coding`), 
              size = 2, stroke = 1.5) +
   scale_color_brewer(palette="Dark2") +
   scale_shape_manual(values = c(4,5,20)) +
@@ -309,7 +310,7 @@ ggplot(hc.dev.data, aes(x = LadlabID, y = hc)) +
   theme(legend.position="bottom", 
         axis.text.x = element_text(angle = 270, hjust = 1)) +
   theme(axis.text.x=element_blank(),
-        axis.ticks.x=element_blank())
+        axis.ticks.x=element_blank()) 
 
 hc.dev.prod <- subset(hc.dev.data, Productivity == "Productive")
 hc.dev.nonprod <- subset(hc.dev.data, Productivity == "Nonproductive")
@@ -319,14 +320,14 @@ hc.dev.nonprod <- subset(hc.dev.data, Productivity == "Nonproductive")
 ggplot(hc.dev.prod, aes(x = LadlabID, y = hc)) + 
   facet_grid(rows = vars(Productivity)) +
   geom_line(data=hc.dev.prod[!is.na(hc.dev.prod$hc),]) + 
-  geom_point(aes(shape = hcprogression, colour = hcprogression), 
+  geom_point(aes(shape = `Highest Count Coding`, colour = `Highest Count Coding`), 
              size = 2, stroke = 1.5) +
   scale_color_brewer(palette="Dark2") +
   scale_shape_manual(values = c(4,5,20)) +
   ylim(0, 100) +
-  labs(title="Distance, productive",
+  labs(title="A. Distance, Productive Decade Counters",
        x = "Each line = individual kids",
-       y="Highest Count by Count Type") +
+       y="Highest Count") +
   theme_bw() + 
   theme(legend.position="bottom", 
         axis.text.x = element_text(angle = 270, hjust = 1)) + 
@@ -338,14 +339,14 @@ ggsave('graphs/distance-prod.png')
 ggplot(hc.dev.nonprod, aes(x = LadlabID, y = hc)) + 
   facet_grid(rows = vars(Productivity)) +
   geom_line(data=hc.dev.nonprod[!is.na(hc.dev.nonprod$hc),]) + 
-  geom_point(aes(shape = hcprogression, colour = hcprogression), 
+  geom_point(aes(shape = `Highest Count Coding`, colour = `Highest Count Coding`), 
              size = 2, stroke = 1.5) +
   scale_color_brewer(palette="Dark2") +
   scale_shape_manual(values = c(4,5,20)) +
   ylim(0, 100) +
-  labs(title="Distance, Nonproductive",
+  labs(title="B. Distance, Non-productive Decade Counters",
        x = "Each line = individual kids",
-       y="Highest Count by Count Type") +
+       y="Highest Count") +
   theme_bw() + 
   theme(legend.position="bottom", 
         axis.text.x = element_text(angle = 270, hjust = 1)) +
@@ -413,7 +414,7 @@ full.data %>%
 
 # What Comes Next Descriptives
 
-<span style="color:red">Note practice trials 1 and 5 are included in highest contig NN computation but not in overall percent correct, or within vs. beyond - PC</span>
+<span style="color:red">Note practice trials 1 and 5 are included in highest contig NN computation but originally excluded in overall percent correct, or within vs. beyond. Added back 1 and 5 in %corr and within vs beyond just so the measures are comparable- PC</span>
 
 First check if Accuracy column in full.data is coded correctly. Good to go.
 ```{r}
@@ -464,7 +465,7 @@ wcn.wide <- full.data %>%
 
 # data check: there shouldn't be any kids who got 1 for immediate but 0 for momentum or 1 for immediate and 1 for momentum (less of a problem)
 ##pulling out these kids below
-wcn.check <- full.data %>%
+full.data %>%
   filter(Task == "WCN", 
          TaskType == "momentum" | TaskType == "immediate")%>%
   dplyr::select(LadlabID, Age, AgeGroup, TaskType, TaskItem, Accuracy) %>%
@@ -483,17 +484,19 @@ xtabs(~immediate + momentum, data = wcn.wide, na.action = na.pass, exclude = NUL
 
 Percent Correct on WCN
 ```{r}
-wcn.wide %>%
+wcn.data %>%
+  dplyr::filter(TaskType == "immediate" | TaskType == "practice") %>%
   dplyr::group_by(LadlabID) %>%
-  dplyr::summarize(avg.wcn = mean(immediate, na.rm=TRUE),
-            sd.wcn = sd(immediate, na.rm=TRUE)) %>%
+  dplyr::summarize(avg.wcn = mean(Accuracy, na.rm=TRUE),
+            sd.wcn = sd(Accuracy, na.rm=TRUE)) %>%
   dplyr::summarize(avg = mean(avg.wcn),
             sd = sd(sd.wcn))
 
-wcn.wide %>%
+wcn.data %>%
+  dplyr::filter(TaskType == "immediate" | TaskType == "practice") %>%
   dplyr::group_by(LadlabID, Productivity) %>%
-  dplyr::summarize(avg.wcn = mean(immediate, na.rm=TRUE),
-            sd.wcn = sd(immediate, na.rm=TRUE)) %>%
+  dplyr::summarize(avg.wcn = mean(Accuracy, na.rm=TRUE),
+            sd.wcn = sd(Accuracy, na.rm=TRUE)) %>%
   dplyr::group_by(Productivity) %>%
   dplyr::summarize(avg = mean(avg.wcn),
             sd = sd(sd.wcn))
@@ -501,10 +504,11 @@ wcn.wide %>%
 
 Plotting %corr on WCN as function of productivity
 ```{r}
-wcn.wide %>%
+wcn.data %>%
+  dplyr::filter(TaskType == "immediate" | TaskType == "practice") %>%
   dplyr::group_by(LadlabID, Productivity) %>%
-  dplyr::summarize(avg.wcn = mean(immediate, na.rm=TRUE),
-            sd.wcn = sd(immediate, na.rm=TRUE)) %>%
+  dplyr::summarize(avg.wcn = mean(Accuracy, na.rm=TRUE),
+            sd.wcn = sd(Accuracy, na.rm=TRUE)) %>%
   ggplot(aes(x = Productivity, y = avg.wcn, fill=factor(Productivity))) +
   stat_summary(fun.y = mean, position = position_dodge(width = .95), 
                       geom="bar", alpha = .5, colour = "black") +
@@ -530,7 +534,7 @@ Add whether the Task Item was within or outside of the kid's initial highest cou
 lookup <- full.data %>%
   distinct(LadlabID, IHC)
 
-wcn.wide %<>%
+wcn.data %<>%
   dplyr::mutate(TaskItem = as.numeric(as.character(TaskItem)))
 
 #This is a function that, for each trial, checks the number queried. If number queried is above the child's initial highest count, marks that trial as beyond count range.
@@ -550,31 +554,34 @@ determine_count_range <- function(df) {
 }
 
 #Run for wcn
-wcn.wide <- determine_count_range(wcn.wide)
+wcn.data <- determine_count_range(wcn.data)
 ```
 
 WCN accuracy, within and outside of IHC
 ```{r}
-wcn.wide %>%
+wcn.data %>%
+  dplyr::filter(TaskType == "immediate" | TaskType == "practice") %>%
   dplyr::group_by(WithinOutsideIHC) %>%
-  dplyr::summarize(mean = mean(immediate, na.rm = TRUE), 
-            sd = sd(immediate, na.rm = TRUE))
+  dplyr::summarize(mean = mean(Accuracy, na.rm = TRUE), 
+            sd = sd(Accuracy, na.rm = TRUE))
 ```
      
 
 Now WCN by within/outside count range and productivity
 ```{r}
-wcn.wide %>%
+wcn.data %>%
+  dplyr::filter(TaskType == "immediate" | TaskType == "practice") %>%
   dplyr::group_by(Productivity, WithinOutsideIHC) %>%
-  dplyr::summarize(mean = mean(immediate, na.rm = TRUE), 
-            sd = sd(immediate, na.rm = TRUE))
+  dplyr::summarize(mean = mean(Accuracy, na.rm = TRUE), 
+            sd = sd(Accuracy, na.rm = TRUE))
 ```
 
 Plotting WCN as within vs. beyond by productivity 
 ```{r}
-wcn.wide %>%
+wcn.data %>%
+  dplyr::filter(TaskType == "immediate" | TaskType == "practice") %>%
   dplyr::group_by(Productivity, WithinOutsideIHC, LadlabID) %>%
-  dplyr::summarize(meansubj = mean(immediate, na.rm = TRUE)) %>%
+  dplyr::summarize(meansubj = mean(Accuracy, na.rm = TRUE)) %>%
   ggplot(aes(x=Productivity, y=meansubj, fill=WithinOutsideIHC)) +
   stat_summary(fun.y = mean, position = position_dodge(width = .95), 
                       geom="bar", alpha = .5, colour = "black") +
@@ -593,8 +600,8 @@ ggsave('graphs/wcn-within-beyond.png')
 
 How many trials do kids have beyond their IHC?
 ```{r}
-wcn.wide %>%
-  dplyr:: select(-momentum)%>%
+wcn.data %>%
+  dplyr::filter(TaskType == "immediate" | TaskType == "practice") %>%
   dplyr::group_by(Productivity, WithinOutsideIHC)%>%
   dplyr::summarise(n = n())
 ```
@@ -602,6 +609,8 @@ wcn.wide %>%
 Highest contiguous NN
 
 ```{r}
+wcn.wide %<>%
+  dplyr::mutate(TaskItem = as.numeric(as.character(TaskItem)))
 
 unique.nn <- as.vector(unique(wcn.wide$LadlabID))
 #get the task items from wcn
@@ -655,7 +664,7 @@ highest_contiguous_nn <- get_contiguous()%>%
 ```
 
 Code for checking highest contig NN
-```{r}
+```{r eval = FALSE}
 full.data %>%
   filter(LadlabID == "022316-AB") %>%
   filter(TaskType == "immediate"|TaskType == "practice") %>%
@@ -687,7 +696,6 @@ wcn.data %>%
 
 
 # 2 kids had NA as n_corr
-
 wcn.data %>%
   dplyr::right_join(highest_contiguous_nn) %>%
   dplyr::filter(TaskType == "immediate"|TaskType == "practice") %>% #added prac for 1&5
@@ -700,17 +708,21 @@ wcn.data %>%
 
 # this kid got 0 for all test and NA for 1 and 5. Not one of the two kids under zero.corr
 # I know why: only kids with sum < 2 were pulled out. this kid's sum is NA
-full.data %>%
-  filter(LadlabID == "022516-ML") %>%
-  filter(TaskType == "immediate"|TaskType == "practice") %>%
-  select(LadlabID, TaskType, TaskItem, Accuracy)
+
+# commentout
+# full.data %>%
+#   filter(LadlabID == "022516-ML") %>%
+#   filter(TaskType == "immediate"|TaskType == "practice") %>%
+#   select(LadlabID, TaskType, TaskItem, Accuracy)
 
 # this kid has one NA value but otherwise look fine
 # now added na.rm=TRUE for sum(accuracy)
-full.data %>%
-  filter(LadlabID == "040317-SL") %>%
-  filter(TaskType == "immediate"|TaskType == "practice") %>%
-  select(LadlabID, TaskType, TaskItem, Accuracy)
+
+# commentout
+# full.data %>%
+#   filter(LadlabID == "040317-SL") %>%
+#   filter(TaskType == "immediate"|TaskType == "practice") %>%
+#   select(LadlabID, TaskType, TaskItem, Accuracy)
 
 
 ```
@@ -950,41 +962,9 @@ large.endless.prod <- glmer(EndlessKnower ~ Productivity + Highest_Contig_NN + I
 with(large.endless.prod@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#True, we're okay
 
 #compare 
-anova(large.endless.base, large.endless.prod, test = 'LRT')#Productivity is significant
+anova(large.endless.nn, large.endless.prod, test = 'LRT')
 
 # productivity not sig. 
 # Old code didn't add highest_contig_nn to model. only had prod & ihc. doesn't seem right? (PC)
 
-```
-
-
-#### Pierina exploring using overall %corr as predictor
-```{r}
-###MODEL BUILDING AND COMPARISONS###
-#base model for successor knower
-base.successor <- glmer(SuccessorKnower ~ Age + (1|LadlabID), family = "binomial", 
-                    data = distinct_model.df)
-
-##IHC model##
-model.ihc.successor <- glmer(SuccessorKnower ~ IHC + Age + (1|LadlabID), family = "binomial", 
-                   data = distinct_model.df)
-#convergence warnings, is this an issue?
-with(model.ihc.successor@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#True, so we're okay
-
-#compare
-anova(base.successor, model.ihc.successor, test = 'LRT') #IHC not significant
-
-##Highest NN Model##
-model.nn.successor <- glmer(SuccessorKnower ~ Highest_Contig_NN + Age + (1|LadlabID), family = "binomial", 
-                   data = distinct_model.df)
-
-#compare
-anova(base.successor, model.nn.successor, test = 'LRT')#highest contiguous NN not significant
-
-##Productivity model##
-model.prod.successor <- glmer(SuccessorKnower ~ Productivity + Age + (1|LadlabID), family = "binomial",
-                   data = distinct_model.df)
-
-#compare
-anova(base.successor, model.prod.successor, test = 'LRT')#Productivity trending
 ```
