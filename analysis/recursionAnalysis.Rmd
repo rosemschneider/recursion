@@ -12,9 +12,9 @@ output:
 ```{r setup, include=FALSE}
 rm(list = ls())
 require("knitr")
-# opts_knit$set(root.dir = "~/Documents/Projects/recursion/") #this is specific to RMS, change accordinglyz
+opts_knit$set(root.dir = "~/Documents/Projects/recursion/") #this is specific to RMS, change accordinglyz
 #opts_knit$set(root.dir = "~/Sites/jchu.github.io/recursion/")
-opts_knit$set(root.dir = "~/Projects/Junyi study/recursiongithub/") #for PC
+# opts_knit$set(root.dir = "~/Projects/Junyi study/recursiongithub/") #for PC
 library(Hmisc)
 library(tidyverse)
 library(magrittr)
@@ -867,7 +867,10 @@ distinct_model.df <- model.df %>%
          EndlessKnower = factor(EndlessKnower, levels = c(0,1)))%>%
   mutate(IHC = as.integer(IHC), 
          Highest_Contig_NN = as.integer(Highest_Contig_NN), 
-         LadlabID = factor(LadlabID))
+         LadlabID = factor(LadlabID))%>%
+  mutate(IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)), #scale and center for model fit
+         FHC.c = as.vector(scale(FHC, center = TRUE, scale=TRUE)),
+         Highest_Contig_NN.c = as.vector(scale(Highest_Contig_NN, center = TRUE, scale=TRUE)))
 
 # #add mean_nn to model df
 # distinct_model.df <- right_join(distinct_model.df, lookup, by = "LadlabID")
@@ -878,16 +881,14 @@ base.successor <- glmer(SuccessorKnower ~ Age + (1|LadlabID), family = "binomial
                     data = distinct_model.df)
 
 ##IHC model##
-model.ihc.successor <- glmer(SuccessorKnower ~ IHC + Age + (1|LadlabID), family = "binomial", 
+model.ihc.successor <- glmer(SuccessorKnower ~ IHC.c + Age + (1|LadlabID), family = "binomial", 
                    data = distinct_model.df)
-#convergence warnings, is this an issue?
-with(model.ihc.successor@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#True, so we're okay
 
 #compare
 anova(base.successor, model.ihc.successor, test = 'LRT') #IHC not significant
 
 ##Highest NN Model##
-model.nn.successor <- glmer(SuccessorKnower ~ Highest_Contig_NN + Age + (1|LadlabID), family = "binomial", 
+model.nn.successor <- glmer(SuccessorKnower ~ Highest_Contig_NN.c + Age + (1|LadlabID), family = "binomial", 
                    data = distinct_model.df)
 
 #compare
@@ -897,8 +898,13 @@ anova(base.successor, model.nn.successor, test = 'LRT')#highest contiguous NN no
 model.prod.successor <- glmer(SuccessorKnower ~ Productivity + Age + (1|LadlabID), family = "binomial",
                    data = distinct_model.df)
 
+#convergence warnings, is this an issue?
+with(model.prod.successor@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#true, so we're okay
+
 #compare
 anova(base.successor, model.prod.successor, test = 'LRT')#Productivity trending
+
+
 ```
 
 
@@ -908,20 +914,15 @@ base.endless <- glmer(EndlessKnower ~ Age + (1|LadlabID), family = "binomial",
                       data = distinct_model.df)
 
 ###IHC MODEL###
-model.ihc.endless <- glmer(EndlessKnower ~ IHC + Age + (1|LadlabID), family = "binomial", 
+model.ihc.endless <- glmer(EndlessKnower ~ IHC.c + Age + (1|LadlabID), family = "binomial", 
                         data = distinct_model.df)
-#convergence warnings, is this an issue?
-with(model.ihc.endless@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#true, so we're okay
-
 #compare
 anova(base.endless, model.ihc.endless, test = 'LRT') #IHC significant
 
 
 ###HIGHEST CONTIG NN MODEL###
-model.nn.endless <- glmer(EndlessKnower ~ Highest_Contig_NN + Age + (1|LadlabID), family = "binomial", 
+model.nn.endless <- glmer(EndlessKnower ~ Highest_Contig_NN.c + Age + (1|LadlabID), family = "binomial", 
                         data = distinct_model.df) 
-#convergence warnings, is this an issue?
-with(model.nn.endless@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#True, model converging
 
 anova(model.nn.endless, base.endless, test = 'LRT')#Highest contig NN significant
 
@@ -942,20 +943,17 @@ anova(model.prod.endless, base.endless, test = 'LRT')#Prod significant
 Put all significant Endless predictors into large model, run model comparison
 
 ```{r}
-large.endless.base <- glmer(EndlessKnower ~ IHC + Age + (1|LadlabID), 
+large.endless.base <- glmer(EndlessKnower ~ IHC.c + Age + (1|LadlabID), 
                             family = "binomial", data = distinct_model.df)
-#convergence warnings, is this an issue?
-with(large.endless.base@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#True, we're okay
-
 ##add highest contig
-large.endless.nn <- glmer(EndlessKnower ~ Highest_Contig_NN + IHC + (1|LadlabID), 
+large.endless.nn <- glmer(EndlessKnower ~ Highest_Contig_NN.c + IHC.c + (1|LadlabID), 
                           family = "binomial", data = distinct_model.df)
 
 #compare
 anova(large.endless.base, large.endless.nn, test = 'LRT')#Apparently ns?
 
 ##add productivity
-large.endless.prod <- glmer(EndlessKnower ~ Productivity + Highest_Contig_NN + IHC + (1|LadlabID), 
+large.endless.prod <- glmer(EndlessKnower ~ Productivity + Highest_Contig_NN.c + IHC + (1|LadlabID), 
                           family = "binomial", data = distinct_model.df)
 #convergence warnings, is this an issue?
 with(large.endless.prod@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#True, we're okay
