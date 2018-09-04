@@ -762,6 +762,8 @@ rcorr(as.matrix(corrdf), type = "pearson")
 ```
 
 # Infinity Descriptives
+
+Number of kids in each infinity category
 ```{r}
 full.data %>%
   dplyr::distinct(LadlabID, Category)%>%
@@ -782,17 +784,53 @@ full.data %>%
 
 ```
 
+Average age of kids for Endless and Successor Knowers
+```{r}
+full.data %>%
+  dplyr::distinct(LadlabID, SuccessorKnower, Age)%>%
+  dplyr::group_by(SuccessorKnower)%>%
+  dplyr::summarise(meanAge = mean(Age),
+                   sdAge = sd(Age))
+
+full.data %>%
+  dplyr::distinct(LadlabID, EndlessKnower, Age)%>%
+  dplyr::group_by(EndlessKnower)%>%
+  dplyr::summarise(meanAge = mean(Age),
+                   sdAge = sd(Age))
+
+```
+
 Infinity in relation to highest count
 ```{r}
+full.data %>%
+  dplyr::distinct(LadlabID, EndlessKnower, IHC, FHC) %>%
+  dplyr::group_by(EndlessKnower) %>%
+  dplyr::summarize(mean_IHC = mean(IHC),
+                   mean_FHC = mean(FHC))
 
-
-
+full.data %>%
+  dplyr::distinct(LadlabID, SuccessorKnower, IHC, FHC) %>%
+  dplyr::group_by(SuccessorKnower) %>%
+  dplyr::summarize(mean_IHC = mean(IHC),
+                   mean_FHC = mean(FHC))
 ```
 
 Infinity in relation to WCN
 ```{r}
+full.data %>%
+  dplyr::right_join(highest_contiguous_nn) %>%
+  dplyr::distinct(LadlabID, EndlessKnower, Highest_Contig_NN) %>%
+  dplyr::group_by(EndlessKnower) %>%
+  dplyr::summarize(mean_contig_nn = mean(Highest_Contig_NN),
+                   median_contig_nn = median(Highest_Contig_NN))
 
 
+full.data %>%
+  dplyr::right_join(highest_contiguous_nn) %>%
+  dplyr::distinct(LadlabID, SuccessorKnower, Highest_Contig_NN) %>%
+  dplyr::group_by(SuccessorKnower) %>%
+  dplyr::summarize(mean_contig_nn = mean(Highest_Contig_NN),
+                   median_contig_nn = median(Highest_Contig_NN))
 
 ```
 
