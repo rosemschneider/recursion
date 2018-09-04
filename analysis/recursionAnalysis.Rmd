@@ -12,9 +12,9 @@ output:
 ```{r setup, include=FALSE}
 rm(list = ls())
 require("knitr")
-opts_knit$set(root.dir = "~/Documents/Projects/recursion/") #this is specific to RMS, change accordinglyz
+#opts_knit$set(root.dir = "~/Documents/Projects/recursion/") #this is specific to RMS, change accordinglyz
 #opts_knit$set(root.dir = "~/Sites/jchu.github.io/recursion/")
-# opts_knit$set(root.dir = "~/Projects/Junyi study/recursiongithub/") #for PC
+opts_knit$set(root.dir = "~/Projects/Junyi study/recursiongithub/") #for PC
 library(Hmisc)
 library(tidyverse)
 library(magrittr)
@@ -68,19 +68,19 @@ zero.corr <- as.vector(c("030216-AD", "040616-K"))
 
 ```
 
-Set those who failed the What Comes Next Task practice trials to exclude.
+Exclude those who failed the practice trials on What Comes Next Task
 ```{r}
 
 #final decision: remove kids who fail 1 trial out of 2 trials, with no additional information about whether E reran the failed trial. Removing 8 kids in total
 
-# pc added 022516-ML on 2018-09-03 as excluded kid based on fail wcn.
-# kid's data were NA for wcn practice trials nd 0 correct on test. not sure why prac were marked as NA but assume kid fail wcn.
+# added 022516-ML on 2018-09-03 to the exclusion list. kid had NA data for wcn practice trials and 0 correct on test. assume kid failed wcn.
 
 full.data %<>%
   mutate(ExclusionGroup = ifelse(LadlabID == "022616-JM"| LadlabID == "030216-AD"|
                                    LadlabID == "031516-A" | LadlabID == "041316-AR"|
                                    LadlabID == "041316-VN" | LadlabID == "032216-RC"|
-                                   LadlabID == "012316-BO"|LadlabID == "022516-ML", "fail wcn", levels(ExclusionGroup)[ExclusionGroup]),
+                                   LadlabID == "012316-BO"| LadlabID == "041316-NC"|
+                                   LadlabID == "022516-ML", "fail wcn", levels(ExclusionGroup)[ExclusionGroup]),
          ExclusionGroup = as.factor(ExclusionGroup))
 
 # check. good
@@ -99,7 +99,7 @@ full.data %<>%
 
 Now, add in the Productivity classification, IHC, and FHC from PC, JC, and RMS coding
 
-<span style="color:red">Question from RMS: is FHC capped at 100 as well?</span>
+<span style="color:red">Question from RMS: is FHC capped at 100 as well? Yes, capping it at 100 for now - PC. Junyi - thoughts? </span>
 
 ```{r}
 #productivity, fhc, ihc coding from pc, jc, and rms
@@ -136,7 +136,7 @@ full.data %>%
 
 ```
 
-Number of kids who were classified as prod, nonprod, NA
+Number of kids who were classified as decade productive & nonproductive
 ```{r}
 full.data %>%
   dplyr::distinct(LadlabID, Productivity, Age)%>%
@@ -201,7 +201,7 @@ full.data %>%
   kable()
 ```
 
-Similar data by productivity
+Similar data by decade productivity
 ```{r}
 full.data %>%
   dplyr::distinct(LadlabID, Productivity, IHC)%>%
@@ -233,10 +233,6 @@ full.data %>%
             median_FHC = median(FHC)) %>%
   kable()
 ```
-
-
-
-
 
 
 Plotting distribution of IHC, as a function of productivity (~ junyi's graph)
@@ -287,7 +283,7 @@ ggsave('graphs/prod-by-age.png')
 
 Distance between IHC and FHC
 
-Restruture data to plot distance between ihc, dce, and final count
+Restruture data to plot distance between IHC, DCE, and FHC
 ```{r}
 hc.dev.data <- full.data %>%
   dplyr::select(LadlabID, Age, Productivity, IHC, DCE, FHC) %>%
@@ -314,8 +310,11 @@ ggplot(hc.dev.data, aes(x = LadlabID, y = hc)) +
 
 hc.dev.prod <- subset(hc.dev.data, Productivity == "Productive")
 hc.dev.nonprod <- subset(hc.dev.data, Productivity == "Nonproductive")
+```
 
-#for easier viewing, just going to break this up into individual plots
+
+Separate graphs for productivity groups (for easier viewing)
+```{r}
 #productive
 ggplot(hc.dev.prod, aes(x = LadlabID, y = hc)) + 
   facet_grid(rows = vars(Productivity)) +
@@ -410,11 +409,9 @@ full.data %>%
 ```
 
 
-
-
 # What Comes Next Descriptives
 
-<span style="color:red">Note practice trials 1 and 5 are included in highest contig NN computation but originally excluded in overall percent correct, or within vs. beyond. Added back 1 and 5 in %corr and within vs beyond just so the measures are comparable- PC</span>
+<span style="color:red">Note minimum highest contig NN can be 5 (one of the practice trials). Practice trials are excluded from %corr and within vs. beyond computation.</span>
 
 First check if Accuracy column in full.data is coded correctly. Good to go.
 ```{r}
@@ -440,19 +437,7 @@ validate <- function(){
 validate()
 ```
 
-
-```{r}
-# PC ask: do we need this?
-
-# wcn.test <- wcn.data %>%
-#  mutate(Response_num = as.numeric(as.character(Response)), 
-#         TaskItem_num = as.numeric(as.character(TaskItem)), 
-#         Response_check = ifelse(Response == Response_num, TRUE, FALSE), 
-#         TaskItem_check = ifelse(TaskItem == TaskItem_num, TRUE, FALSE))%>%
-#  filter(Response_check == FALSE | TaskItem_check == FALSE)
-```
-
-WCN: Children were provided with momentum trials if they got wrong on immediate trials. Check %trials where immediate = wrong, momentum = right
+Immediate vs. Momentum trials: Children were provided with momentum trials if they got wrong on immediate trials. Check %trials where immediate = wrong, momentum = right
 ```{r}
 wcn.wide <- full.data %>%
   filter(ExclusionGroup == "include") %>%
@@ -463,8 +448,8 @@ wcn.wide <- full.data %>%
   dplyr::select(LadlabID, Age, AgeGroup, TaskType, TaskItem, Accuracy, Productivity) %>%
   spread(TaskType, Accuracy)
 
-# data check: there shouldn't be any kids who got 1 for immediate but 0 for momentum or 1 for immediate and 1 for momentum (less of a problem)
-##pulling out these kids below
+# data check: some kids got 1 for immediate but 0 for momentum or 1 for immediate and 1 for momentum (N = 5).Keeping them. 
+## for reference, pulling out these kids below
 full.data %>%
   filter(Task == "WCN", 
          TaskType == "momentum" | TaskType == "immediate")%>%
@@ -474,8 +459,6 @@ full.data %>%
          issue_immediate1Momentum1 = ifelse(immediate == 1 & momentum == 1, TRUE, FALSE))%>%
   filter(issue_immediate1Momentum0 == TRUE | 
            issue_immediate1Momentum1 == TRUE)
-#7 kids with this issue - exclude??
-#PC: I think we can keep them but we should check the coding sheet. Can keep because presumaly they shouldn't be tested on momentum if they got immeidate right.
 
 # how many kids show improved performance
 xtabs(~immediate + momentum, data = wcn.wide, na.action = na.pass, exclude = NULL)
@@ -485,7 +468,7 @@ xtabs(~immediate + momentum, data = wcn.wide, na.action = na.pass, exclude = NUL
 Percent Correct on WCN
 ```{r}
 wcn.data %>%
-  dplyr::filter(TaskType == "immediate" | TaskType == "practice") %>%
+  dplyr::filter(TaskType == "immediate") %>%
   dplyr::group_by(LadlabID) %>%
   dplyr::summarize(avg.wcn = mean(Accuracy, na.rm=TRUE),
             sd.wcn = sd(Accuracy, na.rm=TRUE)) %>%
@@ -493,7 +476,7 @@ wcn.data %>%
             sd = sd(sd.wcn))
 
 wcn.data %>%
-  dplyr::filter(TaskType == "immediate" | TaskType == "practice") %>%
+  dplyr::filter(TaskType == "immediate") %>%
   dplyr::group_by(LadlabID, Productivity) %>%
   dplyr::summarize(avg.wcn = mean(Accuracy, na.rm=TRUE),
             sd.wcn = sd(Accuracy, na.rm=TRUE)) %>%
@@ -505,7 +488,7 @@ wcn.data %>%
 Plotting %corr on WCN as function of productivity
 ```{r}
 wcn.data %>%
-  dplyr::filter(TaskType == "immediate" | TaskType == "practice") %>%
+  dplyr::filter(TaskType == "immediate") %>%
   dplyr::group_by(LadlabID, Productivity) %>%
   dplyr::summarize(avg.wcn = mean(Accuracy, na.rm=TRUE),
             sd.wcn = sd(Accuracy, na.rm=TRUE)) %>%
@@ -560,7 +543,7 @@ wcn.data <- determine_count_range(wcn.data)
 WCN accuracy, within and outside of IHC
 ```{r}
 wcn.data %>%
-  dplyr::filter(TaskType == "immediate" | TaskType == "practice") %>%
+  dplyr::filter(TaskType == "immediate") %>%
   dplyr::group_by(WithinOutsideIHC) %>%
   dplyr::summarize(mean = mean(Accuracy, na.rm = TRUE), 
             sd = sd(Accuracy, na.rm = TRUE))
@@ -570,7 +553,7 @@ wcn.data %>%
 Now WCN by within/outside count range and productivity
 ```{r}
 wcn.data %>%
-  dplyr::filter(TaskType == "immediate" | TaskType == "practice") %>%
+  dplyr::filter(TaskType == "immediate") %>%
   dplyr::group_by(Productivity, WithinOutsideIHC) %>%
   dplyr::summarize(mean = mean(Accuracy, na.rm = TRUE), 
             sd = sd(Accuracy, na.rm = TRUE))
@@ -579,7 +562,7 @@ wcn.data %>%
 Plotting WCN as within vs. beyond by productivity 
 ```{r}
 wcn.data %>%
-  dplyr::filter(TaskType == "immediate" | TaskType == "practice") %>%
+  dplyr::filter(TaskType == "immediate") %>%
   dplyr::group_by(Productivity, WithinOutsideIHC, LadlabID) %>%
   dplyr::summarize(meansubj = mean(Accuracy, na.rm = TRUE)) %>%
   ggplot(aes(x=Productivity, y=meansubj, fill=WithinOutsideIHC)) +
@@ -601,7 +584,7 @@ ggsave('graphs/wcn-within-beyond.png')
 How many trials do kids have beyond their IHC?
 ```{r}
 wcn.data %>%
-  dplyr::filter(TaskType == "immediate" | TaskType == "practice") %>%
+  dplyr::filter(TaskType == "immediate") %>%
   dplyr::group_by(Productivity, WithinOutsideIHC)%>%
   dplyr::summarise(n = n())
 ```
@@ -682,6 +665,7 @@ full.data %>%
 #   filter(LadlabID == "040317-KK")
   
 ```
+
 See if highest contiguous next number underestimates kids' knowledge. Seems to correspond well with # correct data.
 ```{r}
 wcn.data %>%
@@ -706,8 +690,7 @@ wcn.data %>%
 # 022516-ML
 # 040317-SL
 
-# this kid got 0 for all test and NA for 1 and 5. Not one of the two kids under zero.corr
-# I know why: only kids with sum < 2 were pulled out. this kid's sum is NA
+# this kid (ML) got 0 for all test and NA for 1 and 5. Not one of the two kids under zero.corr because kid's sum is NA. Now excluded up top.
 
 # commentout
 # full.data %>%
@@ -715,7 +698,7 @@ wcn.data %>%
 #   filter(TaskType == "immediate"|TaskType == "practice") %>%
 #   select(LadlabID, TaskType, TaskItem, Accuracy)
 
-# this kid has one NA value but otherwise look fine
+# this kid (SL) has one NA value but otherwise look fine
 # now added na.rm=TRUE for sum(accuracy)
 
 # commentout
@@ -724,7 +707,12 @@ wcn.data %>%
 #   filter(TaskType == "immediate"|TaskType == "practice") %>%
 #   select(LadlabID, TaskType, TaskItem, Accuracy)
 
-
+# overview of highest contiguous coding and by-trial performance
+z <- wcn.data %>%
+  dplyr::right_join(highest_contiguous_nn) %>%
+  filter(TaskType == "immediate") %>%
+  select(LadlabID, Highest_Contig_NN, TaskItem, Accuracy) %>%
+  spread(TaskItem, Accuracy)
 ```
 
 Median highest contiguous next number by productivity 
@@ -733,7 +721,8 @@ full.data %>%
   dplyr::right_join(highest_contiguous_nn) %>%
   dplyr::distinct(LadlabID, Highest_Contig_NN, Productivity) %>%
   dplyr::group_by(Productivity) %>%
-  dplyr::summarise(median = median(Highest_Contig_NN)) %>%
+  dplyr::summarise(median_NN = median(Highest_Contig_NN),
+                   mean_NN = mean(Highest_Contig_NN)) %>%
   kable()
 
 ```
@@ -793,10 +782,22 @@ full.data %>%
 
 ```
 
+Infinity in relation to highest count
+```{r}
 
+
+
+```
+
+Infinity in relation to WCN
+```{r}
+
+
+
+```
 
 # Analyses
-## 1: Counting, Productivity, and Infinity Battery
+## Counting, Productivity, and Infinity Battery
 To identify whether there is connection between counting experience and Infinity Task performance, we will conduct three initial analyses, predicting Infinity Task performance from either (1) Initial Highest Count, (2) Productivity for Decade Rule (defined above), or (3) performance on the Next Number task. 
 
 glmer(inf.0/1 ~ (predictor) + age + (1|subject), family = binomial).
@@ -953,7 +954,7 @@ large.endless.nn <- glmer(EndlessKnower ~ Highest_Contig_NN.c + IHC.c + (1|Ladla
 anova(large.endless.base, large.endless.nn, test = 'LRT')#Apparently ns?
 
 ##add productivity
-large.endless.prod <- glmer(EndlessKnower ~ Productivity + Highest_Contig_NN.c + IHC + (1|LadlabID), 
+large.endless.prod <- glmer(EndlessKnower ~ Productivity + Highest_Contig_NN.c + IHC.c + (1|LadlabID), 
                           family = "binomial", data = distinct_model.df)
 #convergence warnings, is this an issue?
 with(large.endless.prod@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#True, we're okay
@@ -963,5 +964,25 @@ anova(large.endless.nn, large.endless.prod, test = 'LRT')
 
 # productivity not sig. 
 # Old code didn't add highest_contig_nn to model. only had prod & ihc. doesn't seem right? (PC)
+
+```
+
+Does ordering of the predictors matter?
+```{r}
+large.endless.base <- glmer(EndlessKnower ~ IHC.c + Age + (1|LadlabID), 
+                            family = "binomial", data = distinct_model.df)
+##add prod
+large.endless.prod2 <- glmer(EndlessKnower ~ Productivity + IHC.c + (1|LadlabID), 
+                          family = "binomial", data = distinct_model.df)
+
+#compare
+anova(large.endless.base, large.endless.prod2, test = 'LRT')
+
+##add highest contig nn
+large.endless.nn2 <- glmer(EndlessKnower ~ Productivity + Highest_Contig_NN.c + IHC.c + (1|LadlabID), 
+                          family = "binomial", data = distinct_model.df)
+
+#compare 
+anova(large.endless.nn2, large.endless.prod2, test = 'LRT')
 
 ```
