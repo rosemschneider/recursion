@@ -1,6 +1,0 @@
-"0","full.data %>%"
-"0","  dplyr::filter(ExclusionGroup != ""include"") %>%"
-"0","  dplyr::distinct(LadlabID, .keep_all = TRUE) %>%"
-"0","  dplyr::group_by(ExclusionGroup) %>%"
-"0","  dplyr::summarize(countN = dplyr::n_distinct(LadlabID)) %>%"
-"0","  kable()"

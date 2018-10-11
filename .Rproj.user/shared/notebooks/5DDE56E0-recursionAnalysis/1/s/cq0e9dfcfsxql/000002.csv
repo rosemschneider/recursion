@@ -1,7 +1,0 @@
-"0","# copied from stackoverflow"
-"0","# https://stackoverflow.com/questions/34096162/dplyr-mutate-replace-on-a-subset-of-rows"
-"0","mutate_cond <- function(.data, condition, ..., envir = parent.frame()) {"
-"0","  condition <- eval(substitute(condition), .data, envir)"
-"0","  .data[condition, ] <- .data[condition, ] %>% mutate(...)"
-"0","  .data"
-"0","}"
