@@ -14,9 +14,15 @@ output:
 ```{r setup, include=FALSE}
 rm(list = ls())
 require("knitr")
+<<<<<<< HEAD
 #opts_knit$set(root.dir = "~/Documents/Projects/recursion/") #this is specific to RMS, change accordinglyz
 opts_knit$set(root.dir = "~/Sites/recursion/")
 #opts_knit$set(root.dir = "~/Projects/Junyi study/recursiongithub/") #for PC
+=======
+opts_knit$set(root.dir = "~/Documents/Projects/recursion/") #this is specific to RMS, change accordinglyz
+#opts_knit$set(root.dir = "~/Sites/jchu.github.io/recursion/")
+# opts_knit$set(root.dir = "~/Projects/Junyi study/recursiongithub/") #for PC
+>>>>>>> 86508d1a4ef7323fb95eb161e68df277cd72415a
 library(Hmisc)
 library(tidyverse)
 library(magrittr)
@@ -1095,17 +1101,35 @@ anova(model.prod.endless, base.endless, test = 'LRT')#Prod significant
 Put all significant Endless predictors into large model, run model comparison
 
 ```{r}
+##BASE MODEL WITH IHC
 large.endless.base <- glmer(EndlessKnower ~ IHC.c + Age + (1|LadlabID), 
                             family = "binomial", data = distinct_model.df)
+<<<<<<< HEAD
 ##add highest contig
 large.endless.nn <- glmer(EndlessKnower ~ Highest_Contig_NN.c + IHC.c + Age + (1|LadlabID), 
+=======
+##IHC v. Highest contiguous##
+large.endless.nn <- glmer(EndlessKnower ~ Highest_Contig_NN.c + IHC.c + (1|LadlabID), 
+>>>>>>> 86508d1a4ef7323fb95eb161e68df277cd72415a
                           family = "binomial", data = distinct_model.df)
 
 #compare
 anova(large.endless.base, large.endless.nn, test = 'LRT')#Apparently ns?
 
+<<<<<<< HEAD
 ##add productivity
 large.endless.full <- glmer(EndlessKnower ~ Productivity + Highest_Contig_NN.c + IHC.c + Age + (1|LadlabID), 
+=======
+##Productivity v. Highest contiguous##
+large.endless.prod2 <- glmer(EndlessKnower ~ Productivity + IHC.c + (1|LadlabID), 
+                          family = "binomial", data = distinct_model.df)
+
+#compare
+anova(large.endless.base, large.endless.prod2, test = 'LRT')##Productivity is significant
+
+##ALL THREE TOGETHER
+large.endless.prod <- glmer(EndlessKnower ~ Productivity + Highest_Contig_NN.c + IHC.c + (1|LadlabID), 
+>>>>>>> 86508d1a4ef7323fb95eb161e68df277cd72415a
                           family = "binomial", data = distinct_model.df)
 #convergence warnings, is this an issue?
 with(large.endless.full@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#True, we're okay
