@@ -1,28 +1,28 @@
 ---
 title: "RecursionAnalysis"
 author: "Junyi Chu, Rose M. Schneider, Pierina Cheung"
-date: "7/19/2018"
+date: "10/11/2018"
 output:
-  pdf_document:
-    toc: yes
   html_document:
     toc: yes
     toc_float: yes
+  pdf_document:
+    toc: yes
 ---
 
 # Setup
 ```{r setup, include=FALSE}
 rm(list = ls())
 require("knitr")
-<<<<<<< HEAD
-#opts_knit$set(root.dir = "~/Documents/Projects/recursion/") #this is specific to RMS, change accordinglyz
+
+# Set WD
 opts_knit$set(root.dir = "~/Sites/recursion/")
 #opts_knit$set(root.dir = "~/Projects/Junyi study/recursiongithub/") #for PC
-=======
-opts_knit$set(root.dir = "~/Documents/Projects/recursion/") #this is specific to RMS, change accordinglyz
-#opts_knit$set(root.dir = "~/Sites/jchu.github.io/recursion/")
-# opts_knit$set(root.dir = "~/Projects/Junyi study/recursiongithub/") #for PC
->>>>>>> 86508d1a4ef7323fb95eb161e68df277cd72415a
+#opts_knit$set(root.dir = "~/Documents/Projects/recursion/") #this is specific to RMS, change accordinglyz
+
+# For wrappign lines when knitting
+opts_chunk$set(tidy.opts=list(width.cutoff=80),tidy=TRUE)
+
 library(Hmisc)
 library(tidyverse)
 library(magrittr)
@@ -66,10 +66,10 @@ x <- full.data %>%
 #just hardcoding kids because it's easier than going back to the full data frame
 #These kids got 1 right, 5 wrong: 
 one.corr <- as.vector(c("012316-BO", "022616-JM", "030216-ED", 
-              "030817-ZI", "031516-A", "032216-JH", 
-              "032216-RC", "040317-AL", "040317-SL", 
-              "041316-AR", "041316-NC", "041316-VN", 
-              "062416-MC"))
+                        "030817-ZI", "031516-A", "032216-JH", 
+                        "032216-RC", "040317-AL", "040317-SL", 
+                        "041316-AR", "041316-NC", "041316-VN", 
+                        "062416-MC"))
 
 five.corr <- as.vector("050617-Z1")
 
@@ -124,9 +124,9 @@ full.data %<>%
                 FHC = fhc_tomerge, 
                 DCE = dce)%>%
   dplyr::mutate(Productivity = factor(Productivity, levels = c("nonprod", "prod"), 
-                               labels = c("Nonproductive", "Productive")), 
-         IHC = ifelse(IHC > 100, 100, IHC),
-         FHC = ifelse(FHC > 100, 100, FHC))
+                                      labels = c("Nonproductive", "Productive")), 
+                IHC = ifelse(IHC > 100, 100, IHC),
+                FHC = ifelse(FHC > 100, 100, FHC))
 ```
 
 Number of kids by age group and average age
@@ -139,9 +139,9 @@ full.data %>%
 full.data %>%
   dplyr::distinct(LadlabID, .keep_all = TRUE) %>%
   dplyr::summarize(minAge = min(Age),
-            maxAge = max(Age),
-            meanAge = mean(Age),
-            sdAge = sd(Age)) %>%
+                   maxAge = max(Age),
+                   meanAge = mean(Age),
+                   sdAge = sd(Age)) %>%
   kable()
 
 ```
@@ -166,15 +166,15 @@ full.data %>%
   droplevels()%>%
   dplyr::distinct(LadlabID, Response, Productivity) %>%
   dplyr::mutate(Response = factor(Response, levels = c("nonprod", "prod"), 
-                           labels = c("Nonproductive", "Productive")))%>%
+                                  labels = c("Nonproductive", "Productive")))%>%
   dplyr::mutate(changed_classification = ifelse((is.na(Response) & Productivity == "Nonproductive"),
-                                         "NA_toNonprod",
-                                         ifelse((is.na(Response) & Productivity == "Productive"), 
-                                                "NA_toProd", 
-                                                ifelse((Response == "Nonproductive" & Productivity == "Productive"), 
-                                                       "Nonprod_toProd", 
-                                                       ifelse((Response == "Productive" & Productivity == "Nonproductive"),
-                                                              "Prod_toNonprod", "no_change")))))%>%
+                                                "NA_toNonprod",
+                                                ifelse((is.na(Response) & Productivity == "Productive"), 
+                                                       "NA_toProd", 
+                                                       ifelse((Response == "Nonproductive" & Productivity == "Productive"), 
+                                                              "Nonprod_toProd", 
+                                                              ifelse((Response == "Productive" & Productivity == "Nonproductive"),
+                                                                     "Prod_toNonprod", "no_change")))))%>%
   dplyr::group_by(changed_classification)%>%
   dplyr::summarise(n =n())
 ```
@@ -186,28 +186,28 @@ Average of IHC, DCE, and FHC for all kids
 full.data %>%
   dplyr::distinct(LadlabID, IHC)%>%
   dplyr::summarise(mean_IHC = mean(IHC),
-            sd_IHC = sd(IHC),
-            min_IHC = min(IHC),
-            max_IHC = max(IHC),
-            median_IHC = median(IHC)) %>%
+                   sd_IHC = sd(IHC),
+                   min_IHC = min(IHC),
+                   max_IHC = max(IHC),
+                   median_IHC = median(IHC)) %>%
   kable()
 
 full.data %>%
   dplyr::distinct(LadlabID, DCE)%>%
   dplyr::summarise(mean_DCE = mean(DCE, na.rm=TRUE),
-            sd_DCE = sd(DCE, na.rm=TRUE),
-            min_DCE = min(DCE, na.rm=TRUE),
-            max_DCE = max(DCE, na.rm=TRUE),
-            median_DCE = median(DCE, na.rm=TRUE)) %>%
+                   sd_DCE = sd(DCE, na.rm=TRUE),
+                   min_DCE = min(DCE, na.rm=TRUE),
+                   max_DCE = max(DCE, na.rm=TRUE),
+                   median_DCE = median(DCE, na.rm=TRUE)) %>%
   kable()
 
 full.data %>%
   dplyr::distinct(LadlabID, FHC)%>%
   dplyr::summarise(mean_FHC = mean(FHC),
-            sd_FHC = sd(FHC),
-            min_FHC = min(FHC),
-            max_FHC = max(FHC),
-            median_FHC = median(FHC)) %>%
+                   sd_FHC = sd(FHC),
+                   min_FHC = min(FHC),
+                   max_FHC = max(FHC),
+                   median_FHC = median(FHC)) %>%
   kable()
 ```
 
@@ -217,30 +217,30 @@ full.data %>%
   dplyr::distinct(LadlabID, Productivity, IHC)%>%
   dplyr::group_by(Productivity)%>%
   dplyr::summarise(mean_IHC = mean(IHC),
-            sd_IHC = sd(IHC),
-            min_IHC = min(IHC),
-            max_IHC = max(IHC),
-            median_IHC = median(IHC)) %>%
+                   sd_IHC = sd(IHC),
+                   min_IHC = min(IHC),
+                   max_IHC = max(IHC),
+                   median_IHC = median(IHC)) %>%
   kable()
 
 full.data %>%
   dplyr::distinct(LadlabID, Productivity, DCE)%>%
   dplyr::group_by(Productivity)%>%
   dplyr::summarise(mean_DCE = mean(DCE, na.rm=TRUE),
-            sd_DCE = sd(DCE, na.rm=TRUE),
-            min_DCE = min(DCE, na.rm=TRUE),
-            max_DCE = max(DCE, na.rm=TRUE),
-            median_DCE = median(DCE, na.rm=TRUE)) %>%
+                   sd_DCE = sd(DCE, na.rm=TRUE),
+                   min_DCE = min(DCE, na.rm=TRUE),
+                   max_DCE = max(DCE, na.rm=TRUE),
+                   median_DCE = median(DCE, na.rm=TRUE)) %>%
   kable()
 
 full.data %>%
   dplyr::distinct(LadlabID, Productivity, FHC)%>%
   dplyr::group_by(Productivity)%>%
   dplyr::summarise(mean_FHC = mean(FHC),
-            sd_FHC = sd(FHC),
-            min_FHC = min(FHC),
-            max_FHC = max(FHC),
-            median_FHC = median(FHC)) %>%
+                   sd_FHC = sd(FHC),
+                   min_FHC = min(FHC),
+                   max_FHC = max(FHC),
+                   median_FHC = median(FHC)) %>%
   kable()
 ```
 
@@ -253,7 +253,7 @@ unique.hc.data <- full.data %>%
 
 ggplot(unique.hc.data, aes(x=IHC, color=Productivity)) + 
   geom_dotplot(aes(fill = Productivity),
-    binwidth=1, stackgroups=TRUE, binpositions="all",method="dotdensity") +
+               binwidth=1, stackgroups=TRUE, binpositions="all",method="dotdensity") +
   scale_color_brewer(palette="Set2") + 
   scale_fill_brewer(palette="Set2") +
   coord_fixed(ratio=1) +
@@ -468,7 +468,7 @@ full.data %>%
 First check if Accuracy column in full.data is coded correctly. Good to go.
 ```{r}
 wcn.data <- full.data %>%
-   filter(Task == "WCN")
+  filter(Task == "WCN")
 
 wcn.data %<>%
   mutate(Response_num = as.numeric(as.character(Response)), 
@@ -478,7 +478,7 @@ wcn.data %<>%
 
 validate <- function(){
   validation <- wcn.data %>%
-  filter(Accuracy_valid == FALSE)
+    filter(Accuracy_valid == FALSE)
   if(length(validation$LadlabID) > 0) {
     print("WARNING: CHECK CODING")
   } else {
@@ -523,18 +523,18 @@ wcn.data %>%
   dplyr::filter(TaskType == "immediate") %>%
   dplyr::group_by(LadlabID) %>%
   dplyr::summarize(avg.wcn = mean(Accuracy, na.rm=TRUE),
-            sd.wcn = sd(Accuracy, na.rm=TRUE)) %>%
+                   sd.wcn = sd(Accuracy, na.rm=TRUE)) %>%
   dplyr::summarize(avg = mean(avg.wcn),
-            sd = sd(sd.wcn))
+                   sd = sd(sd.wcn))
 
 wcn.data %>%
   dplyr::filter(TaskType == "immediate") %>%
   dplyr::group_by(LadlabID, Productivity) %>%
   dplyr::summarize(avg.wcn = mean(Accuracy, na.rm=TRUE),
-            sd.wcn = sd(Accuracy, na.rm=TRUE)) %>%
+                   sd.wcn = sd(Accuracy, na.rm=TRUE)) %>%
   dplyr::group_by(Productivity) %>%
   dplyr::summarize(avg = mean(avg.wcn),
-            sd = sd(sd.wcn))
+                   sd = sd(sd.wcn))
 ```
 
 Plotting %corr on WCN as function of productivity
@@ -543,10 +543,10 @@ wcn.data %>%
   dplyr::filter(TaskType == "immediate") %>%
   dplyr::group_by(LadlabID, Productivity) %>%
   dplyr::summarize(avg.wcn = mean(Accuracy, na.rm=TRUE),
-            sd.wcn = sd(Accuracy, na.rm=TRUE)) %>%
+                   sd.wcn = sd(Accuracy, na.rm=TRUE)) %>%
   ggplot(aes(x = Productivity, y = avg.wcn, fill=factor(Productivity))) +
   stat_summary(fun.y = mean, position = position_dodge(width = .95), 
-                      geom="bar", alpha = .8, colour = "black") +
+               geom="bar", alpha = .8, colour = "black") +
   stat_summary(fun.data = mean_se, geom="errorbar", 
                position = position_dodge(width=0.90), width = 0.2)+
   #scale_fill_discrete(name = "Productivity") +
@@ -562,7 +562,7 @@ wcn.data %>%
 ggsave('graphs/wcn-percentcorr.png')
 
 ```
-     
+
 Add whether the Task Item was within or outside of the kid's initial highest count.
 ```{r}
 #first, get initial highest count for each kiddo
@@ -599,7 +599,7 @@ wcn.data %>%
   dplyr::filter(TaskType == "immediate") %>%
   dplyr::group_by(WithinOutsideIHC) %>%
   dplyr::summarize(mean = mean(Accuracy, na.rm = TRUE), 
-            sd = sd(Accuracy, na.rm = TRUE))
+                   sd = sd(Accuracy, na.rm = TRUE))
 ```
 
 
@@ -609,7 +609,7 @@ wcn.data %>%
   dplyr::filter(TaskType == "immediate") %>%
   dplyr::group_by(Productivity, WithinOutsideIHC) %>%
   dplyr::summarize(mean = mean(Accuracy, na.rm = TRUE), 
-            sd = sd(Accuracy, na.rm = TRUE))
+                   sd = sd(Accuracy, na.rm = TRUE))
 ```
 
 Plotting WCN as within vs. beyond by productivity 
@@ -620,7 +620,7 @@ wcn.data %>%
   dplyr::summarize(meansubj = mean(Accuracy, na.rm = TRUE)) %>%
   ggplot(aes(x=WithinOutsideIHC, y=meansubj, fill=Productivity)) +
   stat_summary(fun.y = mean, position = position_dodge(width = .95), 
-                      geom="bar", colour = "black") +
+               geom="bar", colour = "black") +
   stat_summary(fun.data = mean_se, geom="errorbar",
                position = position_dodge(width=0.90), width = 0.2) +
   scale_fill_brewer(name = "Productivity", palette="Set2") +
@@ -642,11 +642,11 @@ wcn.data %>%
   geom_violin(alpha=0.7, scale="count", position=position_dodge(width=0.8)) +
   #geom_point(position=position_jitterdodge(jitter.width=0.2, dodge.width=.9)) +
   stat_summary(fun.y = mean,position = position_dodge(width=0.8), 
-                      geom="point", shape=23, size=3, colour = "black") +
+               geom="point", shape=23, size=3, colour = "black") +
   stat_summary(fun.data = mean_cl_boot, geom="errorbar",
                position = position_dodge(width=0.8), width = 0.2) +
   scale_fill_brewer(name = "Trial Type", palette="Set1",direction=-1) +
-  scale_y_continuous(lim=c(0,1)) +
+  scale_y_continuous(limits=c(0,1)) +
   labs(title="Performance on Next Number task by Productivity and trial type", 
        y="Average Proportion Correct", x="",
        fill="Trial Type") +
@@ -657,7 +657,7 @@ ggsave('graphs/wcn-within-beyond2.png', width=6, height=4)
 
 ### todo     
 Analysis of WCN accuracy by productivity and trial type
-```{r}
+```{r eval=FALSE}
 wcn_score.df <- wcn.data %>%
   dplyr::filter(TaskType == "immediate") %>%
   dplyr::group_by(LadlabID, Productivity, TrialType=as.factor(WithinOutsideIHC)) %>%
@@ -708,9 +708,9 @@ get_contiguous <- function(){
       contig <- bind_rows(contig, sub_contig)
     } else if (length(tmp$TaskItem) > 0 & min(tmp$TaskItem) == 23) {
       #if(sub %in% one.corr){
-        highest_contig = 5
-        sub_contig <- data.frame(sub, highest_contig)
-        contig <- bind_rows(contig, sub_contig)
+      highest_contig = 5
+      sub_contig <- data.frame(sub, highest_contig)
+      contig <- bind_rows(contig, sub_contig)
       # } else if(sub %in% five.corr | sub %in% zero.corr){
       #   highest_contig = 0
       #   sub_contig <- data.frame(sub, highest_contig)
@@ -724,9 +724,9 @@ get_contiguous <- function(){
       min.nn <- min(tmp$TaskItem)
       prev_correct <- nextnums[nextnums < min.nn]
       highest_contig <- max(prev_correct)
-    
+      
       sub_contig <- data.frame(sub,
-                             highest_contig)
+                               highest_contig)
       contig <- bind_rows(contig, sub_contig)
     }
   }
@@ -757,7 +757,7 @@ full.data %>%
 # 
 # wcn.data %>%
 #   filter(LadlabID == "040317-KK")
-  
+
 ```
 
 See if highest contiguous next number underestimates kids' knowledge. Seems to correspond well with # correct data.
@@ -828,7 +828,7 @@ full.data %>%
   dplyr::distinct(LadlabID, Highest_Contig_NN, Productivity) %>%
   ggplot(aes(x=Highest_Contig_NN, color=Productivity)) + 
   geom_dotplot(aes(fill = Productivity),
-    binwidth=1, stackgroups=TRUE, binpositions="all",method="dotdensity") +
+               binwidth=1, stackgroups=TRUE, binpositions="all",method="dotdensity") +
   scale_color_brewer(palette="Set2") + 
   scale_fill_brewer(palette="Set2") +
   coord_fixed(ratio=1) +
@@ -849,7 +849,7 @@ full.data %>%
   dplyr::distinct(LadlabID, Highest_Contig_NN, Productivity) %>%
   ggplot(aes(x=Highest_Contig_NN, color=Productivity)) + 
   geom_dotplot(aes(fill = Productivity),
-    binwidth=1, stackdir="up", position=position_dodge(width=2), stackgroups=FALSE, binpositions="all",method="dotdensity") +
+               binwidth=1, stackdir="up", position=position_dodge(width=2), stackgroups=FALSE, binpositions="all",method="dotdensity") +
   scale_color_brewer(palette="Set2") + 
   scale_fill_brewer(palette="Set2") +
   coord_fixed(ratio=1) +
@@ -1036,25 +1036,25 @@ distinct_model.df <- model.df %>%
 ###MODEL BUILDING AND COMPARISONS###
 #base model for successor knower
 base.successor <- glmer(SuccessorKnower ~ Age + (1|LadlabID), family = "binomial", 
-                    data = distinct_model.df)
+                        data = distinct_model.df)
 
 ##IHC model##
 model.ihc.successor <- glmer(SuccessorKnower ~ IHC.c + Age + (1|LadlabID), family = "binomial", 
-                   data = distinct_model.df)
+                             data = distinct_model.df)
 
 #compare
 anova(base.successor, model.ihc.successor, test = 'LRT') #IHC not significant
 
 ##Highest NN Model##
 model.nn.successor <- glmer(SuccessorKnower ~ Highest_Contig_NN.c + Age + (1|LadlabID), family = "binomial", 
-                   data = distinct_model.df)
+                            data = distinct_model.df)
 
 #compare
 anova(base.successor, model.nn.successor, test = 'LRT')#highest contiguous NN not significant
 
 ##Productivity model##
 model.prod.successor <- glmer(SuccessorKnower ~ Productivity + Age + (1|LadlabID), family = "binomial",
-                   data = distinct_model.df)
+                              data = distinct_model.df)
 
 #convergence warnings, is this an issue?
 with(model.prod.successor@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#true, so we're okay
@@ -1073,14 +1073,14 @@ base.endless <- glmer(EndlessKnower ~ Age + (1|LadlabID), family = "binomial",
 
 ###IHC MODEL###
 model.ihc.endless <- glmer(EndlessKnower ~ IHC.c + Age + (1|LadlabID), family = "binomial", 
-                        data = distinct_model.df)
+                           data = distinct_model.df)
 #compare
 anova(base.endless, model.ihc.endless, test = 'LRT') #IHC significant
 
 
 ###HIGHEST CONTIG NN MODEL###
 model.nn.endless <- glmer(EndlessKnower ~ Highest_Contig_NN.c + Age + (1|LadlabID), family = "binomial", 
-                        data = distinct_model.df) 
+                          data = distinct_model.df) 
 
 anova(model.nn.endless, base.endless, test = 'LRT')#Highest contig NN significant
 
@@ -1104,85 +1104,25 @@ Put all significant Endless predictors into large model, run model comparison
 ##BASE MODEL WITH IHC
 large.endless.base <- glmer(EndlessKnower ~ IHC.c + Age + (1|LadlabID), 
                             family = "binomial", data = distinct_model.df)
-<<<<<<< HEAD
 ##add highest contig
 large.endless.nn <- glmer(EndlessKnower ~ Highest_Contig_NN.c + IHC.c + Age + (1|LadlabID), 
-=======
-##IHC v. Highest contiguous##
-large.endless.nn <- glmer(EndlessKnower ~ Highest_Contig_NN.c + IHC.c + (1|LadlabID), 
->>>>>>> 86508d1a4ef7323fb95eb161e68df277cd72415a
                           family = "binomial", data = distinct_model.df)
-
 #compare
 anova(large.endless.base, large.endless.nn, test = 'LRT')#Apparently ns?
 
-<<<<<<< HEAD
-##add productivity
-large.endless.full <- glmer(EndlessKnower ~ Productivity + Highest_Contig_NN.c + IHC.c + Age + (1|LadlabID), 
-=======
 ##Productivity v. Highest contiguous##
-large.endless.prod2 <- glmer(EndlessKnower ~ Productivity + IHC.c + (1|LadlabID), 
-                          family = "binomial", data = distinct_model.df)
-
+large.endless.prod <- glmer(EndlessKnower ~ Productivity + IHC.c + (1|LadlabID), 
+                            family = "binomial", data = distinct_model.df)
 #compare
-anova(large.endless.base, large.endless.prod2, test = 'LRT')##Productivity is significant
+anova(large.endless.base, large.endless.prod, test = 'LRT')##Productivity is significant
 
 ##ALL THREE TOGETHER
-large.endless.prod <- glmer(EndlessKnower ~ Productivity + Highest_Contig_NN.c + IHC.c + (1|LadlabID), 
->>>>>>> 86508d1a4ef7323fb95eb161e68df277cd72415a
-                          family = "binomial", data = distinct_model.df)
+large.endless.full <- glmer(EndlessKnower ~ Productivity + Highest_Contig_NN.c + IHC.c + (1|LadlabID), 
+                            family = "binomial", data = distinct_model.df)
+
 #convergence warnings, is this an issue?
 with(large.endless.full@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#True, we're okay
 
 #compare 
-anova(large.endless.nn, large.endless.full, test = 'LRT')
-
-# productivity not sig. 
-# Old code didn't add highest_contig_nn to model. only had prod & ihc. doesn't seem right? (PC)
-
+anova(large.endless.prod, large.endless.full, test = 'LRT') #n.s.
 ```
-
-Does ordering of the predictors matter?
-```{r}
-large.endless.base <- glmer(EndlessKnower ~ IHC.c + Age + (1|LadlabID), 
-                            family = "binomial", data = distinct_model.df)
-##add prod
-large.endless.prod <- glmer(EndlessKnower ~ Productivity + IHC.c + Age + (1|LadlabID), 
-                          family = "binomial", data = distinct_model.df)
-
-#compare these two
-anova(large.endless.base, large.endless.prod, test = 'LRT')
-
-#compare with full
-anova(large.endless.prod, large.endless.full, test = 'LRT')
-```
-
-(Junyi 09/08/2018): compare starting with productivity
-```{r}
-# start with prod
-large.endless.prod.base <- glmer(EndlessKnower ~ Productivity + Age + (1|LadlabID), 
-                            family = "binomial", data = distinct_model.df)
-## prod + IHC
-large.endless.prod.ihc <- glmer(EndlessKnower ~ Productivity + IHC.c + Age + (1|LadlabID), 
-                          family = "binomial", data = distinct_model.df)
-
-#compare
-anova(large.endless.prod.base, large.endless.prod.ihc, test = 'LRT')
-```
-
-```{r}
-# start with prod
-large.endless.prod.base <- glmer(EndlessKnower ~ Productivity + Age + (1|LadlabID), 
-                            family = "binomial", data = distinct_model.df)
-## prod + HCNN
-large.endless.prod.hcnn <- glmer(EndlessKnower ~ Productivity + Highest_Contig_NN.c + Age+ (1|LadlabID), 
-                          family = "binomial", data = distinct_model.df)
-
-# compare
-anova(large.endless.prod.base, large.endless.prod.hcnn, test = 'LRT')
-
-# compare with full
-anova(large.endless.prod.hcnn, large.endless.full, test = 'LRT')
-
-```
-
