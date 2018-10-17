@@ -33,7 +33,7 @@ library(RColorBrewer)
 library(ggthemes)
 ```
 
-R Version for citation is: `R.version.string`.
+R Version for citation is: `r R.version.string`.
 
 ## Loading data
 ```{r}
@@ -683,7 +683,7 @@ wcn.data %>%
   dplyr::summarise(n = n())
 ```
 
-Highest contiguous NN
+## Highest contiguous NN
 
 ```{r}
 wcn.wide %<>%
@@ -1126,3 +1126,4 @@ with(large.endless.full@optinfo$derivs,max(abs(solve(Hessian,gradient)))<2e-3)#T
 #compare 
 anova(large.endless.prod, large.endless.full, test = 'LRT') #n.s.
 ```
+ 
