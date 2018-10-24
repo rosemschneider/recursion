@@ -15,10 +15,10 @@ output:
 rm(list = ls())
 require("knitr")
 
-# Set WD
-opts_knit$set(root.dir = "~/Sites/recursion/")
+# # Set WD
+# opts_knit$set(root.dir = "~/Sites/recursion/")
 #opts_knit$set(root.dir = "~/Projects/Junyi study/recursiongithub/") #for PC
-#opts_knit$set(root.dir = "~/Documents/Projects/recursion/") #this is specific to RMS, change accordinglyz
+opts_knit$set(root.dir = "~/Documents/Projects/recursion/") #this is specific to RMS, change accordinglyz
 
 # For wrappign lines when knitting
 opts_chunk$set(tidy.opts=list(width.cutoff=80),tidy=TRUE)
@@ -285,7 +285,7 @@ ggplot(unique.hc.data, aes(x=AgeMonths, colour = Productivity)) +
   labs(title="Productivity by Age", 
        x="Age in Months", 
        y="Frequency") +
-  theme_bw() + 
+  theme_bw(base_size = 13) + 
   theme(legend.position="bottom")
 ggsave('graphs/prod-by-age.png')
 
@@ -312,7 +312,7 @@ ggplot(hc.dev.data, aes(x = LadlabID, y = hc)) +
   labs(title="Highest Count Progression by Decade Productivity",
        x = "Each line = individual kids",
        y="Highest Count by Count Type") +
-  theme_bw() + 
+  theme_bw(base_size = 13) + 
   theme(legend.position="bottom", 
         axis.text.x = element_text(angle = 270, hjust = 1)) +
   theme(axis.text.x=element_blank(),
@@ -337,7 +337,7 @@ ggplot(hc.dev.prod, aes(x = LadlabID, y = hc)) +
   labs(title="A. Distance, Productive Decade Counters",
        x = "Each line = individual kids",
        y="Highest Count") +
-  theme_bw() + 
+  theme_bw(base_size = 13) + 
   theme(legend.position="bottom", 
         axis.text.x = element_text(angle = 270, hjust = 1)) + 
   theme(axis.text.x=element_blank(),
@@ -356,7 +356,7 @@ ggplot(hc.dev.nonprod, aes(x = LadlabID, y = hc)) +
   labs(title="B. Distance, Non-productive Decade Counters",
        x = "Each line = individual kids",
        y="Highest Count") +
-  theme_bw() + 
+  theme_bw(base_size = 13) + 
   theme(legend.position="bottom", 
         axis.text.x = element_text(angle = 270, hjust = 1)) +
   theme(axis.text.x=element_blank(),
@@ -379,7 +379,7 @@ ggplot(hc.dev.prod, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) +
   labs(title="A. Distance, Productive Decade Counters",
        x = "Each line = individual kids",
        y="Highest Count") +
-  theme_bw() + 
+  theme_bw(base_size = 13) + 
   theme(legend.position="bottom", 
         axis.text.x = element_text(angle = 270, hjust = 1)) + 
   theme(axis.text.x=element_blank(),
@@ -398,7 +398,7 @@ ggplot(hc.dev.nonprod, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) +
   labs(title="B. Distance, Non-productive Decade Counters",
        x = "Each line = individual kids",
        y="Highest Count") +
-  theme_bw() + 
+  theme_bw(base_size = 13) + 
   theme(legend.position="bottom", 
         axis.text.x = element_text(angle = 270, hjust = 1)) +
   theme(axis.text.x=element_blank(),
@@ -553,7 +553,7 @@ wcn.data %>%
   scale_fill_brewer(name="Productivity", palette="Set2") +
   ylab("Proportion Correct") + 
   xlab('Productivity') + 
-  theme_bw() + 
+  theme_bw(base_size = 13) + 
   theme(legend.position = "none") +
   ggtitle("Overall proportion correct on the What Comes Next Task") +
   theme(text = element_text(size = 12)) +
