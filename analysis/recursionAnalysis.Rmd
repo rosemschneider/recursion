@@ -610,6 +610,11 @@ wcn.data %>%
                    sd = sd(Accuracy, na.rm = TRUE))
 ```
 
+Median WCN by productivity, excluding kids with IHC of 99
+```{r}
+
+```
+
 Plotting WCN as within vs. beyond by productivity 
 ```{r}
 wcn.data %>%
@@ -744,6 +749,9 @@ highest_contiguous_nn <- get_contiguous()%>%
   distinct(LadlabID, highest_contig)%>%
   rename(Highest_Contig_NN = highest_contig)
 
+#add highest contiguous to wcn.data
+wcn.data <- full_join(wcn.data, highest_contiguous_nn, by = "LadlabID")
+
 ```
 
 Code for checking highest contig NN
@@ -769,11 +777,10 @@ full.data %>%
 See if highest contiguous next number underestimates kids' knowledge. Seems to correspond well with # correct data.
 ```{r}
 wcn.data %>%
-  dplyr::right_join(highest_contiguous_nn) %>%
   dplyr::filter(TaskType == "immediate"|TaskType == "practice") %>% #added prac for 1&5
   dplyr::group_by(LadlabID, Highest_Contig_NN) %>%
-  dplyr::summarize(n_corr = sum(Accuracy)) %>%
-  dplyr::group_by(Highest_Contig_NN, n_corr, na.rm=TRUE) %>%
+  dplyr::summarize(n_corr = sum(Accuracy, na.rm = TRUE)) %>%
+  dplyr::group_by(Highest_Contig_NN, n_corr) %>%
   dplyr::summarize(n_participants = n_distinct(LadlabID)) %>%
   tidyr::spread(n_corr, n_participants) %>%
   kable()
@@ -781,7 +788,6 @@ wcn.data %>%
 
 # 2 kids had NA as n_corr
 wcn.data %>%
-  dplyr::right_join(highest_contiguous_nn) %>%
   dplyr::filter(TaskType == "immediate"|TaskType == "practice") %>% #added prac for 1&5
   dplyr::group_by(LadlabID, Highest_Contig_NN) %>%
   dplyr::summarize(n_corr = sum(Accuracy)) %>%
@@ -817,11 +823,12 @@ z <- wcn.data %>%
 
 Median highest contiguous next number by productivity 
 ```{r}
-full.data %>%
-  dplyr::right_join(highest_contiguous_nn) %>%
+wcn.data %>%
+  filter(IHC < 99)%>%
   dplyr::distinct(LadlabID, Highest_Contig_NN, Productivity) %>%
   dplyr::group_by(Productivity) %>%
-  dplyr::summarise(median_NN = median(Highest_Contig_NN),
+  dplyr::summarise(n = n(),
+                   median_NN = median(Highest_Contig_NN),
                    mean_NN = mean(Highest_Contig_NN)) %>%
   kable()
 
