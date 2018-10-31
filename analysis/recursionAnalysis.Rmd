@@ -109,8 +109,6 @@ full.data %<>%
 
 Now, add in the Productivity classification, IHC, and FHC from PC, JC, and RMS coding
 
-<span style="color:red">Question from RMS: is FHC capped at 100 as well? Yes, capping it at 100 for now - PC. Junyi - thoughts? </span>
-
 ```{r}
 #productivity, fhc, ihc coding from pc, jc, and rms
 hc.data <- read.csv('data/HC-datawide-forcoding - hc.datawide.csv') %>%
@@ -310,7 +308,7 @@ ggplot(hc.dev.data, aes(x = LadlabID, y = hc)) +
   scale_color_brewer(palette="Dark2") +
   scale_shape_manual(values = c(4,5,20)) +
   labs(title="Highest Count Progression by Decade Productivity",
-       x = "Each line = individual kids",
+       x = "Each line = individual participant",
        y="Highest Count by Count Type") +
   theme_bw(base_size = 13) + 
   theme(legend.position="bottom", 
@@ -335,7 +333,7 @@ ggplot(hc.dev.prod, aes(x = LadlabID, y = hc)) +
   scale_shape_manual(values = c(4,5,20)) +
   ylim(0, 100) +
   labs(title="A. Distance, Productive Decade Counters",
-       x = "Each line = individual kids",
+       x = "Each line = individual participant",
        y="Highest Count") +
   theme_bw(base_size = 13) + 
   theme(legend.position="bottom", 
@@ -354,7 +352,7 @@ ggplot(hc.dev.nonprod, aes(x = LadlabID, y = hc)) +
   scale_shape_manual(values = c(4,5,20)) +
   ylim(0, 100) +
   labs(title="B. Distance, Non-productive Decade Counters",
-       x = "Each line = individual kids",
+       x = "Each line = individual participant",
        y="Highest Count") +
   theme_bw(base_size = 13) + 
   theme(legend.position="bottom", 
@@ -377,7 +375,7 @@ ggplot(hc.dev.prod, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) +
   scale_shape_manual(values = c(4,5,20)) +
   ylim(0, 100) +
   labs(title="A. Distance, Productive Decade Counters",
-       x = "Each line = individual kids",
+       x = "Each line = individual participant",
        y="Highest Count") +
   theme_bw(base_size = 13) + 
   theme(legend.position="bottom", 
@@ -396,7 +394,7 @@ ggplot(hc.dev.nonprod, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) +
   scale_shape_manual(values = c(4,5,20)) +
   ylim(0, 100) +
   labs(title="B. Distance, Non-productive Decade Counters",
-       x = "Each line = individual kids",
+       x = "Each line = individual participant",
        y="Highest Count") +
   theme_bw(base_size = 13) + 
   theme(legend.position="bottom", 
@@ -658,20 +656,28 @@ ggsave('graphs/wcn-within-beyond2.png', width=6, height=4)
 ### todo     
 Analysis of WCN accuracy by productivity and trial type
 ```{r eval=FALSE}
-wcn_score.df <- wcn.data %>%
-  dplyr::filter(TaskType == "immediate") %>%
-  dplyr::group_by(LadlabID, Productivity, TrialType=as.factor(WithinOutsideIHC)) %>%
-  dplyr::summarize(correct = sum(Accuracy, na.rm = TRUE), total=n())
-
-wcn_model.df <- wcn_score.df %>%
-  mutate(Productivity = factor(Productivity, levels = c(0,1)), 
-         TrialType = factor(WithinOutsideIHC, levels = c(0,1)))%>%
-  mutate(IHC = as.integer(IHC), 
-         Highest_Contig_NN = as.integer(Highest_Contig_NN), 
+# wcn_score.df <- wcn.data %>%
+#   dplyr::filter(TaskType == "immediate") %>%
+#   dplyr::group_by(LadlabID, Productivity, TrialType=as.factor(WithinOutsideIHC)) %>%
+#   dplyr::summarize(correct = sum(Accuracy, na.rm = TRUE), total=n())
+# 
+wcn_model.df <- wcn.data %>%
+  mutate(IHC = as.integer(IHC),
          LadlabID = factor(LadlabID))%>%
   mutate(IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)), #scale and center for model fit
-         FHC.c = as.vector(scale(FHC, center = TRUE, scale=TRUE)),
-         Highest_Contig_NN.c = as.vector(scale(Highest_Contig_NN, center = TRUE, scale=TRUE)))
+         FHC.c = as.vector(scale(FHC, center = TRUE, scale=TRUE)), 
+         age.c = as.vector(scale(Age, center = TRUE, scale=TRUE)))
+
+##WCN model looking at interaction between productivity and trial type in WCN task
+wcn.model.noint <- glmer(Accuracy ~ Productivity + WithinOutsideIHC + IHC.c + age.c + (1|TaskItem) +
+                     (1|LadlabID), family = "binomial", data = wcn_model.df)
+wcn.model.int <- glmer(Accuracy ~ Productivity*WithinOutsideIHC + IHC.c + age.c + (1|TaskItem) +
+                     (1|LadlabID), family = "binomial", data = wcn_model.df)
+wcn.model.base <- glmer(Accuracy ~ IHC.c + 
+                          age.c + (1|TaskItem) + (1|LadlabID), family = "binomial", data = wcn_model.df)
+#compare model with interaction to one without 
+anova(wcn.model.noint, wcn.model.int, wcn.model.base, test = 'LRT')
+anova(wcn.model.noint, wcn.model.int, test = 'LRT')
 ```
 
 
