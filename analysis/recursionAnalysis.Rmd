@@ -1,7 +1,7 @@
 ---
 title: "RecursionAnalysis"
 author: "Junyi Chu, Rose M. Schneider, Pierina Cheung"
-date: "10/11/2018"
+date: "`r Sys.Date()`"
 output: github_document
 ---
 
@@ -16,7 +16,8 @@ opts_knit$set(root.dir = "~/Sites/recursion/")
 #opts_knit$set(root.dir = "~/Documents/Projects/recursion/") #this is specific to RMS, change accordinglyz
 
 # For wrappign lines when knitting
-opts_chunk$set(tidy.opts=list(width.cutoff=80),tidy=TRUE)
+opts_chunk$set(tidy.opts=list(width.cutoff=80),tidy=TRUE,
+               warning=FALSE)
 
 library(Hmisc)
 library(tidyverse)
@@ -674,8 +675,9 @@ wcn.model.int <- glmer(Accuracy ~ Productivity*WithinOutsideIHC + IHC.c + age.c 
                      (1|LadlabID), family = "binomial", data = wcn_model.df)
 wcn.model.base <- glmer(Accuracy ~ IHC.c + 
                           age.c + (1|TaskItem) + (1|LadlabID), family = "binomial", data = wcn_model.df)
+#compare full model to base model
+anova(wcn.model.int, wcn.model.base, test = 'LRT')
 #compare model with interaction to one without 
-anova(wcn.model.noint, wcn.model.int, wcn.model.base, test = 'LRT')
 anova(wcn.model.noint, wcn.model.int, test = 'LRT')
 ```
 
@@ -892,18 +894,16 @@ full.data %>%
   dplyr::group_by(Category)%>%
   dplyr::summarise(n = n())
 
-full.data %>%
-  dplyr::distinct(LadlabID, SuccessorKnower, Productivity)%>%
-  dplyr::group_by(SuccessorKnower, Productivity)%>%
-  dplyr::summarise(n = n()) %>%
-  spread(Productivity, n)
+classification.data <- full.data %>%
+  dplyr::distinct(LadlabID, EndlessKnower, SuccessorKnower, Productivity)
 
-full.data %>%
-  dplyr::distinct(LadlabID, EndlessKnower, Productivity)%>%
-  dplyr::group_by(EndlessKnower, Productivity)%>%
-  dplyr::summarise(n = n()) %>%
-  spread(Productivity, n)
+#Successor contingency table
+table(classification.data$SuccessorKnower, classification.data$Productivity)
+chisq.test(table(classification.data$SuccessorKnower, classification.data$Productivity))
 
+#Endless contingency table
+table(classification.data$EndlessKnower, classification.data$Productivity)
+chisq.test(table(classification.data$EndlessKnower, classification.data$Productivity))
 ```
 
 Average age of kids for Endless and Successor Knowers
@@ -957,6 +957,8 @@ full.data %>%
   dplyr::group_by(SuccessorKnower) %>%
   dplyr::summarize(mean_contig_nn = mean(Highest_Contig_NN),
                    median_contig_nn = median(Highest_Contig_NN))
+
+
 
 ```
 
