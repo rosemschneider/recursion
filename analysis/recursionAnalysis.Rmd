@@ -1038,24 +1038,32 @@ distinct_model.df <- model.df %>%
   mutate(IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)), #scale and center for model fit
          FHC.c = as.vector(scale(FHC, center = TRUE, scale=TRUE)),
          Highest_Contig_NN.c = as.vector(scale(Highest_Contig_NN, center = TRUE, scale=TRUE)), 
-         Age.c = as.vector(scale(Age, center = TRUE, scale=TRUE)))
+         Age.c = as.vector(scale(Age, center = TRUE, scale=TRUE))) %>%
+  mutate(delta.hc = FHC-IHC, 
+         gain.hc = delta.hc/(100-IHC), 
+         gain.hc = ifelse(gain.hc == "NaN", 1, as.numeric(gain.hc))) %>%
+  mutate(gain.hc = ifelse(gain.hc == 0 & IHC == 99, 1, as.numeric(gain.hc)))
 
 # #add mean_nn to model df
 # distinct_model.df <- right_join(distinct_model.df, lookup, by = "LadlabID")
 
 ###MODEL BUILDING AND COMPARISONS###
 #base model for successor knower
-base.successor <- glmer(SuccessorKnower ~ Age.c + (1|LadlabID), family = "binomial", 
+base.successor <- glm(SuccessorKnower ~ Age.c, family = "binomial", 
                         data = distinct_model.df)
 
 ##IHC model##
-model.ihc.successor <- glmer(SuccessorKnower ~ IHC.c + Age.c + (1|LadlabID), family = "binomial", 
+model.ihc.successor <- glm(SuccessorKnower ~ IHC.c + Age.c, family = "binomial", 
                              data = distinct_model.df)
 ##Highest NN Model##
-model.nn.successor <- glmer(SuccessorKnower ~ Highest_Contig_NN.c + Age.c + (1|LadlabID), family = "binomial", 
+model.nn.successor <- glm(SuccessorKnower ~ Highest_Contig_NN.c + Age.c, family = "binomial", 
                             data = distinct_model.df)
 ##Productivity model##
-model.prod.successor <- glmer(SuccessorKnower ~ Productivity + Age + (1|LadlabID), family = "binomial",
+model.prod.successor <- glm(SuccessorKnower ~ Productivity + Age.c, family = "binomial",
+                              data = distinct_model.df)
+
+##EXPLORATORY## - GAIN SCORE
+model.gain.successor <- glm(SuccessorKnower ~ gain.hc + Age.c, family = "binomial",
                               data = distinct_model.df)
 
 ##Regression table for Successor Knower Models
@@ -1082,20 +1090,24 @@ anova(base.successor, model.prod.successor, test = 'LRT')#Productivity trending
 ## Endless Models
 ```{r}
 #Base model
-base.endless <- glmer(EndlessKnower ~ Age.c + (1|LadlabID), family = "binomial", 
+base.endless <- glm(EndlessKnower ~ Age.c, family = "binomial", 
                       data = distinct_model.df)
 
 ###IHC MODEL###
-model.ihc.endless <- glmer(EndlessKnower ~ IHC.c + Age.c + (1|LadlabID), family = "binomial", 
+model.ihc.endless <- glm(EndlessKnower ~ IHC.c + Age.c, family = "binomial", 
                            data = distinct_model.df)
 
 ###HIGHEST CONTIG NN MODEL###
-model.nn.endless <- glmer(EndlessKnower ~ Highest_Contig_NN.c + Age.c + (1|LadlabID), family = "binomial", 
+model.nn.endless <- glm(EndlessKnower ~ Highest_Contig_NN.c + Age.c, family = "binomial", 
                           data = distinct_model.df) 
 
 ###PRODUCTIVITY MODEL###
-model.prod.endless <- glmer(EndlessKnower ~ Productivity + Age.c + (1|LadlabID), family = "binomial", 
+model.prod.endless <- glm(EndlessKnower ~ Productivity + Age.c, family = "binomial", 
                             data = distinct_model.df)
+
+##EXPLORATORY## - GAIN SCORE
+model.gain.endless <- glm(EndlessKnower ~ gain.hc + Age.c, family = "binomial", 
+                          data = distinct_model.df)
 
 ##Regression table for Endless Models
 mtable.endless.knowers <- mtable('Base' = base.endless,
@@ -1126,19 +1138,19 @@ Put all significant Endless predictors into large model, run model comparison
 
 ```{r}
 ##BASE MODEL WITH IHC
-large.endless.base <- glmer(EndlessKnower ~ IHC.c + Age.c + (1|LadlabID), 
+large.endless.base <- glm(EndlessKnower ~ IHC.c + Age.c, 
                             family = "binomial", data = distinct_model.df)
 ##add highest contig
-large.endless.nn <- glmer(EndlessKnower ~ Highest_Contig_NN.c + IHC.c + Age.c + (1|LadlabID), 
+large.endless.nn <- glm(EndlessKnower ~ Highest_Contig_NN.c + IHC.c + Age.c, 
                           family = "binomial", data = distinct_model.df)
 
 ##Productivity v. IHC##
-large.endless.prod <- glmer(EndlessKnower ~ Productivity + IHC.c + Age.c + (1|LadlabID), 
+large.endless.prod <- glm(EndlessKnower ~ Productivity + IHC.c + Age.c, 
                             family = "binomial", data = distinct_model.df)
 
 ##ALL THREE TOGETHER
-large.endless.full <- glmer(EndlessKnower ~ Productivity + Highest_Contig_NN.c + 
-                              IHC.c + Age.c +(1|LadlabID), 
+large.endless.full <- glm(EndlessKnower ~ Productivity + Highest_Contig_NN.c + 
+                              IHC.c + Age.c, 
                             family = "binomial", data = distinct_model.df)
 
 #regression table
@@ -1160,14 +1172,69 @@ anova(large.endless.base, large.endless.prod, test = 'LRT')##Productivity NS
 #LM predicting IHC from productivity and age, HCNN and age
 ```{r}
 lm.prod <- full.data %>%
-  distinct(LadlabID, Productivity, Age, IHC)
+  distinct(LadlabID, Productivity, Age, IHC)%>%
+  mutate(Age.c = as.vector(scale(Age, center = TRUE, scale=TRUE)))
 
-lm1 <- lm(IHC ~ Productivity + Age, data = lm.prod)
+lm1 <- lm(IHC ~ Productivity + Age.c, data = lm.prod)
 summary(lm1)
 
-lm.prod <- full.data %>%
-  distinct(LadlabID, highest_contiguous_nn, Age, IHC)
 
-lm2 <- lm(IHC ~ Highest_Contig_NN + Age, data = distinct_model.df)
+lm2 <- lm(IHC ~ Highest_Contig_NN + Age.c, data = distinct_model.df)
 summary(lm2)
+```
+
+#Exploratory - what about with participants who did not reach 99?
+```{r}
+explore.dat <- distinct_model.df %>%
+  filter(IHC < 99)
+
+end.base <- glm(EndlessKnower ~ Age.c, family = "binomial", data = explore.dat)
+
+#IHC
+end.ihc <- glm(EndlessKnower ~ IHC.c + Age.c, family = "binomial", data = explore.dat)
+end.prod <- glm(EndlessKnower ~ Productivity + Age.c, family = "binomial", data = explore.dat)
+end.nn <- glm(EndlessKnower ~Highest_Contig_NN + Age.c, family = "binomial", data = explore.dat)
+```
+
+#Exploratory - trying to account for distance between IHC and FHC
+```{r}
+tmp <- distinct_model.df %>%
+  mutate(delta.hc = FHC-IHC)%>%
+  mutate(prop.hc = delta.hc/(100-IHC), 
+         prop.hc = ifelse(prop.hc == "NaN", 1, as.numeric(prop.hc)), 
+         prop.hc = ifelse(prop.hc == 0 & IHC == 99, 1, as.numeric(prop.hc))) #one kid with IHC and FHC as 99
+
+#plot by IHC
+ggplot(tmp, aes(x = IHC, y = prop.hc, colour = Productivity)) +
+  geom_point()+
+  geom_jitter(width = .01)+
+  theme_bw(base_size = 13) +
+  theme(legend.position = "bottom", 
+        panel.grid.minor = element_blank()) +
+  scale_x_continuous(breaks = seq(0, 100, 10)) +
+  labs(x = 'IHC', y = 'Productivity Gain Score')
+
+end.gain.ihc <- glm(EndlessKnower ~ IHC.c + Age.c, family = "binomial", 
+                data = distinct_model.df)
+end.gain.Prod <- glm(EndlessKnower ~ Productivity + Age.c, family = "binomial", 
+                     data = distinct_model.df)
+end.gain.gain <- glm(EndlessKnower ~ gain.hc + Age.c, family = "binomial", 
+                     data = distinct_model.df)
+end.gain.nn <- glm(EndlessKnower ~ Highest_Contig_NN + Age.c, 
+                   family = "binomial", data = distinct_model.df)
+summary(end.gain.ihc)
+summary(end.gain.Prod)
+summary(end.gain.gain)
+summary(end.gain.nn)
+
+#add IHC to model with gain score
+end.gain.ihcgain <- glm(EndlessKnower ~ IHC.c + gain.hc + Age.c, family = "binomial", 
+                        data = distinct_model.df)
+anova(end.gain.ihcgain, end.gain.gain, test = 'LRT')
+
+#correlation between productivity and gain score
+tmp %<>%
+  mutate(Prod.num = ifelse(Productivity == "Productive", 1, 0))
+
+cor.test(tmp$Prod.num, tmp$prop.hc)
 ```
