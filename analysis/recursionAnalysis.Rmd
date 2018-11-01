@@ -611,10 +611,6 @@ wcn.data %>%
                    sd = sd(Accuracy, na.rm = TRUE))
 ```
 
-Median WCN by productivity, excluding kids with IHC of 99
-```{r}
-
-```
 
 Plotting WCN as within vs. beyond by productivity 
 ```{r}
@@ -659,7 +655,6 @@ wcn.data %>%
 ggsave('graphs/wcn-within-beyond2.png', width=6, height=4)
 ```
 
-### todo     
 Analysis of WCN accuracy by productivity and trial type
 ```{r eval=FALSE}
 # wcn_score.df <- wcn.data %>%
@@ -748,7 +743,7 @@ get_contiguous <- function(){
 highest_contiguous_nn <- get_contiguous()%>%
   dplyr::rename(LadlabID = sub)%>%
   distinct(LadlabID, highest_contig)%>%
-  rename(Highest_Contig_NN = highest_contig)
+  dplyr::rename(Highest_Contig_NN = highest_contig)
 
 #add highest contiguous to wcn.data
 wcn.data <- full_join(wcn.data, highest_contiguous_nn, by = "LadlabID")
@@ -818,7 +813,7 @@ wcn.data %>%
 z <- wcn.data %>%
   dplyr::right_join(highest_contiguous_nn) %>%
   filter(TaskType == "immediate") %>%
-  select(LadlabID, Highest_Contig_NN, TaskItem, Accuracy) %>%
+  dplyr::select(LadlabID, Highest_Contig_NN, TaskItem, Accuracy) %>%
   spread(TaskItem, Accuracy)
 ```
 
@@ -1162,3 +1157,17 @@ anova(large.endless.base, large.endless.nn, test = 'LRT')#Highest contig. NS
 anova(large.endless.base, large.endless.prod, test = 'LRT')##Productivity NS
 ```
  
+#LM predicting IHC from productivity and age, HCNN and age
+```{r}
+lm.prod <- full.data %>%
+  distinct(LadlabID, Productivity, Age, IHC)
+
+lm1 <- lm(IHC ~ Productivity + Age, data = lm.prod)
+summary(lm1)
+
+lm.prod <- full.data %>%
+  distinct(LadlabID, highest_contiguous_nn, Age, IHC)
+
+lm2 <- lm(IHC ~ Highest_Contig_NN + Age, data = distinct_model.df)
+summary(lm2)
+```
