@@ -28,7 +28,8 @@ library(RColorBrewer)
 library(ggthemes)
 library(memisc)
 
-
+# Set seed for reproducible analyses
+set.seed(42)
 ```
 
 R Version for citation is: `r R.version.string`.

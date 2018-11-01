@@ -915,8 +915,44 @@ wcn.model.base <- glmer(Accuracy ~ IHC.c +
                           age.c + (1|TaskItem) + (1|LadlabID), family = "binomial", data = wcn_model.df)
 #compare model with interaction to one without 
 anova(wcn.model.noint, wcn.model.int, wcn.model.base, test = 'LRT')
+```
+
+    ## Data: wcn_model.df
+    ## Models:
+    ## wcn.model.base: Accuracy ~ IHC.c + age.c + (1 | TaskItem) + (1 | LadlabID)
+    ## wcn.model.noint: Accuracy ~ Productivity + WithinOutsideIHC + IHC.c + age.c + 
+    ## wcn.model.noint:     (1 | TaskItem) + (1 | LadlabID)
+    ## wcn.model.int: Accuracy ~ Productivity * WithinOutsideIHC + IHC.c + age.c + 
+    ## wcn.model.int:     (1 | TaskItem) + (1 | LadlabID)
+    ##                 Df    AIC    BIC  logLik deviance  Chisq Chi Df Pr(>Chisq)
+    ## wcn.model.base   5 1536.6 1563.9 -763.29   1526.6                         
+    ## wcn.model.noint  7 1534.2 1572.5 -760.09   1520.2 6.4066      2   0.040628
+    ## wcn.model.int    8 1527.0 1570.7 -755.48   1511.0 9.2093      1   0.002408
+    ##                   
+    ## wcn.model.base    
+    ## wcn.model.noint * 
+    ## wcn.model.int   **
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+``` r
 anova(wcn.model.noint, wcn.model.int, test = 'LRT')
 ```
+
+    ## Data: wcn_model.df
+    ## Models:
+    ## wcn.model.noint: Accuracy ~ Productivity + WithinOutsideIHC + IHC.c + age.c + 
+    ## wcn.model.noint:     (1 | TaskItem) + (1 | LadlabID)
+    ## wcn.model.int: Accuracy ~ Productivity * WithinOutsideIHC + IHC.c + age.c + 
+    ## wcn.model.int:     (1 | TaskItem) + (1 | LadlabID)
+    ##                 Df    AIC    BIC  logLik deviance  Chisq Chi Df Pr(>Chisq)
+    ## wcn.model.noint  7 1534.2 1572.5 -760.09   1520.2                         
+    ## wcn.model.int    8 1527.0 1570.7 -755.48   1511.0 9.2093      1   0.002408
+    ##                   
+    ## wcn.model.noint   
+    ## wcn.model.int   **
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 How many trials do kids have beyond their IHC?
 
