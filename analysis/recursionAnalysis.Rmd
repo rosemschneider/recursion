@@ -2,12 +2,7 @@
 title: "RecursionAnalysis"
 author: "Junyi Chu, Rose M. Schneider, Pierina Cheung"
 date: "10/11/2018"
-output:
-  html_document:
-    toc: yes
-    toc_float: yes
-  pdf_document:
-    toc: yes
+output: github_document
 ---
 
 # Setup
@@ -16,9 +11,9 @@ rm(list = ls())
 require("knitr")
 
 # # Set WD
-# opts_knit$set(root.dir = "~/Sites/recursion/")
+opts_knit$set(root.dir = "~/Sites/recursion/")
 #opts_knit$set(root.dir = "~/Projects/Junyi study/recursiongithub/") #for PC
-opts_knit$set(root.dir = "~/Documents/Projects/recursion/") #this is specific to RMS, change accordinglyz
+#opts_knit$set(root.dir = "~/Documents/Projects/recursion/") #this is specific to RMS, change accordinglyz
 
 # For wrappign lines when knitting
 opts_chunk$set(tidy.opts=list(width.cutoff=80),tidy=TRUE)
@@ -32,6 +27,8 @@ library(stringr)
 library(RColorBrewer)
 library(ggthemes)
 library(memisc)
+
+
 ```
 
 R Version for citation is: `r R.version.string`.
@@ -298,7 +295,7 @@ hc.dev.data <- full.data %>%
   dplyr::select(LadlabID, Age, Productivity, IHC, DCE, FHC) %>%
   gather(hcprogression, hc, IHC:FHC)%>%
   mutate(hcprogression = factor(hcprogression, levels = c("IHC", "DCE", "FHC"))) %>%
-  rename(`Highest Count Coding` = hcprogression)
+  dplyr::rename(`Highest Count Coding` = hcprogression)
 
 #all kids together
 ggplot(hc.dev.data, aes(x = LadlabID, y = hc)) + 
@@ -656,7 +653,7 @@ ggsave('graphs/wcn-within-beyond2.png', width=6, height=4)
 ```
 
 Analysis of WCN accuracy by productivity and trial type
-```{r eval=FALSE}
+```{r}
 # wcn_score.df <- wcn.data %>%
 #   dplyr::filter(TaskType == "immediate") %>%
 #   dplyr::group_by(LadlabID, Productivity, TrialType=as.factor(WithinOutsideIHC)) %>%
