@@ -1,7 +1,7 @@
 RecursionAnalysis
 ================
 Junyi Chu, Rose M. Schneider, Pierina Cheung
-10/11/2018
+2018-11-01
 
 # Setup
 
@@ -97,12 +97,7 @@ hc.data <- read.csv('data/HC-datawide-forcoding - hc.datawide.csv') %>%
   dplyr::select(LadlabID, prod_tomerge, ihc_tomerge, fhc_tomerge, dce)
 
 full.data <- dplyr::left_join(full.data, hc.data, by = "LadlabID")
-```
 
-    ## Warning: Column `LadlabID` joining factors with different levels, coercing
-    ## to character vector
-
-``` r
 full.data %<>%
   dplyr::rename(Productivity = prod_tomerge, 
                 IHC = ihc_tomerge, 
@@ -389,8 +384,6 @@ ggplot(hc.dev.data, aes(x = LadlabID, y = hc)) +
         axis.ticks.x=element_blank()) 
 ```
 
-    ## Warning: Removed 3010 rows containing missing values (geom_point).
-
 ![](recursionAnalysis_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
 
 ``` r
@@ -420,8 +413,6 @@ ggplot(hc.dev.prod, aes(x = LadlabID, y = hc)) +
         axis.ticks.x=element_blank())
 ```
 
-    ## Warning: Removed 1849 rows containing missing values (geom_point).
-
 ![](recursionAnalysis_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
 
 ``` r
@@ -429,8 +420,6 @@ ggsave('graphs/distance-prod.png')
 ```
 
     ## Saving 7 x 5 in image
-
-    ## Warning: Removed 1849 rows containing missing values (geom_point).
 
 ``` r
 #nonproductive
@@ -452,8 +441,6 @@ ggplot(hc.dev.nonprod, aes(x = LadlabID, y = hc)) +
         axis.ticks.x=element_blank())
 ```
 
-    ## Warning: Removed 1161 rows containing missing values (geom_point).
-
 ![](recursionAnalysis_files/figure-gfm/unnamed-chunk-15-2.png)<!-- -->
 
 ``` r
@@ -461,8 +448,6 @@ ggsave('graphs/distance-nonprod.png')
 ```
 
     ## Saving 7 x 5 in image
-
-    ## Warning: Removed 1161 rows containing missing values (geom_point).
 
 Separate graphs for productivity groups, sorted by ascending IHC
 
@@ -486,8 +471,6 @@ ggplot(hc.dev.prod, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) +
         axis.ticks.x=element_blank())
 ```
 
-    ## Warning: Removed 1849 rows containing missing values (geom_point).
-
 ![](recursionAnalysis_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 ``` r
@@ -495,8 +478,6 @@ ggsave('graphs/distance-prod-sorted.png')
 ```
 
     ## Saving 7 x 5 in image
-
-    ## Warning: Removed 1849 rows containing missing values (geom_point).
 
 ``` r
 #nonproductive
@@ -518,8 +499,6 @@ ggplot(hc.dev.nonprod, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) +
         axis.ticks.x=element_blank())
 ```
 
-    ## Warning: Removed 1161 rows containing missing values (geom_point).
-
 ![](recursionAnalysis_files/figure-gfm/unnamed-chunk-16-2.png)<!-- -->
 
 ``` r
@@ -527,8 +506,6 @@ ggsave('graphs/distance-nonprod-sorted.png')
 ```
 
     ## Saving 7 x 5 in image
-
-    ## Warning: Removed 1161 rows containing missing values (geom_point).
 
 Number of kids who counted to 99+ spontaneously on IHC plus those whose
 FHC = 99+ without prompting
@@ -626,12 +603,7 @@ wcn.data %<>%
          TaskItem_num = as.numeric(as.character(TaskItem)), 
          Accuracy_check = ifelse(Response_num == (TaskItem_num + 1), 1, 0), 
          Accuracy_valid = ifelse(Accuracy == Accuracy_check, TRUE, FALSE))
-```
 
-    ## Warning in evalq(as.numeric(as.character(Response)), <environment>): NAs
-    ## introduced by coercion
-
-``` r
 validate <- function(){
   validation <- wcn.data %>%
     filter(Accuracy_valid == FALSE)
@@ -913,29 +885,26 @@ wcn.model.int <- glmer(Accuracy ~ Productivity*WithinOutsideIHC + IHC.c + age.c 
                      (1|LadlabID), family = "binomial", data = wcn_model.df)
 wcn.model.base <- glmer(Accuracy ~ IHC.c + 
                           age.c + (1|TaskItem) + (1|LadlabID), family = "binomial", data = wcn_model.df)
-#compare model with interaction to one without 
-anova(wcn.model.noint, wcn.model.int, wcn.model.base, test = 'LRT')
+#compare full model to base model
+anova(wcn.model.int, wcn.model.base, test = 'LRT')
 ```
 
     ## Data: wcn_model.df
     ## Models:
     ## wcn.model.base: Accuracy ~ IHC.c + age.c + (1 | TaskItem) + (1 | LadlabID)
-    ## wcn.model.noint: Accuracy ~ Productivity + WithinOutsideIHC + IHC.c + age.c + 
-    ## wcn.model.noint:     (1 | TaskItem) + (1 | LadlabID)
     ## wcn.model.int: Accuracy ~ Productivity * WithinOutsideIHC + IHC.c + age.c + 
     ## wcn.model.int:     (1 | TaskItem) + (1 | LadlabID)
-    ##                 Df    AIC    BIC  logLik deviance  Chisq Chi Df Pr(>Chisq)
-    ## wcn.model.base   5 1536.6 1563.9 -763.29   1526.6                         
-    ## wcn.model.noint  7 1534.2 1572.5 -760.09   1520.2 6.4066      2   0.040628
-    ## wcn.model.int    8 1527.0 1570.7 -755.48   1511.0 9.2093      1   0.002408
-    ##                   
-    ## wcn.model.base    
-    ## wcn.model.noint * 
-    ## wcn.model.int   **
+    ##                Df    AIC    BIC  logLik deviance  Chisq Chi Df Pr(>Chisq)
+    ## wcn.model.base  5 1536.6 1563.9 -763.29   1526.6                         
+    ## wcn.model.int   8 1527.0 1570.7 -755.48   1511.0 15.616      3   0.001359
+    ##                  
+    ## wcn.model.base   
+    ## wcn.model.int  **
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 ``` r
+#compare model with interaction to one without 
 anova(wcn.model.noint, wcn.model.int, test = 'LRT')
 ```
 
@@ -1026,377 +995,7 @@ highest_contiguous_nn <- get_contiguous()%>%
   dplyr::rename(LadlabID = sub)%>%
   distinct(LadlabID, highest_contig)%>%
   dplyr::rename(Highest_Contig_NN = highest_contig)
-```
 
-    ## Warning in bind_rows_(x, .id): Unequal factor levels: coercing to character
-
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-    
-    ## Warning in bind_rows_(x, .id): binding character and factor vector,
-    ## coercing into character vector
-
-``` r
 #add highest contiguous to wcn.data
 wcn.data <- full_join(wcn.data, highest_contiguous_nn, by = "LadlabID")
 ```
@@ -1627,34 +1226,47 @@ full.data %>%
     ## 4 D Full-knower       19
 
 ``` r
-full.data %>%
-  dplyr::distinct(LadlabID, SuccessorKnower, Productivity)%>%
-  dplyr::group_by(SuccessorKnower, Productivity)%>%
-  dplyr::summarise(n = n()) %>%
-  spread(Productivity, n)
+classification.data <- full.data %>%
+  dplyr::distinct(LadlabID, EndlessKnower, SuccessorKnower, Productivity)
+
+#Successor contingency table
+table(classification.data$SuccessorKnower, classification.data$Productivity)
 ```
 
-    ## # A tibble: 2 x 3
-    ## # Groups:   SuccessorKnower [2]
-    ##   SuccessorKnower Nonproductive Productive
-    ##             <int>         <int>      <int>
-    ## 1               0            31         39
-    ## 2               1            12         40
+    ##    
+    ##     Nonproductive Productive
+    ##   0            31         39
+    ##   1            12         40
 
 ``` r
-full.data %>%
-  dplyr::distinct(LadlabID, EndlessKnower, Productivity)%>%
-  dplyr::group_by(EndlessKnower, Productivity)%>%
-  dplyr::summarise(n = n()) %>%
-  spread(Productivity, n)
+chisq.test(table(classification.data$SuccessorKnower, classification.data$Productivity))
 ```
 
-    ## # A tibble: 2 x 3
-    ## # Groups:   EndlessKnower [2]
-    ##   EndlessKnower Nonproductive Productive
-    ##           <int>         <int>      <int>
-    ## 1             0            39         49
-    ## 2             1             4         30
+    ## 
+    ##  Pearson's Chi-squared test with Yates' continuity correction
+    ## 
+    ## data:  table(classification.data$SuccessorKnower, classification.data$Productivity)
+    ## X-squared = 4.9877, df = 1, p-value = 0.02553
+
+``` r
+#Endless contingency table
+table(classification.data$EndlessKnower, classification.data$Productivity)
+```
+
+    ##    
+    ##     Nonproductive Productive
+    ##   0            39         49
+    ##   1             4         30
+
+``` r
+chisq.test(table(classification.data$EndlessKnower, classification.data$Productivity))
+```
+
+    ## 
+    ##  Pearson's Chi-squared test with Yates' continuity correction
+    ## 
+    ## data:  table(classification.data$EndlessKnower, classification.data$Productivity)
+    ## X-squared = 10.006, df = 1, p-value = 0.001561
 
 Average age of kids for Endless and Successor Knowers
 
@@ -1852,62 +1464,58 @@ distinct_model.df <- model.df %>%
 
 ###MODEL BUILDING AND COMPARISONS###
 #base model for successor knower
-base.successor <- glmer(SuccessorKnower ~ Age.c + (1|LadlabID), family = "binomial", 
+base.successor <- glm(SuccessorKnower ~ Age.c, family = "binomial", 
                         data = distinct_model.df)
 
 ##IHC model##
-model.ihc.successor <- glmer(SuccessorKnower ~ IHC.c + Age.c + (1|LadlabID), family = "binomial", 
+model.ihc.successor <- glm(SuccessorKnower ~ IHC.c + Age.c, family = "binomial", 
                              data = distinct_model.df)
 ##Highest NN Model##
-model.nn.successor <- glmer(SuccessorKnower ~ Highest_Contig_NN.c + Age.c + (1|LadlabID), family = "binomial", 
+model.nn.successor <- glm(SuccessorKnower ~ Highest_Contig_NN.c + Age.c, family = "binomial", 
                             data = distinct_model.df)
 ##Productivity model##
-model.prod.successor <- glmer(SuccessorKnower ~ Productivity + Age + (1|LadlabID), family = "binomial",
+model.prod.successor <- glm(SuccessorKnower ~ Productivity + Age.c, family = "binomial",
                               data = distinct_model.df)
 
-##Regression table for Successor Knower Models
+##Regression table for Successor Knower Models (Table 2)
 mtable.sf.knowers <- mtable('Base' = base.successor,
             'IHC' = model.ihc.successor,
             'Highest Contig.' = model.nn.successor,
             'Productivity' = model.prod.successor,
-            summary.stats = c('R-squared','F','p','N'))
+            #summary.stats = c('R-squared','F','p','N'))
+            summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'))
 mtable.sf.knowers
 ```
 
     ## 
     ## Calls:
-    ## Base: glmer(formula = SuccessorKnower ~ Age.c + (1 | LadlabID), data = distinct_model.df, 
-    ##     family = "binomial")
-    ## IHC: glmer(formula = SuccessorKnower ~ IHC.c + Age.c + (1 | LadlabID), 
-    ##     data = distinct_model.df, family = "binomial")
-    ## Highest Contig.: glmer(formula = SuccessorKnower ~ Highest_Contig_NN.c + Age.c + 
-    ##     (1 | LadlabID), data = distinct_model.df, family = "binomial")
-    ## Productivity: glmer(formula = SuccessorKnower ~ Productivity + Age + (1 | LadlabID), 
-    ##     data = distinct_model.df, family = "binomial")
+    ## Base: glm(formula = SuccessorKnower ~ Age.c, family = "binomial", data = distinct_model.df)
+    ## IHC: glm(formula = SuccessorKnower ~ IHC.c + Age.c, family = "binomial", 
+    ##     data = distinct_model.df)
+    ## Highest Contig.: glm(formula = SuccessorKnower ~ Highest_Contig_NN.c + Age.c, 
+    ##     family = "binomial", data = distinct_model.df)
+    ## Productivity: glm(formula = SuccessorKnower ~ Productivity + Age.c, family = "binomial", 
+    ##     data = distinct_model.df)
     ## 
-    ## =============================================================================
-    ##                             Base      IHC     Highest Contig.  Productivity  
-    ## -----------------------------------------------------------------------------
-    ##   (Intercept)              -0.306    -0.306       -0.307          -2.153     
-    ##                            (0.191)   (0.191)      (0.193)         (1.795)    
-    ##   Age.c                     0.342     0.313        0.245                     
-    ##                            (0.194)   (0.222)      (0.205)                    
-    ##   IHC.c                               0.058                                  
-    ##                                      (0.216)                                 
-    ##   Highest_Contig_NN.c                              0.271                     
-    ##                                                   (0.204)                    
-    ##   ProductivityProductive                                           0.816     
-    ##                                                                   (0.468)    
-    ##   Age                                                              0.261     
-    ##                                                                   (0.382)    
-    ## -----------------------------------------------------------------------------
-    ##   Var(~1|LadlabID)          0.001     0.001        0.003           0.000     
-    ##                                                                              
-    ## -----------------------------------------------------------------------------
-    ##   Total                   122       122          122             122         
-    ##   LadlabID                122       122          122             122         
-    ## -----------------------------------------------------------------------------
-    ## =============================================================================
+    ## =============================================================================================
+    ##                                             Base      IHC     Highest Contig.  Productivity  
+    ## ---------------------------------------------------------------------------------------------
+    ##   (Intercept)                              -0.306    -0.306       -0.307          -0.847*    
+    ##                                            (0.186)   (0.186)      (0.187)         (0.370)    
+    ##   Age.c                                     0.342     0.313        0.245           0.149     
+    ##                                            (0.188)   (0.218)      (0.202)         (0.218)    
+    ##   IHC.c                                               0.058                                  
+    ##                                                      (0.216)                                 
+    ##   Highest_Contig_NN.c                                              0.271                     
+    ##                                                                   (0.200)                    
+    ##   Productivity: Productive/Nonproductive                                           0.816     
+    ##                                                                                   (0.468)    
+    ## ---------------------------------------------------------------------------------------------
+    ##   Nagelkerke R-sq.                          0.037     0.038        0.056           0.070     
+    ##   Log-likelihood                          -81.539   -81.503      -80.610         -79.977     
+    ##   AIC                                     167.077   169.006      167.221         165.954     
+    ##   N                                       122       122          122             122         
+    ## =============================================================================================
 
 ``` r
 ###MODEL COMPARISONS##
@@ -1915,48 +1523,39 @@ mtable.sf.knowers
 anova(base.successor, model.ihc.successor, test = 'LRT') #IHC not significant
 ```
 
-    ## Data: distinct_model.df
-    ## Models:
-    ## base.successor: SuccessorKnower ~ Age.c + (1 | LadlabID)
-    ## model.ihc.successor: SuccessorKnower ~ IHC.c + Age.c + (1 | LadlabID)
-    ##                     Df    AIC    BIC  logLik deviance  Chisq Chi Df
-    ## base.successor       3 169.08 177.49 -81.539   163.08              
-    ## model.ihc.successor  4 171.01 182.22 -81.503   163.01 0.0711      1
-    ##                     Pr(>Chisq)
-    ## base.successor                
-    ## model.ihc.successor     0.7897
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: SuccessorKnower ~ Age.c
+    ## Model 2: SuccessorKnower ~ IHC.c + Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)
+    ## 1       120     163.08                     
+    ## 2       119     163.01  1 0.071147   0.7897
 
 ``` r
 #Highest contiguous NN v. IHC
 anova(base.successor, model.nn.successor, test = 'LRT')#highest contiguous NN not significant
 ```
 
-    ## Data: distinct_model.df
-    ## Models:
-    ## base.successor: SuccessorKnower ~ Age.c + (1 | LadlabID)
-    ## model.nn.successor: SuccessorKnower ~ Highest_Contig_NN.c + Age.c + (1 | LadlabID)
-    ##                    Df    AIC    BIC  logLik deviance  Chisq Chi Df
-    ## base.successor      3 169.08 177.49 -81.539   163.08              
-    ## model.nn.successor  4 169.22 180.44 -80.610   161.22 1.8565      1
-    ##                    Pr(>Chisq)
-    ## base.successor               
-    ## model.nn.successor      0.173
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: SuccessorKnower ~ Age.c
+    ## Model 2: SuccessorKnower ~ Highest_Contig_NN.c + Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)
+    ## 1       120     163.08                     
+    ## 2       119     161.22  1   1.8565    0.173
 
 ``` r
 #Productivity v. IHC
 anova(base.successor, model.prod.successor, test = 'LRT')#Productivity trending
 ```
 
-    ## Data: distinct_model.df
-    ## Models:
-    ## base.successor: SuccessorKnower ~ Age.c + (1 | LadlabID)
-    ## model.prod.successor: SuccessorKnower ~ Productivity + Age + (1 | LadlabID)
-    ##                      Df    AIC    BIC  logLik deviance  Chisq Chi Df
-    ## base.successor        3 169.08 177.49 -81.539   163.08              
-    ## model.prod.successor  4 167.95 179.17 -79.977   159.95 3.1234      1
-    ##                      Pr(>Chisq)  
-    ## base.successor                   
-    ## model.prod.successor    0.07718 .
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: SuccessorKnower ~ Age.c
+    ## Model 2: SuccessorKnower ~ Productivity + Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)  
+    ## 1       120     163.08                       
+    ## 2       119     159.95  1   3.1234  0.07718 .
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -1964,19 +1563,19 @@ anova(base.successor, model.prod.successor, test = 'LRT')#Productivity trending
 
 ``` r
 #Base model
-base.endless <- glmer(EndlessKnower ~ Age.c + (1|LadlabID), family = "binomial", 
+base.endless <- glm(EndlessKnower ~ Age.c, family = "binomial", 
                       data = distinct_model.df)
 
 ###IHC MODEL###
-model.ihc.endless <- glmer(EndlessKnower ~ IHC.c + Age.c + (1|LadlabID), family = "binomial", 
+model.ihc.endless <- glm(EndlessKnower ~ IHC.c + Age.c, family = "binomial", 
                            data = distinct_model.df)
 
 ###HIGHEST CONTIG NN MODEL###
-model.nn.endless <- glmer(EndlessKnower ~ Highest_Contig_NN.c + Age.c + (1|LadlabID), family = "binomial", 
+model.nn.endless <- glm(EndlessKnower ~ Highest_Contig_NN.c + Age.c, family = "binomial", 
                           data = distinct_model.df) 
 
 ###PRODUCTIVITY MODEL###
-model.prod.endless <- glmer(EndlessKnower ~ Productivity + Age.c + (1|LadlabID), family = "binomial", 
+model.prod.endless <- glm(EndlessKnower ~ Productivity + Age.c, family = "binomial", 
                             data = distinct_model.df)
 
 ##Regression table for Endless Models
@@ -1984,42 +1583,41 @@ mtable.endless.knowers <- mtable('Base' = base.endless,
             'IHC' = model.ihc.endless,
             'Highest Contig.' = model.nn.endless,
             'Productivity' = model.prod.endless,
-            summary.stats = c('R-squared','F','p','N'))
+            #summary.stats = c('R-squared','F','p','N'))
+            summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'))
+
 mtable.endless.knowers
 ```
 
     ## 
     ## Calls:
-    ## Base: glmer(formula = EndlessKnower ~ Age.c + (1 | LadlabID), data = distinct_model.df, 
-    ##     family = "binomial")
-    ## IHC: glmer(formula = EndlessKnower ~ IHC.c + Age.c + (1 | LadlabID), 
-    ##     data = distinct_model.df, family = "binomial")
-    ## Highest Contig.: glmer(formula = EndlessKnower ~ Highest_Contig_NN.c + Age.c + 
-    ##     (1 | LadlabID), data = distinct_model.df, family = "binomial")
-    ## Productivity: glmer(formula = EndlessKnower ~ Productivity + Age.c + (1 | LadlabID), 
-    ##     data = distinct_model.df, family = "binomial")
+    ## Base: glm(formula = EndlessKnower ~ Age.c, family = "binomial", data = distinct_model.df)
+    ## IHC: glm(formula = EndlessKnower ~ IHC.c + Age.c, family = "binomial", 
+    ##     data = distinct_model.df)
+    ## Highest Contig.: glm(formula = EndlessKnower ~ Highest_Contig_NN.c + Age.c, family = "binomial", 
+    ##     data = distinct_model.df)
+    ## Productivity: glm(formula = EndlessKnower ~ Productivity + Age.c, family = "binomial", 
+    ##     data = distinct_model.df)
     ## 
-    ## =================================================================================
-    ##                              Base        IHC      Highest Contig.  Productivity  
-    ## ---------------------------------------------------------------------------------
-    ##   (Intercept)              -1.068***   -1.135***     -1.091***       -2.024**    
-    ##                            (0.316)     (0.343)       (0.228)         (0.630)     
-    ##   Age.c                     0.715**     0.408         0.535*          0.450      
-    ##                            (0.268)     (0.264)       (0.238)         (0.267)     
-    ##   IHC.c                                 0.668*                                   
-    ##                                        (0.284)                                   
-    ##   Highest_Contig_NN.c                                 0.504*                     
-    ##                                                      (0.215)                     
-    ##   ProductivityProductive                                              1.336*     
-    ##                                                                      (0.654)     
-    ## ---------------------------------------------------------------------------------
-    ##   Var(~1|LadlabID)          0.051       0.016         0.000           0.038      
-    ##                                                                                  
-    ## ---------------------------------------------------------------------------------
-    ##   Total                   122         122           122             122          
-    ##   LadlabID                122         122           122             122          
-    ## ---------------------------------------------------------------------------------
-    ## =================================================================================
+    ## =================================================================================================
+    ##                                              Base        IHC      Highest Contig.  Productivity  
+    ## -------------------------------------------------------------------------------------------------
+    ##   (Intercept)                              -1.057***   -1.131***     -1.091***       -2.010***   
+    ##                                            (0.221)     (0.235)       (0.228)         (0.542)     
+    ##   Age.c                                     0.707**     0.407         0.535*          0.446      
+    ##                                            (0.224)     (0.250)       (0.238)         (0.249)     
+    ##   IHC.c                                                 0.666**                                  
+    ##                                                        (0.242)                                   
+    ##   Highest_Contig_NN.c                                                 0.504*                     
+    ##                                                                      (0.215)                     
+    ##   Productivity: Productive/Nonproductive                                              1.329*     
+    ##                                                                                      (0.627)     
+    ## -------------------------------------------------------------------------------------------------
+    ##   Nagelkerke R-sq.                          0.125       0.205         0.183           0.179      
+    ##   Log-likelihood                          -66.655     -62.810       -63.884         -64.095      
+    ##   AIC                                     137.311     131.619       133.767         134.190      
+    ##   N                                       122         122           122             122          
+    ## =================================================================================================
 
 ``` r
 ##SIMPLE MODEL COMPARISONS##
@@ -2027,16 +1625,13 @@ mtable.endless.knowers
 anova(base.endless, model.ihc.endless, test = 'LRT') #IHC significant
 ```
 
-    ## Data: distinct_model.df
-    ## Models:
-    ## base.endless: EndlessKnower ~ Age.c + (1 | LadlabID)
-    ## model.ihc.endless: EndlessKnower ~ IHC.c + Age.c + (1 | LadlabID)
-    ##                   Df    AIC    BIC  logLik deviance  Chisq Chi Df
-    ## base.endless       3 139.31 147.72 -66.654   133.31              
-    ## model.ihc.endless  4 133.62 144.84 -62.810   125.62 7.6888      1
-    ##                   Pr(>Chisq)   
-    ## base.endless                   
-    ## model.ihc.endless   0.005556 **
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: EndlessKnower ~ Age.c
+    ## Model 2: EndlessKnower ~ IHC.c + Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)   
+    ## 1       120     133.31                        
+    ## 2       119     125.62  1   7.6914 0.005549 **
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -2045,16 +1640,13 @@ anova(base.endless, model.ihc.endless, test = 'LRT') #IHC significant
 anova(model.nn.endless, base.endless, test = 'LRT')#Highest contig NN significant
 ```
 
-    ## Data: distinct_model.df
-    ## Models:
-    ## base.endless: EndlessKnower ~ Age.c + (1 | LadlabID)
-    ## model.nn.endless: EndlessKnower ~ Highest_Contig_NN.c + Age.c + (1 | LadlabID)
-    ##                  Df    AIC    BIC  logLik deviance  Chisq Chi Df
-    ## base.endless      3 139.31 147.72 -66.654   133.31              
-    ## model.nn.endless  4 135.77 146.98 -63.884   127.77 5.5405      1
-    ##                  Pr(>Chisq)  
-    ## base.endless                 
-    ## model.nn.endless    0.01858 *
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: EndlessKnower ~ Highest_Contig_NN.c + Age.c
+    ## Model 2: EndlessKnower ~ Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)  
+    ## 1       119     127.77                       
+    ## 2       120     133.31 -1  -5.5433  0.01855 *
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -2063,16 +1655,13 @@ anova(model.nn.endless, base.endless, test = 'LRT')#Highest contig NN significan
 anova(model.prod.endless, base.endless, test = 'LRT')#Prod significant
 ```
 
-    ## Data: distinct_model.df
-    ## Models:
-    ## base.endless: EndlessKnower ~ Age.c + (1 | LadlabID)
-    ## model.prod.endless: EndlessKnower ~ Productivity + Age.c + (1 | LadlabID)
-    ##                    Df    AIC    BIC  logLik deviance  Chisq Chi Df
-    ## base.endless        3 139.31 147.72 -66.654   133.31              
-    ## model.prod.endless  4 136.19 147.40 -64.094   128.19 5.1201      1
-    ##                    Pr(>Chisq)  
-    ## base.endless                   
-    ## model.prod.endless    0.02365 *
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: EndlessKnower ~ Productivity + Age.c
+    ## Model 2: EndlessKnower ~ Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)  
+    ## 1       119     128.19                       
+    ## 2       120     133.31 -1   -5.121  0.02364 *
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -2090,19 +1679,19 @@ comparison
 
 ``` r
 ##BASE MODEL WITH IHC
-large.endless.base <- glmer(EndlessKnower ~ IHC.c + Age.c + (1|LadlabID), 
+large.endless.base <- glm(EndlessKnower ~ IHC.c + Age.c, 
                             family = "binomial", data = distinct_model.df)
 ##add highest contig
-large.endless.nn <- glmer(EndlessKnower ~ Highest_Contig_NN.c + IHC.c + Age.c + (1|LadlabID), 
+large.endless.nn <- glm(EndlessKnower ~ Highest_Contig_NN.c + IHC.c + Age.c, 
                           family = "binomial", data = distinct_model.df)
 
 ##Productivity v. IHC##
-large.endless.prod <- glmer(EndlessKnower ~ Productivity + IHC.c + Age.c + (1|LadlabID), 
+large.endless.prod <- glm(EndlessKnower ~ Productivity + IHC.c + Age.c, 
                             family = "binomial", data = distinct_model.df)
 
 ##ALL THREE TOGETHER
-large.endless.full <- glmer(EndlessKnower ~ Productivity + Highest_Contig_NN.c + 
-                              IHC.c + Age.c +(1|LadlabID), 
+large.endless.full <- glm(EndlessKnower ~ Productivity + Highest_Contig_NN.c + 
+                              IHC.c + Age.c, 
                             family = "binomial", data = distinct_model.df)
 
 #regression table
@@ -2110,43 +1699,42 @@ mtable.endless.large <- mtable('IHC alone' = large.endless.base,
             'Highest contiguous NN + IHC' = large.endless.nn,
             'Productivity + IHC' = large.endless.prod,
             'Prod. + Highest contig. + IHC' = large.endless.full,
-            summary.stats = c('R-squared','F','p','N'))
+            #summary.stats = c('R-squared','F','p','N'))
+            summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'))
+
 mtable.endless.large
 ```
 
     ## 
     ## Calls:
-    ## IHC alone: glmer(formula = EndlessKnower ~ IHC.c + Age.c + (1 | LadlabID), 
-    ##     data = distinct_model.df, family = "binomial")
-    ## Highest contiguous NN + IHC: glmer(formula = EndlessKnower ~ Highest_Contig_NN.c + IHC.c + 
-    ##     Age.c + (1 | LadlabID), data = distinct_model.df, family = "binomial")
-    ## Productivity + IHC: glmer(formula = EndlessKnower ~ Productivity + IHC.c + Age.c + 
-    ##     (1 | LadlabID), data = distinct_model.df, family = "binomial")
-    ## Prod. + Highest contig. + IHC: glmer(formula = EndlessKnower ~ Productivity + Highest_Contig_NN.c + 
-    ##     IHC.c + Age.c + (1 | LadlabID), data = distinct_model.df, 
-    ##     family = "binomial")
+    ## IHC alone: glm(formula = EndlessKnower ~ IHC.c + Age.c, family = "binomial", 
+    ##     data = distinct_model.df)
+    ## Highest contiguous NN + IHC: glm(formula = EndlessKnower ~ Highest_Contig_NN.c + IHC.c + Age.c, 
+    ##     family = "binomial", data = distinct_model.df)
+    ## Productivity + IHC: glm(formula = EndlessKnower ~ Productivity + IHC.c + Age.c, family = "binomial", 
+    ##     data = distinct_model.df)
+    ## Prod. + Highest contig. + IHC: glm(formula = EndlessKnower ~ Productivity + Highest_Contig_NN.c + 
+    ##     IHC.c + Age.c, family = "binomial", data = distinct_model.df)
     ## 
-    ## ======================================================================================================================
-    ##                           IHC alone   Highest contiguous NN + IHC  Productivity + IHC  Prod. + Highest contig. + IHC  
-    ## ----------------------------------------------------------------------------------------------------------------------
-    ##   (Intercept)              -1.135***           -1.129***                -1.710**                  -1.694**            
-    ##                            (0.343)             (0.235)                  (0.563)                   (0.565)             
-    ##   IHC.c                     0.668*              0.529                    0.523*                    0.411              
-    ##                            (0.284)             (0.336)                  (0.263)                   (0.345)             
-    ##   Age.c                     0.408               0.411                    0.315                     0.320              
-    ##                            (0.264)             (0.250)                  (0.260)                   (0.260)             
-    ##   Highest_Contig_NN.c                           0.173                                              0.148              
-    ##                                                (0.299)                                            (0.297)             
-    ##   ProductivityProductive                                                 0.823                     0.802              
-    ##                                                                         (0.687)                   (0.689)             
-    ## ----------------------------------------------------------------------------------------------------------------------
-    ##   Var(~1|LadlabID)          0.016               0.000                    0.000                     0.000              
-    ##                                                                                                                       
-    ## ----------------------------------------------------------------------------------------------------------------------
-    ##   Total                   122                 122                      122                       122                  
-    ##   LadlabID                122                 122                      122                       122                  
-    ## ----------------------------------------------------------------------------------------------------------------------
-    ## ======================================================================================================================
+    ## ======================================================================================================================================
+    ##                                           IHC alone   Highest contiguous NN + IHC  Productivity + IHC  Prod. + Highest contig. + IHC  
+    ## --------------------------------------------------------------------------------------------------------------------------------------
+    ##   (Intercept)                              -1.131***           -1.129***                -1.710**                  -1.694**            
+    ##                                            (0.235)             (0.235)                  (0.563)                   (0.565)             
+    ##   IHC.c                                     0.666**             0.529                    0.523*                    0.411              
+    ##                                            (0.242)             (0.336)                  (0.263)                   (0.345)             
+    ##   Age.c                                     0.407               0.411                    0.315                     0.320              
+    ##                                            (0.250)             (0.250)                  (0.260)                   (0.260)             
+    ##   Highest_Contig_NN.c                                           0.173                                              0.148              
+    ##                                                                (0.299)                                            (0.297)             
+    ##   Productivity: Productive/Nonproductive                                                 0.823                     0.802              
+    ##                                                                                         (0.687)                   (0.689)             
+    ## --------------------------------------------------------------------------------------------------------------------------------------
+    ##   Nagelkerke R-sq.                          0.205               0.209                    0.221                     0.223              
+    ##   Log-likelihood                          -62.810             -62.642                  -62.059                   -61.934              
+    ##   AIC                                     131.619             133.284                  132.118                   133.868              
+    ##   N                                       122                 122                      122                       122                  
+    ## ======================================================================================================================================
 
 ``` r
 ##MODEL COMPARISONS
@@ -2154,32 +1742,26 @@ mtable.endless.large
 anova(large.endless.base, large.endless.nn, test = 'LRT')#Highest contig. NS
 ```
 
-    ## Data: distinct_model.df
-    ## Models:
-    ## large.endless.base: EndlessKnower ~ IHC.c + Age.c + (1 | LadlabID)
-    ## large.endless.nn: EndlessKnower ~ Highest_Contig_NN.c + IHC.c + Age.c + (1 | LadlabID)
-    ##                    Df    AIC    BIC  logLik deviance  Chisq Chi Df
-    ## large.endless.base  4 133.62 144.84 -62.810   125.62              
-    ## large.endless.nn    5 135.28 149.30 -62.642   125.28 0.3349      1
-    ##                    Pr(>Chisq)
-    ## large.endless.base           
-    ## large.endless.nn       0.5628
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: EndlessKnower ~ IHC.c + Age.c
+    ## Model 2: EndlessKnower ~ Highest_Contig_NN.c + IHC.c + Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)
+    ## 1       119     125.62                     
+    ## 2       118     125.28  1   0.3351   0.5627
 
 ``` r
 #IHC v. Productivity
 anova(large.endless.base, large.endless.prod, test = 'LRT')##Productivity NS
 ```
 
-    ## Data: distinct_model.df
-    ## Models:
-    ## large.endless.base: EndlessKnower ~ IHC.c + Age.c + (1 | LadlabID)
-    ## large.endless.prod: EndlessKnower ~ Productivity + IHC.c + Age.c + (1 | LadlabID)
-    ##                    Df    AIC    BIC  logLik deviance  Chisq Chi Df
-    ## large.endless.base  4 133.62 144.84 -62.810   125.62              
-    ## large.endless.prod  5 134.12 148.14 -62.059   124.12 1.5011      1
-    ##                    Pr(>Chisq)
-    ## large.endless.base           
-    ## large.endless.prod     0.2205
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: EndlessKnower ~ IHC.c + Age.c
+    ## Model 2: EndlessKnower ~ Productivity + IHC.c + Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)
+    ## 1       119     125.62                     
+    ## 2       118     124.12  1   1.5013   0.2205
 
 \#LM predicting IHC from productivity and age, HCNN and age
 
@@ -2214,17 +1796,7 @@ summary(lm1)
 ``` r
 lm.prod <- full.data %>%
   distinct(LadlabID, highest_contiguous_nn, Age, IHC)
-```
 
-    ## Warning: Trying to compute distinct() for variables not found in the data:
-    ## - `highest_contiguous_nn`
-    ## This is an error, but only a warning is raised for compatibility reasons.
-    ## The following variables will be used:
-    ## - LadlabID
-    ## - Age
-    ## - IHC
-
-``` r
 lm2 <- lm(IHC ~ Highest_Contig_NN + Age, data = distinct_model.df)
 summary(lm2)
 ```

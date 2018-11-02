@@ -1045,25 +1045,26 @@ distinct_model.df <- model.df %>%
 
 ###MODEL BUILDING AND COMPARISONS###
 #base model for successor knower
-base.successor <- glmer(SuccessorKnower ~ Age.c + (1|LadlabID), family = "binomial", 
+base.successor <- glm(SuccessorKnower ~ Age.c, family = "binomial", 
                         data = distinct_model.df)
 
 ##IHC model##
-model.ihc.successor <- glmer(SuccessorKnower ~ IHC.c + Age.c + (1|LadlabID), family = "binomial", 
+model.ihc.successor <- glm(SuccessorKnower ~ IHC.c + Age.c, family = "binomial", 
                              data = distinct_model.df)
 ##Highest NN Model##
-model.nn.successor <- glmer(SuccessorKnower ~ Highest_Contig_NN.c + Age.c + (1|LadlabID), family = "binomial", 
+model.nn.successor <- glm(SuccessorKnower ~ Highest_Contig_NN.c + Age.c, family = "binomial", 
                             data = distinct_model.df)
 ##Productivity model##
-model.prod.successor <- glmer(SuccessorKnower ~ Productivity + Age + (1|LadlabID), family = "binomial",
+model.prod.successor <- glm(SuccessorKnower ~ Productivity + Age.c, family = "binomial",
                               data = distinct_model.df)
 
-##Regression table for Successor Knower Models
+##Regression table for Successor Knower Models (Table 2)
 mtable.sf.knowers <- mtable('Base' = base.successor,
             'IHC' = model.ihc.successor,
             'Highest Contig.' = model.nn.successor,
             'Productivity' = model.prod.successor,
-            summary.stats = c('R-squared','F','p','N'))
+            #summary.stats = c('R-squared','F','p','N'))
+            summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'))
 mtable.sf.knowers
 
 ###MODEL COMPARISONS##
@@ -1082,19 +1083,19 @@ anova(base.successor, model.prod.successor, test = 'LRT')#Productivity trending
 ## Endless Models
 ```{r}
 #Base model
-base.endless <- glmer(EndlessKnower ~ Age.c + (1|LadlabID), family = "binomial", 
+base.endless <- glm(EndlessKnower ~ Age.c, family = "binomial", 
                       data = distinct_model.df)
 
 ###IHC MODEL###
-model.ihc.endless <- glmer(EndlessKnower ~ IHC.c + Age.c + (1|LadlabID), family = "binomial", 
+model.ihc.endless <- glm(EndlessKnower ~ IHC.c + Age.c, family = "binomial", 
                            data = distinct_model.df)
 
 ###HIGHEST CONTIG NN MODEL###
-model.nn.endless <- glmer(EndlessKnower ~ Highest_Contig_NN.c + Age.c + (1|LadlabID), family = "binomial", 
+model.nn.endless <- glm(EndlessKnower ~ Highest_Contig_NN.c + Age.c, family = "binomial", 
                           data = distinct_model.df) 
 
 ###PRODUCTIVITY MODEL###
-model.prod.endless <- glmer(EndlessKnower ~ Productivity + Age.c + (1|LadlabID), family = "binomial", 
+model.prod.endless <- glm(EndlessKnower ~ Productivity + Age.c, family = "binomial", 
                             data = distinct_model.df)
 
 ##Regression table for Endless Models
@@ -1102,7 +1103,9 @@ mtable.endless.knowers <- mtable('Base' = base.endless,
             'IHC' = model.ihc.endless,
             'Highest Contig.' = model.nn.endless,
             'Productivity' = model.prod.endless,
-            summary.stats = c('R-squared','F','p','N'))
+            #summary.stats = c('R-squared','F','p','N'))
+            summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'))
+
 mtable.endless.knowers
 
 ##SIMPLE MODEL COMPARISONS##
@@ -1126,19 +1129,19 @@ Put all significant Endless predictors into large model, run model comparison
 
 ```{r}
 ##BASE MODEL WITH IHC
-large.endless.base <- glmer(EndlessKnower ~ IHC.c + Age.c + (1|LadlabID), 
+large.endless.base <- glm(EndlessKnower ~ IHC.c + Age.c, 
                             family = "binomial", data = distinct_model.df)
 ##add highest contig
-large.endless.nn <- glmer(EndlessKnower ~ Highest_Contig_NN.c + IHC.c + Age.c + (1|LadlabID), 
+large.endless.nn <- glm(EndlessKnower ~ Highest_Contig_NN.c + IHC.c + Age.c, 
                           family = "binomial", data = distinct_model.df)
 
 ##Productivity v. IHC##
-large.endless.prod <- glmer(EndlessKnower ~ Productivity + IHC.c + Age.c + (1|LadlabID), 
+large.endless.prod <- glm(EndlessKnower ~ Productivity + IHC.c + Age.c, 
                             family = "binomial", data = distinct_model.df)
 
 ##ALL THREE TOGETHER
-large.endless.full <- glmer(EndlessKnower ~ Productivity + Highest_Contig_NN.c + 
-                              IHC.c + Age.c +(1|LadlabID), 
+large.endless.full <- glm(EndlessKnower ~ Productivity + Highest_Contig_NN.c + 
+                              IHC.c + Age.c, 
                             family = "binomial", data = distinct_model.df)
 
 #regression table
@@ -1146,7 +1149,9 @@ mtable.endless.large <- mtable('IHC alone' = large.endless.base,
             'Highest contiguous NN + IHC' = large.endless.nn,
             'Productivity + IHC' = large.endless.prod,
             'Prod. + Highest contig. + IHC' = large.endless.full,
-            summary.stats = c('R-squared','F','p','N'))
+            #summary.stats = c('R-squared','F','p','N'))
+            summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'))
+
 mtable.endless.large
 
 ##MODEL COMPARISONS
