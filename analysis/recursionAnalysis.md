@@ -1,48 +1,22 @@
----
-title: "RecursionAnalysis"
-author: "Junyi Chu, Rose M. Schneider, Pierina Cheung"
-date: "`r Sys.Date()`"
-output: github_document
----
+RecursionAnalysis
+================
+Junyi Chu, Rose M. Schneider, Pierina Cheung
+2018-11-01
 
 # Setup
-```{r setup, include=FALSE}
-rm(list = ls())
-require("knitr")
 
-# # Set WD
-opts_knit$set(root.dir = "~/Sites/recursion/")
-#opts_knit$set(root.dir = "~/Projects/Junyi study/recursiongithub/") #for PC
-#opts_knit$set(root.dir = "~/Documents/Projects/recursion/") #this is specific to RMS, change accordinglyz
-
-# For wrappign lines when knitting
-opts_chunk$set(tidy.opts=list(width.cutoff=80),tidy=TRUE,
-               warning=FALSE)
-
-library(Hmisc)
-library(tidyverse)
-library(magrittr)
-#library(langcog)
-library(lme4)
-library(stringr)
-library(RColorBrewer)
-library(ggthemes)
-library(memisc)
-
-# Set seed for reproducible analyses
-set.seed(42)
-```
-
-R Version for citation is: `r R.version.string`.
+R Version for citation is: R version 3.5.1 (2018-07-02).
 
 ## Loading data
-```{r}
+
+``` r
 #original data
 full.data <- read.csv('data/recursion_full.csv', na.strings=c(""," ","NA", "NA "))
 ```
 
 Reasons for exclusion and their numbers
-```{r}
+
+``` r
 full.data %>%
   dplyr::filter(ExclusionGroup != "include") %>%
   dplyr::distinct(LadlabID, .keep_all = TRUE) %>%
@@ -51,10 +25,20 @@ full.data %>%
   kable()
 ```
 
+| ExclusionGroup      | countN |
+| :------------------ | -----: |
+| age                 |      5 |
+| dnf infinity        |      4 |
+| dnf WCN             |      6 |
+| experimenter error  |      3 |
+| L1 not english      |      4 |
+| parent interference |      1 |
+| pilot order         |      3 |
 
-RMS original code for checking who failed practice - do not need to run. EVAL set to FALSE
-```{r eval = FALSE}
+RMS original code for checking who failed practice - do not need to run.
+EVAL set to FALSE
 
+``` r
 # check how many failed both practice trials
 x <- full.data %>%
   filter(Task == "WCN" &
@@ -74,13 +58,12 @@ one.corr <- as.vector(c("012316-BO", "022616-JM", "030216-ED",
 five.corr <- as.vector("050617-Z1")
 
 zero.corr <- as.vector(c("030216-AD", "040616-K"))
-
-
 ```
 
-Exclude those who failed the practice trials on What Comes Next Task
-```{r}
+Exclude those who failed the practice trials on What Comes Next
+Task
 
+``` r
 #final decision: remove kids who fail 1 trial out of 2 trials, with no additional information about whether E reran the failed trial. Removing 8 kids in total
 
 # added 022516-ML on 2018-09-03 to the exclusion list. kid had NA data for wcn practice trials and 0 correct on test. assume kid failed wcn.
@@ -96,20 +79,19 @@ full.data %<>%
 # check. good
 # full.data %>%
 #   filter(LadlabID == "022616-JM")
-
 ```
 
-Let's remove anyone who should not be included in the final dataset.
-```{r}
+Let’s remove anyone who should not be included in the final dataset.
+
+``` r
 full.data %<>%
   dplyr::filter(ExclusionGroup == "include")
-
 ```
 
+Now, add in the Productivity classification, IHC, and FHC from PC, JC,
+and RMS coding
 
-Now, add in the Productivity classification, IHC, and FHC from PC, JC, and RMS coding
-
-```{r}
+``` r
 #productivity, fhc, ihc coding from pc, jc, and rms
 hc.data <- read.csv('data/HC-datawide-forcoding - hc.datawide.csv') %>%
   dplyr::select(LadlabID, prod_tomerge, ihc_tomerge, fhc_tomerge, dce)
@@ -128,12 +110,22 @@ full.data %<>%
 ```
 
 Number of kids by age group and average age
-```{r}
+
+``` r
 full.data %>%
   dplyr::group_by(AgeGroup) %>%
   dplyr::summarize(sumAge = n_distinct(LadlabID)) %>%
   kable()
+```
 
+| AgeGroup | sumAge |
+| :------- | -----: |
+| 4-4.5y   |     32 |
+| 4.5-5y   |     29 |
+| 5-5.5y   |     32 |
+| 5.5-6y   |     29 |
+
+``` r
 full.data %>%
   dplyr::distinct(LadlabID, .keep_all = TRUE) %>%
   dplyr::summarize(minAge = min(Age),
@@ -141,11 +133,15 @@ full.data %>%
                    meanAge = mean(Age),
                    sdAge = sd(Age)) %>%
   kable()
-
 ```
 
+| minAge | maxAge |  meanAge |     sdAge |
+| -----: | -----: | -------: | --------: |
+|      4 |   5.99 | 4.998115 | 0.5713336 |
+
 Number of kids who were classified as decade productive & nonproductive
-```{r}
+
+``` r
 full.data %>%
   dplyr::distinct(LadlabID, Productivity, Age)%>%
   dplyr::group_by(Productivity)%>%
@@ -157,8 +153,15 @@ full.data %>%
   kable()
 ```
 
-Just for reference, this is the number of kids who switched classifications from PC, JC, RMS recode
-```{r}
+| Productivity  |  n |  meanage |     sdage | minage | maxage |
+| :------------ | -: | -------: | --------: | -----: | -----: |
+| Nonproductive | 43 | 4.598837 | 0.4192125 |   4.00 |   5.61 |
+| Productive    | 79 | 5.215443 | 0.5253760 |   4.05 |   5.99 |
+
+Just for reference, this is the number of kids who switched
+classifications from PC, JC, RMS recode
+
+``` r
 full.data %>%
   dplyr::filter(TaskType == "productivity") %>%
   droplevels()%>%
@@ -177,10 +180,21 @@ full.data %>%
   dplyr::summarise(n =n())
 ```
 
-***
+    ## # A tibble: 4 x 2
+    ##   changed_classification     n
+    ##   <chr>                  <int>
+    ## 1 NA_toNonprod              29
+    ## 2 NA_toProd                  7
+    ## 3 no_change                 85
+    ## 4 Nonprod_toProd             1
+
+-----
+
 # Highest Count Descriptives
+
 Average of IHC, DCE, and FHC for all kids
-```{r}
+
+``` r
 full.data %>%
   dplyr::distinct(LadlabID, IHC)%>%
   dplyr::summarise(mean_IHC = mean(IHC),
@@ -189,7 +203,13 @@ full.data %>%
                    max_IHC = max(IHC),
                    median_IHC = median(IHC)) %>%
   kable()
+```
 
+| mean\_IHC |  sd\_IHC | min\_IHC | max\_IHC | median\_IHC |
+| --------: | -------: | -------: | -------: | ----------: |
+|  50.41803 | 33.80568 |        5 |      100 |        39.5 |
+
+``` r
 full.data %>%
   dplyr::distinct(LadlabID, DCE)%>%
   dplyr::summarise(mean_DCE = mean(DCE, na.rm=TRUE),
@@ -198,7 +218,13 @@ full.data %>%
                    max_DCE = max(DCE, na.rm=TRUE),
                    median_DCE = median(DCE, na.rm=TRUE)) %>%
   kable()
+```
 
+| mean\_DCE |  sd\_DCE | min\_DCE | max\_DCE | median\_DCE |
+| --------: | -------: | -------: | -------: | ----------: |
+|  43.80769 | 17.54438 |       19 |       99 |          44 |
+
+``` r
 full.data %>%
   dplyr::distinct(LadlabID, FHC)%>%
   dplyr::summarise(mean_FHC = mean(FHC),
@@ -209,8 +235,13 @@ full.data %>%
   kable()
 ```
 
+| mean\_FHC |  sd\_FHC | min\_FHC | max\_FHC | median\_FHC |
+| --------: | -------: | -------: | -------: | ----------: |
+|  71.55738 | 34.64532 |        5 |      100 |          99 |
+
 Similar data by decade productivity
-```{r}
+
+``` r
 full.data %>%
   dplyr::distinct(LadlabID, Productivity, IHC)%>%
   dplyr::group_by(Productivity)%>%
@@ -220,7 +251,14 @@ full.data %>%
                    max_IHC = max(IHC),
                    median_IHC = median(IHC)) %>%
   kable()
+```
 
+| Productivity  | mean\_IHC |  sd\_IHC | min\_IHC | max\_IHC | median\_IHC |
+| :------------ | --------: | -------: | -------: | -------: | ----------: |
+| Nonproductive |  23.76744 | 15.20156 |        5 |       77 |          18 |
+| Productive    |  64.92405 | 32.30693 |       12 |      100 |          59 |
+
+``` r
 full.data %>%
   dplyr::distinct(LadlabID, Productivity, DCE)%>%
   dplyr::group_by(Productivity)%>%
@@ -230,7 +268,14 @@ full.data %>%
                    max_DCE = max(DCE, na.rm=TRUE),
                    median_DCE = median(DCE, na.rm=TRUE)) %>%
   kable()
+```
 
+| Productivity  | mean\_DCE |   sd\_DCE | min\_DCE | max\_DCE | median\_DCE |
+| :------------ | --------: | --------: | -------: | -------: | ----------: |
+| Nonproductive |  29.62500 |  8.539126 |       19 |       49 |          29 |
+| Productive    |  50.11111 | 16.865481 |       19 |       99 |          49 |
+
+``` r
 full.data %>%
   dplyr::distinct(LadlabID, Productivity, FHC)%>%
   dplyr::group_by(Productivity)%>%
@@ -242,10 +287,15 @@ full.data %>%
   kable()
 ```
 
+| Productivity  | mean\_FHC |  sd\_FHC | min\_FHC | max\_FHC | median\_FHC |
+| :------------ | --------: | -------: | -------: | -------: | ----------: |
+| Nonproductive |  29.13953 | 14.46438 |        5 |       77 |          29 |
+| Productive    |  94.64557 | 14.74922 |       38 |      100 |         100 |
 
-Plotting distribution of IHC, as a function of productivity (~ junyi's graph)
+Plotting distribution of IHC, as a function of productivity (\~ junyi’s
+graph)
 
-```{r}
+``` r
 unique.hc.data <- full.data %>%
   dplyr::distinct(LadlabID, Gender, Age, AgeGroup, HCReceivedSupport, IHC, DCE, FHC, Productivity)
 
@@ -262,13 +312,23 @@ ggplot(unique.hc.data, aes(x=IHC, color=Productivity)) +
        y="Frequency") +
   theme_bw() + 
   theme(legend.position="bottom")
+```
+
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+
+``` r
 ggsave('graphs/ihc-by-prod.png')
+```
+
+    ## Saving 7 x 5 in image
+
+``` r
 # hist(unique.hc.data$IHC)
 ```
 
 Plotting productivity as a function of age in months
 
-```{r}
+``` r
 unique.hc.data$AgeMonths = floor(unique.hc.data$Age*12)
 
 ggplot(unique.hc.data, aes(x=AgeMonths, colour = Productivity)) + 
@@ -285,14 +345,21 @@ ggplot(unique.hc.data, aes(x=AgeMonths, colour = Productivity)) +
        y="Frequency") +
   theme_bw(base_size = 13) + 
   theme(legend.position="bottom")
-ggsave('graphs/prod-by-age.png')
-
 ```
 
-## Distance between IHC and FHC
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
-Restructure data to plot distance between IHC, DCE, and FHC
-```{r}
+``` r
+ggsave('graphs/prod-by-age.png')
+```
+
+    ## Saving 7 x 5 in image
+
+Distance between IHC and FHC
+
+Restruture data to plot distance between IHC, DCE, and FHC
+
+``` r
 hc.dev.data <- full.data %>%
   dplyr::select(LadlabID, Age, Productivity, IHC, DCE, FHC) %>%
   gather(hcprogression, hc, IHC:FHC)%>%
@@ -315,14 +382,18 @@ ggplot(hc.dev.data, aes(x = LadlabID, y = hc)) +
         axis.text.x = element_text(angle = 270, hjust = 1)) +
   theme(axis.text.x=element_blank(),
         axis.ticks.x=element_blank()) 
+```
 
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+
+``` r
 hc.dev.prod <- subset(hc.dev.data, Productivity == "Productive")
 hc.dev.nonprod <- subset(hc.dev.data, Productivity == "Nonproductive")
 ```
 
-
 Separate graphs for productivity groups (for easier viewing)
-```{r eval=FALSE, include=FALSE}
+
+``` r
 #productive
 ggplot(hc.dev.prod, aes(x = LadlabID, y = hc)) + 
   facet_grid(rows = vars(Productivity)) +
@@ -340,8 +411,17 @@ ggplot(hc.dev.prod, aes(x = LadlabID, y = hc)) +
         axis.text.x = element_text(angle = 270, hjust = 1)) + 
   theme(axis.text.x=element_blank(),
         axis.ticks.x=element_blank())
-ggsave('graphs/distance-prod.png')
+```
 
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+
+``` r
+ggsave('graphs/distance-prod.png')
+```
+
+    ## Saving 7 x 5 in image
+
+``` r
 #nonproductive
 ggplot(hc.dev.nonprod, aes(x = LadlabID, y = hc)) + 
   facet_grid(rows = vars(Productivity)) +
@@ -359,12 +439,19 @@ ggplot(hc.dev.nonprod, aes(x = LadlabID, y = hc)) +
         axis.text.x = element_text(angle = 270, hjust = 1)) +
   theme(axis.text.x=element_blank(),
         axis.ticks.x=element_blank())
-ggsave('graphs/distance-nonprod.png')
-
 ```
 
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-15-2.png)<!-- -->
+
+``` r
+ggsave('graphs/distance-nonprod.png')
+```
+
+    ## Saving 7 x 5 in image
+
 Separate graphs for productivity groups, sorted by ascending IHC
-```{r}
+
+``` r
 #productive
 ggplot(hc.dev.prod, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) + 
   facet_grid(rows = vars(Productivity)) +
@@ -382,8 +469,17 @@ ggplot(hc.dev.prod, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) +
         axis.text.x = element_text(angle = 270, hjust = 1)) + 
   theme(axis.text.x=element_blank(),
         axis.ticks.x=element_blank())
-ggsave('graphs/distance-prod-sorted.png')
+```
 
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+
+``` r
+ggsave('graphs/distance-prod-sorted.png')
+```
+
+    ## Saving 7 x 5 in image
+
+``` r
 #nonproductive
 ggplot(hc.dev.nonprod, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) + 
   facet_grid(rows = vars(Productivity)) +
@@ -401,12 +497,20 @@ ggplot(hc.dev.nonprod, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) +
         axis.text.x = element_text(angle = 270, hjust = 1)) +
   theme(axis.text.x=element_blank(),
         axis.ticks.x=element_blank())
-ggsave('graphs/distance-nonprod-sorted.png')
-
 ```
 
-Number of kids who counted to 99+ spontaneously on IHC plus those whose FHC = 99+ without prompting
-```{r}
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-16-2.png)<!-- -->
+
+``` r
+ggsave('graphs/distance-nonprod-sorted.png')
+```
+
+    ## Saving 7 x 5 in image
+
+Number of kids who counted to 99+ spontaneously on IHC plus those whose
+FHC = 99+ without prompting
+
+``` r
 # full.data %>%
 #   filter(IHC > 98) %>%
 #   distinct(LadlabID, IHC, FHC, HCReceivedSupport) %>%
@@ -417,12 +521,16 @@ full.data %>%
   filter(FHC > 98 & (is.na(HCReceivedSupport)|HCReceivedSupport != 1)) %>%
   distinct(LadlabID, IHC, FHC, HCReceivedSupport) %>%
   count() #n =42
-
 ```
 
-## Decade prompts
+    ## # A tibble: 1 x 1
+    ##       n
+    ##   <int>
+    ## 1    42
+
 Average number of decade prompts provided. Productive counters first
-```{r}
+
+``` r
 full.data %>%
   filter(TaskItem == "times") %>%
   filter(Productivity == "Productive") %>%
@@ -434,15 +542,24 @@ full.data %>%
             min = min(Response, na.rm=TRUE),
             max = max(Response, na.rm=TRUE),
             count=n())
+```
+
+    ## # A tibble: 3 x 6
+    ##   HCReceivedSupport   mean     sd   min   max count
+    ##   <fct>              <dbl>  <dbl> <dbl> <dbl> <int>
+    ## 1 0                   2     NA        2     2    37
+    ## 2 1                   3.32   1.73     1     7    37
+    ## 3 <NA>              NaN    NaN      Inf  -Inf     5
+
+``` r
 # assume 0 = NA
 # error in supported.times coding, should only count to 90
 # but one kid got prompted with 100 and 110 and times should be 0
-
 ```
 
-
 Then nonproductive counters.
-```{r}
+
+``` r
 full.data %>%
   filter(TaskItem == "times") %>%
   filter(Productivity == "Nonproductive") %>%
@@ -454,18 +571,30 @@ full.data %>%
             min = min(Response, na.rm=TRUE),
             max = max(Response, na.rm=TRUE),
             count=n())
+```
+
+    ## # A tibble: 2 x 6
+    ##   HCReceivedSupport  mean    sd   min   max count
+    ##   <fct>             <dbl> <dbl> <dbl> <dbl> <int>
+    ## 1 0                  1.33 0.577     1     2    29
+    ## 2 1                  1.29 0.469     1     2    14
+
+``` r
 # assume 0 = NA
 # error in supported.times coding, should only count to 90
 # but one kid got prompted with 100 and 110 and times should be 0
 ```
 
-
 # What Comes Next Descriptives
 
-<span style="color:red">Note minimum highest contig NN can be 5 (one of the practice trials). Practice trials are excluded from %corr and within vs. beyond computation.</span>
+<span style="color:red">Note minimum highest contig NN can be 5 (one of
+the practice trials). Practice trials are excluded from %corr and within
+vs. beyond computation.</span>
 
-First check if Accuracy column in full.data is coded correctly. Good to go.
-```{r}
+First check if Accuracy column in full.data is coded correctly. Good to
+go.
+
+``` r
 wcn.data <- full.data %>%
   filter(Task == "WCN")
 
@@ -488,8 +617,13 @@ validate <- function(){
 validate()
 ```
 
-Immediate vs. Momentum trials: Children were provided with momentum trials if they got wrong on immediate trials. Check %trials where immediate = wrong, momentum = right
-```{r}
+    ## [1] "All coding correct"
+
+Immediate vs. Momentum trials: Children were provided with momentum
+trials if they got wrong on immediate trials. Check %trials where
+immediate = wrong, momentum = right
+
+``` r
 wcn.wide <- full.data %>%
   filter(ExclusionGroup == "include") %>%
   filter(Task == "WCN") %>%
@@ -510,14 +644,39 @@ full.data %>%
          issue_immediate1Momentum1 = ifelse(immediate == 1 & momentum == 1, TRUE, FALSE))%>%
   filter(issue_immediate1Momentum0 == TRUE | 
            issue_immediate1Momentum1 == TRUE)
+```
 
+    ##    LadlabID  Age AgeGroup TaskItem immediate momentum
+    ## 1 011216-WB 4.44   4-4.5y       59         1        1
+    ## 2 022616-AG 4.32   4-4.5y       37         1        1
+    ## 3 031616-RP 4.84   4.5-5y       23         1        1
+    ## 4 041316-CC 4.36   4-4.5y       62         1        0
+    ## 5 111117-VK 5.87   5.5-6y       29         1        1
+    ##   issue_immediate1Momentum0 issue_immediate1Momentum1
+    ## 1                     FALSE                      TRUE
+    ## 2                     FALSE                      TRUE
+    ## 3                     FALSE                      TRUE
+    ## 4                      TRUE                     FALSE
+    ## 5                     FALSE                      TRUE
+
+``` r
 # how many kids show improved performance
 xtabs(~immediate + momentum, data = wcn.wide, na.action = na.pass, exclude = NULL)
+```
+
+    ##          momentum
+    ## immediate   0   1 <NA>
+    ##      0    263 174   13
+    ##      1      1   4  520
+    ##      <NA>   1   0    0
+
+``` r
 # 191 / 1048 trials = ~ 18%. NOTE % not by kids but by trials.
 ```
 
 Percent Correct on WCN
-```{r}
+
+``` r
 wcn.data %>%
   dplyr::filter(TaskType == "immediate") %>%
   dplyr::group_by(LadlabID) %>%
@@ -525,7 +684,14 @@ wcn.data %>%
                    sd.wcn = sd(Accuracy, na.rm=TRUE)) %>%
   dplyr::summarize(avg = mean(avg.wcn),
                    sd = sd(sd.wcn))
+```
 
+    ## # A tibble: 1 x 2
+    ##     avg    sd
+    ##   <dbl> <dbl>
+    ## 1 0.538 0.215
+
+``` r
 wcn.data %>%
   dplyr::filter(TaskType == "immediate") %>%
   dplyr::group_by(LadlabID, Productivity) %>%
@@ -536,8 +702,15 @@ wcn.data %>%
                    sd = sd(sd.wcn))
 ```
 
+    ## # A tibble: 2 x 3
+    ##   Productivity    avg    sd
+    ##   <fct>         <dbl> <dbl>
+    ## 1 Nonproductive 0.265 0.216
+    ## 2 Productive    0.687 0.215
+
 Plotting %corr on WCN as function of productivity
-```{r}
+
+``` r
 wcn.data %>%
   dplyr::filter(TaskType == "immediate") %>%
   dplyr::group_by(LadlabID, Productivity) %>%
@@ -558,12 +731,20 @@ wcn.data %>%
   theme(text = element_text(size = 12)) +
   ylim(0, 1.0) +
   geom_violin(alpha = .3)
-ggsave('graphs/wcn-percentcorr.png')
-
 ```
 
-Add whether the Task Item was within or outside of the kid's initial highest count.
-```{r}
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
+
+``` r
+ggsave('graphs/wcn-percentcorr.png')
+```
+
+    ## Saving 7 x 5 in image
+
+Add whether the Task Item was within or outside of the kid’s initial
+highest count.
+
+``` r
 #first, get initial highest count for each kiddo
 #Make a lookup table with SID and initial highest count
 lookup <- full.data %>%
@@ -593,7 +774,8 @@ wcn.data <- determine_count_range(wcn.data)
 ```
 
 WCN accuracy, within and outside of IHC
-```{r}
+
+``` r
 wcn.data %>%
   dplyr::filter(TaskType == "immediate") %>%
   dplyr::group_by(WithinOutsideIHC) %>%
@@ -601,9 +783,15 @@ wcn.data %>%
                    sd = sd(Accuracy, na.rm = TRUE))
 ```
 
+    ## # A tibble: 2 x 3
+    ##   WithinOutsideIHC  mean    sd
+    ##   <chr>            <dbl> <dbl>
+    ## 1 outside          0.342 0.475
+    ## 2 within           0.764 0.425
 
 Now WCN by within/outside count range and productivity
-```{r}
+
+``` r
 wcn.data %>%
   dplyr::filter(TaskType == "immediate") %>%
   dplyr::group_by(Productivity, WithinOutsideIHC) %>%
@@ -611,9 +799,18 @@ wcn.data %>%
                    sd = sd(Accuracy, na.rm = TRUE))
 ```
 
+    ## # A tibble: 4 x 4
+    ## # Groups:   Productivity [?]
+    ##   Productivity  WithinOutsideIHC  mean    sd
+    ##   <fct>         <chr>            <dbl> <dbl>
+    ## 1 Nonproductive outside          0.207 0.406
+    ## 2 Nonproductive within           0.612 0.492
+    ## 3 Productive    outside          0.518 0.501
+    ## 4 Productive    within           0.783 0.413
 
-Plotting WCN as within vs. beyond by productivity 
-```{r}
+Plotting WCN as within vs. beyond by productivity
+
+``` r
 wcn.data %>%
   dplyr::filter(TaskType == "immediate") %>%
   dplyr::group_by(Productivity, WithinOutsideIHC, LadlabID) %>%
@@ -630,10 +827,17 @@ wcn.data %>%
        fill="Productivity") +
   theme_bw() +
   theme(text = element_text(size = 12))
+```
 
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
+
+``` r
 ggsave('graphs/wcn-within-beyond.png')
+```
 
+    ## Saving 7 x 5 in image
 
+``` r
 wcn.data %>%
   dplyr::filter(TaskType == "immediate") %>%
   dplyr::group_by(Productivity, WithinOutsideIHC, LadlabID) %>%
@@ -651,12 +855,17 @@ wcn.data %>%
        y="Average Proportion Correct", x="",
        fill="Trial Type") +
   theme_bw()
+```
 
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-27-2.png)<!-- -->
+
+``` r
 ggsave('graphs/wcn-within-beyond2.png', width=6, height=4)
 ```
 
 Analysis of WCN accuracy by productivity and trial type
-```{r}
+
+``` r
 # wcn_score.df <- wcn.data %>%
 #   dplyr::filter(TaskType == "immediate") %>%
 #   dplyr::group_by(LadlabID, Productivity, TrialType=as.factor(WithinOutsideIHC)) %>%
@@ -678,22 +887,63 @@ wcn.model.base <- glmer(Accuracy ~ IHC.c +
                           age.c + (1|TaskItem) + (1|LadlabID), family = "binomial", data = wcn_model.df)
 #compare full model to base model
 anova(wcn.model.int, wcn.model.base, test = 'LRT')
+```
+
+    ## Data: wcn_model.df
+    ## Models:
+    ## wcn.model.base: Accuracy ~ IHC.c + age.c + (1 | TaskItem) + (1 | LadlabID)
+    ## wcn.model.int: Accuracy ~ Productivity * WithinOutsideIHC + IHC.c + age.c + 
+    ## wcn.model.int:     (1 | TaskItem) + (1 | LadlabID)
+    ##                Df    AIC    BIC  logLik deviance  Chisq Chi Df Pr(>Chisq)
+    ## wcn.model.base  5 1536.6 1563.9 -763.29   1526.6                         
+    ## wcn.model.int   8 1527.0 1570.7 -755.48   1511.0 15.616      3   0.001359
+    ##                  
+    ## wcn.model.base   
+    ## wcn.model.int  **
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+``` r
 #compare model with interaction to one without 
 anova(wcn.model.noint, wcn.model.int, test = 'LRT')
 ```
 
+    ## Data: wcn_model.df
+    ## Models:
+    ## wcn.model.noint: Accuracy ~ Productivity + WithinOutsideIHC + IHC.c + age.c + 
+    ## wcn.model.noint:     (1 | TaskItem) + (1 | LadlabID)
+    ## wcn.model.int: Accuracy ~ Productivity * WithinOutsideIHC + IHC.c + age.c + 
+    ## wcn.model.int:     (1 | TaskItem) + (1 | LadlabID)
+    ##                 Df    AIC    BIC  logLik deviance  Chisq Chi Df Pr(>Chisq)
+    ## wcn.model.noint  7 1534.2 1572.5 -760.09   1520.2                         
+    ## wcn.model.int    8 1527.0 1570.7 -755.48   1511.0 9.2093      1   0.002408
+    ##                   
+    ## wcn.model.noint   
+    ## wcn.model.int   **
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 How many trials do kids have beyond their IHC?
-```{r}
+
+``` r
 wcn.data %>%
   dplyr::filter(TaskType == "immediate") %>%
   dplyr::group_by(Productivity, WithinOutsideIHC)%>%
   dplyr::summarise(n = n())
 ```
 
+    ## # A tibble: 4 x 3
+    ## # Groups:   Productivity [?]
+    ##   Productivity  WithinOutsideIHC     n
+    ##   <fct>         <chr>            <int>
+    ## 1 Nonproductive outside            295
+    ## 2 Nonproductive within              49
+    ## 3 Productive    outside            227
+    ## 4 Productive    within             405
+
 ## Highest contiguous NN
 
-```{r}
+``` r
 wcn.wide %<>%
   dplyr::mutate(TaskItem = as.numeric(as.character(TaskItem)))
 
@@ -748,11 +998,11 @@ highest_contiguous_nn <- get_contiguous()%>%
 
 #add highest contiguous to wcn.data
 wcn.data <- full_join(wcn.data, highest_contiguous_nn, by = "LadlabID")
-
 ```
 
 Code for checking highest contig NN
-```{r eval = FALSE}
+
+``` r
 full.data %>%
   filter(LadlabID == "022316-AB") %>%
   filter(TaskType == "immediate"|TaskType == "practice") %>%
@@ -768,11 +1018,12 @@ full.data %>%
 # 
 # wcn.data %>%
 #   filter(LadlabID == "040317-KK")
-
 ```
 
-See if highest contiguous next number underestimates kids' knowledge. Seems to correspond well with # correct data.
-```{r}
+See if highest contiguous next number underestimates kids’ knowledge.
+Seems to correspond well with \# correct data.
+
+``` r
 wcn.data %>%
   dplyr::filter(TaskType == "immediate"|TaskType == "practice") %>% #added prac for 1&5
   dplyr::group_by(LadlabID, Highest_Contig_NN) %>%
@@ -781,8 +1032,20 @@ wcn.data %>%
   dplyr::summarize(n_participants = n_distinct(LadlabID)) %>%
   tidyr::spread(n_corr, n_participants) %>%
   kable()
+```
 
+| Highest\_Contig\_NN |  1 |  2 |  3 |  4 |  5 |  6 |  7 |  8 |  9 | 10 |
+| ------------------: | -: | -: | -: | -: | -: | -: | -: | -: | -: | -: |
+|                   5 |  1 | 13 | 11 |  7 | NA |  2 |  2 | NA | NA | NA |
+|                  23 | NA |  2 |  2 |  6 |  7 |  4 | 14 |  7 |  1 | NA |
+|                  29 | NA | NA | NA | NA | NA | NA |  1 |  3 | NA | NA |
+|                  37 | NA | NA | NA | NA | NA |  1 |  1 |  3 |  2 | NA |
+|                  40 | NA | NA | NA | NA | NA | NA |  1 |  3 |  4 | NA |
+|                  62 | NA | NA | NA | NA | NA | NA | NA | NA |  2 | NA |
+|                  70 | NA | NA | NA | NA | NA | NA | NA | NA |  1 | NA |
+|                  86 | NA | NA | NA | NA | NA | NA | NA | NA | NA | 21 |
 
+``` r
 # 2 kids had NA as n_corr
 wcn.data %>%
   dplyr::filter(TaskType == "immediate"|TaskType == "practice") %>% #added prac for 1&5
@@ -790,6 +1053,15 @@ wcn.data %>%
   dplyr::summarize(n_corr = sum(Accuracy)) %>%
   dplyr::group_by(Highest_Contig_NN, n_corr) %>%
   filter(is.na(n_corr))
+```
+
+    ## # A tibble: 1 x 3
+    ## # Groups:   Highest_Contig_NN, n_corr [1]
+    ##   LadlabID  Highest_Contig_NN n_corr
+    ##   <chr>                 <dbl>  <int>
+    ## 1 040317-SL                23     NA
+
+``` r
 # 022516-ML
 # 040317-SL
 
@@ -818,8 +1090,11 @@ z <- wcn.data %>%
   spread(TaskItem, Accuracy)
 ```
 
-Median highest contiguous next number by productivity 
-```{r}
+    ## Joining, by = c("LadlabID", "Highest_Contig_NN")
+
+Median highest contiguous next number by productivity
+
+``` r
 wcn.data %>%
   filter(IHC < 99)%>%
   dplyr::distinct(LadlabID, Highest_Contig_NN, Productivity) %>%
@@ -828,11 +1103,16 @@ wcn.data %>%
                    median_NN = median(Highest_Contig_NN),
                    mean_NN = mean(Highest_Contig_NN)) %>%
   kable()
-
 ```
 
+| Productivity  |  n | median\_NN | mean\_NN |
+| :------------ | -: | ---------: | -------: |
+| Nonproductive | 43 |          5 | 13.53488 |
+| Productive    | 47 |         23 | 24.36170 |
+
 Plotting freq of highest contiguous as a function of productivity
-``` {r}
+
+``` r
 full.data %>%
   dplyr::right_join(highest_contiguous_nn) %>%
   dplyr::distinct(LadlabID, Highest_Contig_NN, Productivity) %>%
@@ -851,8 +1131,19 @@ full.data %>%
        y="Frequency") +
   theme_bw() + 
   theme(legend.position="bottom")
-ggsave('graphs/highestcontig-by-prod.png')
+```
 
+    ## Joining, by = "LadlabID"
+
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
+
+``` r
+ggsave('graphs/highestcontig-by-prod.png')
+```
+
+    ## Saving 7 x 5 in image
+
+``` r
 # side by side
 full.data %>%
   dplyr::right_join(highest_contiguous_nn) %>%
@@ -872,43 +1163,114 @@ full.data %>%
        y="Frequency") +
   theme_bw() + 
   theme(legend.position="bottom")
+```
+
+    ## Joining, by = "LadlabID"
+
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-34-2.png)<!-- -->
+
+``` r
 ggsave('graphs/highestcontig-by-prod-2.png')
 ```
 
+    ## Saving 7 x 5 in image
 
 Correlations
-```{r}
+
+``` r
 corrdf <- full.data %>%
   dplyr::right_join(highest_contiguous_nn) %>%
   dplyr::distinct(LadlabID, Highest_Contig_NN, Age, IHC, FHC) %>%
   dplyr::select(-LadlabID)
+```
 
+    ## Joining, by = "LadlabID"
+
+``` r
 rcorr(as.matrix(corrdf), type = "pearson")
 ```
+
+    ##                    Age  IHC  FHC Highest_Contig_NN
+    ## Age               1.00 0.51 0.61              0.37
+    ## IHC               0.51 1.00 0.72              0.75
+    ## FHC               0.61 0.72 1.00              0.54
+    ## Highest_Contig_NN 0.37 0.75 0.54              1.00
+    ## 
+    ## n= 122 
+    ## 
+    ## 
+    ## P
+    ##                   Age IHC FHC Highest_Contig_NN
+    ## Age                    0   0   0               
+    ## IHC                0       0   0               
+    ## FHC                0   0       0               
+    ## Highest_Contig_NN  0   0   0
 
 # Infinity Descriptives
 
 Number of kids in each infinity category
-```{r}
+
+``` r
 full.data %>%
   dplyr::distinct(LadlabID, Category)%>%
   dplyr::group_by(Category)%>%
   dplyr::summarise(n = n())
+```
 
+    ## # A tibble: 4 x 2
+    ##   Category             n
+    ##   <fct>            <int>
+    ## 1 A Non-knower        62
+    ## 2 B Endless-only      14
+    ## 3 C Successor-only    27
+    ## 4 D Full-knower       19
+
+``` r
 classification.data <- full.data %>%
   dplyr::distinct(LadlabID, EndlessKnower, SuccessorKnower, Productivity)
 
 #Successor contingency table
 table(classification.data$SuccessorKnower, classification.data$Productivity)
-chisq.test(table(classification.data$SuccessorKnower, classification.data$Productivity))
+```
 
+    ##    
+    ##     Nonproductive Productive
+    ##   0            31         39
+    ##   1            12         40
+
+``` r
+chisq.test(table(classification.data$SuccessorKnower, classification.data$Productivity))
+```
+
+    ## 
+    ##  Pearson's Chi-squared test with Yates' continuity correction
+    ## 
+    ## data:  table(classification.data$SuccessorKnower, classification.data$Productivity)
+    ## X-squared = 4.9877, df = 1, p-value = 0.02553
+
+``` r
 #Endless contingency table
 table(classification.data$EndlessKnower, classification.data$Productivity)
+```
+
+    ##    
+    ##     Nonproductive Productive
+    ##   0            39         49
+    ##   1             4         30
+
+``` r
 chisq.test(table(classification.data$EndlessKnower, classification.data$Productivity))
 ```
 
+    ## 
+    ##  Pearson's Chi-squared test with Yates' continuity correction
+    ## 
+    ## data:  table(classification.data$EndlessKnower, classification.data$Productivity)
+    ## X-squared = 10.006, df = 1, p-value = 0.001561
+
 Average age of kids for Endless and Successor Knowers
-```{r}
+
+``` r
 full.data %>%
   dplyr::distinct(LadlabID, SuccessorKnower, Age)%>%
   dplyr::group_by(SuccessorKnower)%>%
@@ -916,7 +1278,15 @@ full.data %>%
                    sdAge = sd(Age),
                    meanAgeMonths = mean(Age)*12,
                    sdAgeMonths = sd(Age)*12)
+```
 
+    ## # A tibble: 2 x 5
+    ##   SuccessorKnower meanAge sdAge meanAgeMonths sdAgeMonths
+    ##             <int>   <dbl> <dbl>         <dbl>       <dbl>
+    ## 1               0    4.92 0.577          59.0        6.93
+    ## 2               1    5.11 0.550          61.3        6.60
+
+``` r
 full.data %>%
   dplyr::distinct(LadlabID, EndlessKnower, Age)%>%
   dplyr::group_by(EndlessKnower)%>%
@@ -924,17 +1294,31 @@ full.data %>%
                    sdAge = sd(Age),
                    meanAgeMonths = mean(Age)*12,
                    sdAgeMonths = sd(Age)*12)
-
 ```
 
+    ## # A tibble: 2 x 5
+    ##   EndlessKnower meanAge sdAge meanAgeMonths sdAgeMonths
+    ##           <int>   <dbl> <dbl>         <dbl>       <dbl>
+    ## 1             0    4.89 0.560          58.7        6.71
+    ## 2             1    5.27 0.516          63.2        6.19
+
 Infinity in relation to highest count
-```{r}
+
+``` r
 full.data %>%
   dplyr::distinct(LadlabID, EndlessKnower, IHC, FHC) %>%
   dplyr::group_by(EndlessKnower) %>%
   dplyr::summarize(mean_IHC = mean(IHC),
                    mean_FHC = mean(FHC))
+```
 
+    ## # A tibble: 2 x 3
+    ##   EndlessKnower mean_IHC mean_FHC
+    ##           <int>    <dbl>    <dbl>
+    ## 1             0     42.8     63.8
+    ## 2             1     70.1     91.8
+
+``` r
 full.data %>%
   dplyr::distinct(LadlabID, SuccessorKnower, IHC, FHC) %>%
   dplyr::group_by(SuccessorKnower) %>%
@@ -942,45 +1326,75 @@ full.data %>%
                    mean_FHC = mean(FHC))
 ```
 
+    ## # A tibble: 2 x 3
+    ##   SuccessorKnower mean_IHC mean_FHC
+    ##             <int>    <dbl>    <dbl>
+    ## 1               0     47.4     67.0
+    ## 2               1     54.5     77.7
+
 Infinity in relation to WCN
-```{r}
+
+``` r
 full.data %>%
   dplyr::right_join(highest_contiguous_nn) %>%
   dplyr::distinct(LadlabID, EndlessKnower, Highest_Contig_NN) %>%
   dplyr::group_by(EndlessKnower) %>%
   dplyr::summarize(mean_contig_nn = mean(Highest_Contig_NN),
                    median_contig_nn = median(Highest_Contig_NN))
+```
 
+    ## Joining, by = "LadlabID"
 
+    ## # A tibble: 2 x 3
+    ##   EndlessKnower mean_contig_nn median_contig_nn
+    ##           <int>          <dbl>            <dbl>
+    ## 1             0           26.2               23
+    ## 2             1           45.7               37
+
+``` r
 full.data %>%
   dplyr::right_join(highest_contiguous_nn) %>%
   dplyr::distinct(LadlabID, SuccessorKnower, Highest_Contig_NN) %>%
   dplyr::group_by(SuccessorKnower) %>%
   dplyr::summarize(mean_contig_nn = mean(Highest_Contig_NN),
                    median_contig_nn = median(Highest_Contig_NN))
-
-
-
 ```
 
+    ## Joining, by = "LadlabID"
+
+    ## # A tibble: 2 x 3
+    ##   SuccessorKnower mean_contig_nn median_contig_nn
+    ##             <int>          <dbl>            <dbl>
+    ## 1               0           27.4               23
+    ## 2               1           37.4               23
+
 # Analyses
+
 ## Counting, Productivity, and Infinity Battery
-To identify whether there is connection between counting experience and Infinity Task performance, we will conduct three initial analyses, predicting Infinity Task performance from either (1) Initial Highest Count, (2) Productivity for Decade Rule (defined above), or (3) performance on the Next Number task. 
 
-glmer(inf.0/1 ~ (predictor) + age + (1|subject), family = binomial).
+To identify whether there is connection between counting experience and
+Infinity Task performance, we will conduct three initial analyses,
+predicting Infinity Task performance from either (1) Initial Highest
+Count, (2) Productivity for Decade Rule (defined above), or (3)
+performance on the Next Number task.
 
----
-First, we need to make a model data frame that readily has all of this information
+glmer(inf.0/1 \~ (predictor) + age + (1|subject), family = binomial).
 
-```{r}
+-----
+
+First, we need to make a model data frame that readily has all of this
+information
+
+``` r
 #model base
 model.df <- full.data %>%
   dplyr::select(LadlabID, Age, AgeGroup, Gender, Task, Response, SuccessorKnower, EndlessKnower, 
                 IHC, FHC, DCE, Productivity)
 ```
 
-Highest Next Number - commented because we're using highest contiguous
-```{r}
+Highest Next Number - commented because we’re using highest contiguous
+
+``` r
 # lookup <- full.data %>%
 #   filter(Task == "WCN", 
 #          Accuracy == 1)%>%
@@ -1003,8 +1417,9 @@ Highest Next Number - commented because we're using highest contiguous
 # model.df <- add_highest_num()
 ```
 
-Add highest contiguous next number to model.df 
-```{r}
+Add highest contiguous next number to model.df
+
+``` r
 model.df <- right_join(model.df, highest_contiguous_nn, by = "LadlabID")
 
 # hc.datawide <- right_join(hc.datawide, highest_contiguous_nn, by = "LadlabID")
@@ -1018,15 +1433,18 @@ model.df <- right_join(model.df, highest_contiguous_nn, by = "LadlabID")
 # #median is 86 for all groups
 ```
 
-Get mean WCN for everyone <span style="color:red">Not using this anymore - RMS</span>
-```{r}
+Get mean WCN for everyone <span style="color:red">Not using this anymore
+- RMS</span>
+
+``` r
 # lookup <- wcn.wide %>%
 #   group_by(LadlabID)%>%
 #   summarise(mean.NN = mean(immediate, na.rm = TRUE))
 ```
 
 ## Successor models
-```{r}
+
+``` r
 #each participant only needs one row here, because we only need to know whether they are a Successor Knower or Endless Knower
 distinct_model.df <- model.df %>%
   distinct(LadlabID, Age, AgeGroup, Gender, SuccessorKnower, EndlessKnower, 
@@ -1039,11 +1457,7 @@ distinct_model.df <- model.df %>%
   mutate(IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)), #scale and center for model fit
          FHC.c = as.vector(scale(FHC, center = TRUE, scale=TRUE)),
          Highest_Contig_NN.c = as.vector(scale(Highest_Contig_NN, center = TRUE, scale=TRUE)), 
-         Age.c = as.vector(scale(Age, center = TRUE, scale=TRUE))) %>%
-  mutate(delta.hc = FHC-IHC, 
-         gain.hc = delta.hc/(100-IHC), 
-         gain.hc = ifelse(gain.hc == "NaN", 1, as.numeric(gain.hc))) %>%
-  mutate(gain.hc = ifelse(gain.hc == 0 & IHC == 99, 1, as.numeric(gain.hc)))
+         Age.c = as.vector(scale(Age, center = TRUE, scale=TRUE)))
 
 # #add mean_nn to model df
 # distinct_model.df <- right_join(distinct_model.df, lookup, by = "LadlabID")
@@ -1063,10 +1477,6 @@ model.nn.successor <- glm(SuccessorKnower ~ Highest_Contig_NN.c + Age.c, family 
 model.prod.successor <- glm(SuccessorKnower ~ Productivity + Age.c, family = "binomial",
                               data = distinct_model.df)
 
-##EXPLORATORY## - GAIN SCORE
-model.gain.successor <- glm(SuccessorKnower ~ gain.hc + Age.c, family = "binomial",
-                              data = distinct_model.df)
-
 ##Regression table for Successor Knower Models (Table 2)
 mtable.sf.knowers <- mtable('Base' = base.successor,
             'IHC' = model.ihc.successor,
@@ -1075,22 +1485,83 @@ mtable.sf.knowers <- mtable('Base' = base.successor,
             #summary.stats = c('R-squared','F','p','N'))
             summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'))
 mtable.sf.knowers
+```
 
+    ## 
+    ## Calls:
+    ## Base: glm(formula = SuccessorKnower ~ Age.c, family = "binomial", data = distinct_model.df)
+    ## IHC: glm(formula = SuccessorKnower ~ IHC.c + Age.c, family = "binomial", 
+    ##     data = distinct_model.df)
+    ## Highest Contig.: glm(formula = SuccessorKnower ~ Highest_Contig_NN.c + Age.c, 
+    ##     family = "binomial", data = distinct_model.df)
+    ## Productivity: glm(formula = SuccessorKnower ~ Productivity + Age.c, family = "binomial", 
+    ##     data = distinct_model.df)
+    ## 
+    ## =============================================================================================
+    ##                                             Base      IHC     Highest Contig.  Productivity  
+    ## ---------------------------------------------------------------------------------------------
+    ##   (Intercept)                              -0.306    -0.306       -0.307          -0.847*    
+    ##                                            (0.186)   (0.186)      (0.187)         (0.370)    
+    ##   Age.c                                     0.342     0.313        0.245           0.149     
+    ##                                            (0.188)   (0.218)      (0.202)         (0.218)    
+    ##   IHC.c                                               0.058                                  
+    ##                                                      (0.216)                                 
+    ##   Highest_Contig_NN.c                                              0.271                     
+    ##                                                                   (0.200)                    
+    ##   Productivity: Productive/Nonproductive                                           0.816     
+    ##                                                                                   (0.468)    
+    ## ---------------------------------------------------------------------------------------------
+    ##   Nagelkerke R-sq.                          0.037     0.038        0.056           0.070     
+    ##   Log-likelihood                          -81.539   -81.503      -80.610         -79.977     
+    ##   AIC                                     167.077   169.006      167.221         165.954     
+    ##   N                                       122       122          122             122         
+    ## =============================================================================================
+
+``` r
 ###MODEL COMPARISONS##
 #base v. IHC
 anova(base.successor, model.ihc.successor, test = 'LRT') #IHC not significant
-
-#Highest contiguous NN v. IHC
-anova(base.successor, model.nn.successor, test = 'LRT')#highest contiguous NN not significant
-
-#Productivity v. IHC
-anova(base.successor, model.prod.successor, test = 'LRT')#Productivity trending
-
 ```
 
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: SuccessorKnower ~ Age.c
+    ## Model 2: SuccessorKnower ~ IHC.c + Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)
+    ## 1       120     163.08                     
+    ## 2       119     163.01  1 0.071147   0.7897
+
+``` r
+#Highest contiguous NN v. IHC
+anova(base.successor, model.nn.successor, test = 'LRT')#highest contiguous NN not significant
+```
+
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: SuccessorKnower ~ Age.c
+    ## Model 2: SuccessorKnower ~ Highest_Contig_NN.c + Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)
+    ## 1       120     163.08                     
+    ## 2       119     161.22  1   1.8565    0.173
+
+``` r
+#Productivity v. IHC
+anova(base.successor, model.prod.successor, test = 'LRT')#Productivity trending
+```
+
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: SuccessorKnower ~ Age.c
+    ## Model 2: SuccessorKnower ~ Productivity + Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)  
+    ## 1       120     163.08                       
+    ## 2       119     159.95  1   3.1234  0.07718 .
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 ## Endless Models
-```{r}
+
+``` r
 #Base model
 base.endless <- glm(EndlessKnower ~ Age.c, family = "binomial", 
                       data = distinct_model.df)
@@ -1107,10 +1578,6 @@ model.nn.endless <- glm(EndlessKnower ~ Highest_Contig_NN.c + Age.c, family = "b
 model.prod.endless <- glm(EndlessKnower ~ Productivity + Age.c, family = "binomial", 
                             data = distinct_model.df)
 
-##EXPLORATORY## - GAIN SCORE
-model.gain.endless <- glm(EndlessKnower ~ gain.hc + Age.c, family = "binomial", 
-                          data = distinct_model.df)
-
 ##Regression table for Endless Models
 mtable.endless.knowers <- mtable('Base' = base.endless,
             'IHC' = model.ihc.endless,
@@ -1120,17 +1587,85 @@ mtable.endless.knowers <- mtable('Base' = base.endless,
             summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'))
 
 mtable.endless.knowers
+```
 
+    ## 
+    ## Calls:
+    ## Base: glm(formula = EndlessKnower ~ Age.c, family = "binomial", data = distinct_model.df)
+    ## IHC: glm(formula = EndlessKnower ~ IHC.c + Age.c, family = "binomial", 
+    ##     data = distinct_model.df)
+    ## Highest Contig.: glm(formula = EndlessKnower ~ Highest_Contig_NN.c + Age.c, family = "binomial", 
+    ##     data = distinct_model.df)
+    ## Productivity: glm(formula = EndlessKnower ~ Productivity + Age.c, family = "binomial", 
+    ##     data = distinct_model.df)
+    ## 
+    ## =================================================================================================
+    ##                                              Base        IHC      Highest Contig.  Productivity  
+    ## -------------------------------------------------------------------------------------------------
+    ##   (Intercept)                              -1.057***   -1.131***     -1.091***       -2.010***   
+    ##                                            (0.221)     (0.235)       (0.228)         (0.542)     
+    ##   Age.c                                     0.707**     0.407         0.535*          0.446      
+    ##                                            (0.224)     (0.250)       (0.238)         (0.249)     
+    ##   IHC.c                                                 0.666**                                  
+    ##                                                        (0.242)                                   
+    ##   Highest_Contig_NN.c                                                 0.504*                     
+    ##                                                                      (0.215)                     
+    ##   Productivity: Productive/Nonproductive                                              1.329*     
+    ##                                                                                      (0.627)     
+    ## -------------------------------------------------------------------------------------------------
+    ##   Nagelkerke R-sq.                          0.125       0.205         0.183           0.179      
+    ##   Log-likelihood                          -66.655     -62.810       -63.884         -64.095      
+    ##   AIC                                     137.311     131.619       133.767         134.190      
+    ##   N                                       122         122           122             122          
+    ## =================================================================================================
+
+``` r
 ##SIMPLE MODEL COMPARISONS##
 #base v. IHC
 anova(base.endless, model.ihc.endless, test = 'LRT') #IHC significant
+```
 
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: EndlessKnower ~ Age.c
+    ## Model 2: EndlessKnower ~ IHC.c + Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)   
+    ## 1       120     133.31                        
+    ## 2       119     125.62  1   7.6914 0.005549 **
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+``` r
 #base v. highest contiguous
 anova(model.nn.endless, base.endless, test = 'LRT')#Highest contig NN significant
+```
 
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: EndlessKnower ~ Highest_Contig_NN.c + Age.c
+    ## Model 2: EndlessKnower ~ Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)  
+    ## 1       119     127.77                       
+    ## 2       120     133.31 -1  -5.5433  0.01855 *
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+``` r
 #base v. productivity
 anova(model.prod.endless, base.endless, test = 'LRT')#Prod significant
+```
 
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: EndlessKnower ~ Productivity + Age.c
+    ## Model 2: EndlessKnower ~ Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)  
+    ## 1       119     128.19                       
+    ## 2       120     133.31 -1   -5.121  0.02364 *
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+``` r
 # #okay with about mean NN
 # model2.endless <- glmer(EndlessKnower ~ mean.NN + Age + (1|LadlabID), family = "binomial", 
 #                         data = distinct_model.df)
@@ -1138,9 +1673,11 @@ anova(model.prod.endless, base.endless, test = 'LRT')#Prod significant
 ```
 
 ### Endless: Large model comparison
-Put all significant Endless predictors into large model, run model comparison
 
-```{r}
+Put all significant Endless predictors into large model, run model
+comparison
+
+``` r
 ##BASE MODEL WITH IHC
 large.endless.base <- glm(EndlessKnower ~ IHC.c + Age.c, 
                             family = "binomial", data = distinct_model.df)
@@ -1166,81 +1703,120 @@ mtable.endless.large <- mtable('IHC alone' = large.endless.base,
             summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'))
 
 mtable.endless.large
+```
 
+    ## 
+    ## Calls:
+    ## IHC alone: glm(formula = EndlessKnower ~ IHC.c + Age.c, family = "binomial", 
+    ##     data = distinct_model.df)
+    ## Highest contiguous NN + IHC: glm(formula = EndlessKnower ~ Highest_Contig_NN.c + IHC.c + Age.c, 
+    ##     family = "binomial", data = distinct_model.df)
+    ## Productivity + IHC: glm(formula = EndlessKnower ~ Productivity + IHC.c + Age.c, family = "binomial", 
+    ##     data = distinct_model.df)
+    ## Prod. + Highest contig. + IHC: glm(formula = EndlessKnower ~ Productivity + Highest_Contig_NN.c + 
+    ##     IHC.c + Age.c, family = "binomial", data = distinct_model.df)
+    ## 
+    ## ======================================================================================================================================
+    ##                                           IHC alone   Highest contiguous NN + IHC  Productivity + IHC  Prod. + Highest contig. + IHC  
+    ## --------------------------------------------------------------------------------------------------------------------------------------
+    ##   (Intercept)                              -1.131***           -1.129***                -1.710**                  -1.694**            
+    ##                                            (0.235)             (0.235)                  (0.563)                   (0.565)             
+    ##   IHC.c                                     0.666**             0.529                    0.523*                    0.411              
+    ##                                            (0.242)             (0.336)                  (0.263)                   (0.345)             
+    ##   Age.c                                     0.407               0.411                    0.315                     0.320              
+    ##                                            (0.250)             (0.250)                  (0.260)                   (0.260)             
+    ##   Highest_Contig_NN.c                                           0.173                                              0.148              
+    ##                                                                (0.299)                                            (0.297)             
+    ##   Productivity: Productive/Nonproductive                                                 0.823                     0.802              
+    ##                                                                                         (0.687)                   (0.689)             
+    ## --------------------------------------------------------------------------------------------------------------------------------------
+    ##   Nagelkerke R-sq.                          0.205               0.209                    0.221                     0.223              
+    ##   Log-likelihood                          -62.810             -62.642                  -62.059                   -61.934              
+    ##   AIC                                     131.619             133.284                  132.118                   133.868              
+    ##   N                                       122                 122                      122                       122                  
+    ## ======================================================================================================================================
+
+``` r
 ##MODEL COMPARISONS
 #IHC v. Highest contig.
 anova(large.endless.base, large.endless.nn, test = 'LRT')#Highest contig. NS
+```
 
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: EndlessKnower ~ IHC.c + Age.c
+    ## Model 2: EndlessKnower ~ Highest_Contig_NN.c + IHC.c + Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)
+    ## 1       119     125.62                     
+    ## 2       118     125.28  1   0.3351   0.5627
+
+``` r
 #IHC v. Productivity
 anova(large.endless.base, large.endless.prod, test = 'LRT')##Productivity NS
 ```
- 
-#LM predicting IHC from productivity and age, HCNN and age
-```{r}
+
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: EndlessKnower ~ IHC.c + Age.c
+    ## Model 2: EndlessKnower ~ Productivity + IHC.c + Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)
+    ## 1       119     125.62                     
+    ## 2       118     124.12  1   1.5013   0.2205
+
+\#LM predicting IHC from productivity and age, HCNN and age
+
+``` r
 lm.prod <- full.data %>%
-  distinct(LadlabID, Productivity, Age, IHC)%>%
-  mutate(Age.c = as.vector(scale(Age, center = TRUE, scale=TRUE)))
+  distinct(LadlabID, Productivity, Age, IHC)
 
-lm1 <- lm(IHC ~ Productivity + Age.c, data = lm.prod)
+lm1 <- lm(IHC ~ Productivity + Age, data = lm.prod)
 summary(lm1)
+```
 
+    ## 
+    ## Call:
+    ## lm(formula = IHC ~ Productivity + Age, data = lm.prod)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -52.524 -17.340  -5.718  23.332  52.599 
+    ## 
+    ## Coefficients:
+    ##                        Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)             -54.058     22.922  -2.358  0.01999 *  
+    ## ProductivityProductive   30.722      5.844   5.257 6.54e-07 ***
+    ## Age                      16.923      4.907   3.449  0.00078 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 26.38 on 119 degrees of freedom
+    ## Multiple R-squared:  0.4009, Adjusted R-squared:  0.3909 
+    ## F-statistic: 39.82 on 2 and 119 DF,  p-value: 5.742e-14
 
-lm2 <- lm(IHC ~ Highest_Contig_NN + Age.c, data = distinct_model.df)
+``` r
+lm.prod <- full.data %>%
+  distinct(LadlabID, highest_contiguous_nn, Age, IHC)
+
+lm2 <- lm(IHC ~ Highest_Contig_NN + Age, data = distinct_model.df)
 summary(lm2)
 ```
 
-#Exploratory - what about with participants who did not reach 99?
-```{r}
-explore.dat <- distinct_model.df %>%
-  filter(IHC < 99)
-
-end.base <- glm(EndlessKnower ~ Age.c, family = "binomial", data = explore.dat)
-
-#IHC
-end.ihc <- glm(EndlessKnower ~ IHC.c + Age.c, family = "binomial", data = explore.dat)
-end.prod <- glm(EndlessKnower ~ Productivity + Age.c, family = "binomial", data = explore.dat)
-end.nn <- glm(EndlessKnower ~Highest_Contig_NN + Age.c, family = "binomial", data = explore.dat)
-```
-
-#Exploratory - trying to account for distance between IHC and FHC
-```{r}
-tmp <- distinct_model.df %>%
-  mutate(delta.hc = FHC-IHC)%>%
-  mutate(prop.hc = delta.hc/(100-IHC), 
-         prop.hc = ifelse(prop.hc == "NaN", 1, as.numeric(prop.hc)), 
-         prop.hc = ifelse(prop.hc == 0 & IHC == 99, 1, as.numeric(prop.hc))) #one kid with IHC and FHC as 99
-
-#plot by IHC
-ggplot(tmp, aes(x = IHC, y = prop.hc, colour = Productivity)) +
-  geom_point()+
-  geom_jitter(width = .01)+
-  theme_bw(base_size = 13) +
-  theme(legend.position = "bottom", 
-        panel.grid.minor = element_blank()) +
-  scale_x_continuous(breaks = seq(0, 100, 10)) +
-  labs(x = 'IHC', y = 'Productivity Gain Score')
-
-end.gain.ihc <- glm(EndlessKnower ~ IHC.c + Age.c, family = "binomial", 
-                data = distinct_model.df)
-end.gain.Prod <- glm(EndlessKnower ~ Productivity + Age.c, family = "binomial", 
-                     data = distinct_model.df)
-end.gain.gain <- glm(EndlessKnower ~ gain.hc + Age.c, family = "binomial", 
-                     data = distinct_model.df)
-end.gain.nn <- glm(EndlessKnower ~ Highest_Contig_NN + Age.c, 
-                   family = "binomial", data = distinct_model.df)
-summary(end.gain.ihc)
-summary(end.gain.Prod)
-summary(end.gain.gain)
-summary(end.gain.nn)
-
-#add IHC to model with gain score
-end.gain.ihcgain <- glm(EndlessKnower ~ IHC.c + gain.hc + Age.c, family = "binomial", 
-                        data = distinct_model.df)
-anova(end.gain.ihcgain, end.gain.gain, test = 'LRT')
-
-#correlation between productivity and gain score
-tmp %<>%
-  mutate(Prod.num = ifelse(Productivity == "Productive", 1, 0))
-
-cor.test(tmp$Prod.num, tmp$prop.hc)
-```
+    ## 
+    ## Call:
+    ## lm(formula = IHC ~ Highest_Contig_NN + Age, data = distinct_model.df)
+    ## 
+    ## Residuals:
+    ##     Min      1Q  Median      3Q     Max 
+    ## -60.998 -10.895  -3.356   9.613  60.317 
+    ## 
+    ## Coefficients:
+    ##                    Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)       -53.90837   17.14384  -3.144   0.0021 ** 
+    ## Highest_Contig_NN   0.78935    0.07249  10.889  < 2e-16 ***
+    ## Age                15.87116    3.55371   4.466 1.82e-05 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 20.73 on 119 degrees of freedom
+    ## Multiple R-squared:  0.6302, Adjusted R-squared:  0.624 
+    ## F-statistic: 101.4 on 2 and 119 DF,  p-value: < 2.2e-16
