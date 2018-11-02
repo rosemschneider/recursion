@@ -289,9 +289,9 @@ ggsave('graphs/prod-by-age.png')
 
 ```
 
-Distance between IHC and FHC
+## Distance between IHC and FHC
 
-Restruture data to plot distance between IHC, DCE, and FHC
+Restructure data to plot distance between IHC, DCE, and FHC
 ```{r}
 hc.dev.data <- full.data %>%
   dplyr::select(LadlabID, Age, Productivity, IHC, DCE, FHC) %>%
@@ -322,7 +322,7 @@ hc.dev.nonprod <- subset(hc.dev.data, Productivity == "Nonproductive")
 
 
 Separate graphs for productivity groups (for easier viewing)
-```{r}
+```{r eval=FALSE, include=FALSE}
 #productive
 ggplot(hc.dev.prod, aes(x = LadlabID, y = hc)) + 
   facet_grid(rows = vars(Productivity)) +
@@ -420,6 +420,7 @@ full.data %>%
 
 ```
 
+## Decade prompts
 Average number of decade prompts provided. Productive counters first
 ```{r}
 full.data %>%
