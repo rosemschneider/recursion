@@ -276,8 +276,7 @@ ggplot(unique.hc.data, aes(x=IHC, color=Productivity)) +
   coord_fixed(ratio=1) +
   scale_y_continuous(breaks=seq(0,40,10), lim=c(0,35)) +
   scale_x_continuous(breaks=seq(0,100,by=10)) +
-  labs(title="Initial Highest Count",  
-       x="IHC (no error)", 
+  labs(x="IHC (no error)", 
        y="Frequency") +
   theme_bw() + 
   theme(legend.position="bottom")
@@ -299,8 +298,7 @@ ggplot(unique.hc.data, aes(x=AgeMonths, colour = Productivity)) +
   scale_x_continuous(breaks=seq(48,72,by=6)) +
   scale_color_brewer(palette="Set1") + 
   scale_fill_brewer(palette="Set1") +
-  labs(title="Productivity by Age", 
-       x="Age in Months", 
+  labs( x="Age in Months", 
        y="Frequency") +
   theme_bw(base_size = 13) + 
   theme(legend.position="bottom")
@@ -393,8 +391,7 @@ ggplot(hc.dev.prod, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) +
   scale_color_brewer(palette="Dark2") +
   scale_shape_manual(values = c(4,5,20)) +
   ylim(0, 100) +
-  labs(title="A. Distance, Productive Decade Counters",
-       x = "Each line = individual participant",
+  labs(x = "Each line = individual participant",
        y="Highest Count") +
   theme_bw(base_size = 13) + 
   theme(legend.position="bottom", 
@@ -412,8 +409,7 @@ ggplot(hc.dev.nonprod, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) +
   scale_color_brewer(palette="Dark2") +
   scale_shape_manual(values = c(4,5,20)) +
   ylim(0, 100) +
-  labs(title="B. Distance, Non-productive Decade Counters",
-       x = "Each line = individual participant",
+  labs(x = "Each line = individual participant",
        y="Highest Count") +
   theme_bw(base_size = 13) + 
   theme(legend.position="bottom", 
@@ -577,7 +573,6 @@ wcn.data %>%
   theme(legend.position = "none", 
         panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank()) +
-  ggtitle("Overall proportion correct on Next Number Task") +
   theme(text = element_text(size = 12)) +
   ylim(0, 1.0) 
   
@@ -650,8 +645,7 @@ wcn.data %>%
                position = position_dodge(width=0.90), width = 0.2) +
   scale_fill_brewer(name = "Productivity", palette="Set1") +
   scale_y_continuous(lim=c(0,1)) +
-  labs(title="Accuracy on WCN by Productivity and trial type", 
-       y="Proportion Correct", 
+  labs(y="Proportion Correct", 
        fill="Productivity") +
   theme_bw() +
   theme(text = element_text(size = 12))
@@ -672,10 +666,9 @@ wcn.data %>%
                geom="point", shape=23, size=3, colour = "black") +
   stat_summary(fun.data = mean_cl_boot, geom="errorbar",
                position = position_dodge(width=0.8), width = 0.2) +  
-  scale_fill_brewer(name = "Trial Type", palette="Set1",direction=-1) +
+  scale_fill_brewer(name = "Trial Type", palette="Dark2",direction=-1) +
   scale_y_continuous(limits=c(0,1)) +
-  labs(title="Performance on Next Number task by Productivity and trial type", 
-       y="Average Proportion Correct", x="",
+  labs(y="Average Proportion Correct", x="",
        fill="Trial Type") +
   theme_bw() +
   theme(panel.grid.major = element_blank(), 
@@ -786,7 +779,7 @@ Code for checking highest contig NN
 full.data %>%
   # filter(LadlabID == "022316-AB") %>%
   filter(TaskType == "immediate"|TaskType == "practice") %>%
-  select(LadlabID, TaskType, TaskItem, Accuracy)
+  dplyr::select(LadlabID, TaskType, TaskItem, Accuracy)
 
 # these two kids, for example, had the same contig highest NN but diff profile of responses
 #040317-KK #7 correct out of 10
@@ -869,15 +862,14 @@ full.data %>%
   ggplot(aes(x=Highest_Contig_NN, color=Productivity)) + 
   geom_dotplot(aes(fill = Productivity),
                binwidth=1, stackgroups=TRUE, binpositions="all",method="dotdensity") +
-  scale_color_brewer(palette="Set2") + 
-  scale_fill_brewer(palette="Set2") +
+  scale_color_brewer(palette="Set1") + 
+  scale_fill_brewer(palette="Set1") +
   coord_fixed(ratio=1) +
   scale_y_continuous(breaks=seq(0,50,10), lim=c(0,50)) +
   #scale_x_continuous(breaks=seq(0,100,by=10)) +
   scale_x_continuous(breaks = c(0, 1, 5, 23, 29, 37, 40, 62, 70, 86),
                      labels=c("0", "1", "5", "23", "29", "37", "40", "62", "70", "86")) +
-  labs(title="Highest Contiguous Next Number by Decade Productivity",  
-       x="Highest Contiguous Next Number", 
+  labs(x="Highest Contiguous Next Number", 
        y="Frequency") +
   theme_bw() + 
   theme(legend.position="bottom")
@@ -890,15 +882,14 @@ full.data %>%
   ggplot(aes(x=Highest_Contig_NN, color=Productivity)) + 
   geom_dotplot(aes(fill = Productivity),
                binwidth=1, stackdir="up", position=position_dodge(width=2), stackgroups=FALSE, binpositions="all",method="dotdensity") +
-  scale_color_brewer(palette="Set2") + 
-  scale_fill_brewer(palette="Set2") +
+  scale_color_brewer(palette="Set1") + 
+  scale_fill_brewer(palette="Set1") +
   coord_fixed(ratio=1) +
   scale_y_continuous(breaks=seq(0,30,10), lim=c(0,30)) +
   #scale_x_continuous(breaks=seq(0,100,by=10)) +
   scale_x_continuous(breaks = c(0, 1, 5, 23, 29, 37, 40, 62, 70, 86),
                      labels=c("0", "1", "5", "23", "29", "37", "40", "62", "70", "86")) +
-  labs(title="Highest Contiguous Next Number by Decade Productivity",  
-       x="Highest Contiguous Next Number", 
+  labs(x="Highest Contiguous Next Number", 
        y="Frequency") +
   theme_bw() + 
   theme(legend.position="bottom")
@@ -1001,6 +992,30 @@ ms.cor <- full.data %>%
 cor.test(ms.cor$IHC, ms.cor$prod.gradient) #sig. correlation between IHC and prod. gradient
 cor.test(ms.cor$FHC, ms.cor$prod.gradient) #sig. correlation between FHC and prod. gradient
 
+```
+
+#Jess graph
+```{r}
+wcn.data %>%
+  mutate(prod.group = ifelse(IHC > 99, "IHC > 99", 
+                             ifelse(Productivity == "Productive", "Prod. IHC < 99", "Nonproductive")))%>%
+  filter(TaskType == "immediate")%>%
+  mutate(TaskItem == factor(TaskItem))%>%
+  group_by(TaskItem, prod.group)%>%
+   summarise(mean = mean(Accuracy, na.rm = TRUE), 
+            n = n(), 
+            sd = sd(Accuracy, na.rm = TRUE), 
+            se = sd/sqrt(n)) %>%
+  ggplot(aes(x = factor(TaskItem), y = mean, colour = prod.group, group= prod.group)) +
+  geom_point(size = 2) + 
+  geom_line() +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), 
+                width = .1) +
+  theme_bw(base_size = 13) + 
+  scale_colour_brewer(palette = "Dark2") +
+  theme(legend.position = "right") +
+  labs(x = "Number queried", y = "Mean performance") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
 # Analyses
