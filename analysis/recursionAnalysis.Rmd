@@ -11,11 +11,11 @@ rm(list = ls())
 require("knitr")
 
 # # Set WD
-opts_knit$set(root.dir = "~/Sites/recursion/")
+# opts_knit$set(root.dir = "~/Sites/recursion/")
 #opts_knit$set(root.dir = "~/Projects/Junyi study/recursiongithub/") #for PC
-#opts_knit$set(root.dir = "~/Documents/Projects/recursion/") #this is specific to RMS, change accordinglyz
+opts_knit$set(root.dir = "~/Documents/Projects/recursion/") #this is specific to RMS, change accordinglyz
 
-# For wrappign lines when knitting
+# For wrapping lines when knitting
 opts_chunk$set(tidy.opts=list(width.cutoff=80),tidy=TRUE,
                warning=FALSE)
 
@@ -177,6 +177,15 @@ full.data %>%
   dplyr::summarise(n =n())
 ```
 
+#Productivity gradient
+```{r}
+full.data %<>%
+  mutate(delta.hc = FHC-IHC, 
+         prod.gradient = delta.hc/(100-IHC), 
+         prod.gradient = ifelse(IHC == 100, 1, as.numeric(prod.gradient)), 
+         prod.gradient = ifelse(prod.gradient == 0 & IHC == 99, 1, as.numeric(prod.gradient)))
+```
+
 ***
 # Highest Count Descriptives
 Average of IHC, DCE, and FHC for all kids
@@ -206,6 +215,16 @@ full.data %>%
                    min_FHC = min(FHC),
                    max_FHC = max(FHC),
                    median_FHC = median(FHC)) %>%
+  kable()
+
+#productivity gradient
+full.data %>%
+  distinct(LadlabID, Productivity, delta.hc, prod.gradient)%>%
+  group_by(Productivity)%>%
+  summarise(mean_gradient = mean(prod.gradient), 
+            sd_gradient = sd(prod.gradient), 
+            mean_delta.hc = mean(delta.hc), 
+            sd_delta.hc = sd(delta.hc))%>%
   kable()
 ```
 
@@ -252,8 +271,8 @@ unique.hc.data <- full.data %>%
 ggplot(unique.hc.data, aes(x=IHC, color=Productivity)) + 
   geom_dotplot(aes(fill = Productivity),
                binwidth=1, stackgroups=TRUE, binpositions="all",method="dotdensity") +
-  scale_color_brewer(palette="Set2") + 
-  scale_fill_brewer(palette="Set2") +
+  scale_color_brewer(palette="Set1") + 
+  scale_fill_brewer(palette="Set1") +
   coord_fixed(ratio=1) +
   scale_y_continuous(breaks=seq(0,40,10), lim=c(0,35)) +
   scale_x_continuous(breaks=seq(0,100,by=10)) +
@@ -278,8 +297,8 @@ ggplot(unique.hc.data, aes(x=AgeMonths, colour = Productivity)) +
   coord_fixed(ratio=1) +
   scale_y_continuous(breaks=seq(0,10,5), lim=c(0,12)) +
   scale_x_continuous(breaks=seq(48,72,by=6)) +
-  scale_color_brewer(palette="Set2") + 
-  scale_fill_brewer(palette="Set2") +
+  scale_color_brewer(palette="Set1") + 
+  scale_fill_brewer(palette="Set1") +
   labs(title="Productivity by Age", 
        x="Age in Months", 
        y="Frequency") +
@@ -496,7 +515,7 @@ wcn.wide <- full.data %>%
   filter(TaskType != "practice") %>%
   filter(TaskItem != 3) %>% # a trial on 3 for momentum that doesn't exist for immediate
   droplevels()%>%
-  dplyr::select(LadlabID, Age, AgeGroup, TaskType, TaskItem, Accuracy, Productivity) %>%
+  dplyr::select(LadlabID, Age, AgeGroup, TaskType, TaskItem, Accuracy, Productivity, prod.gradient) %>%
   spread(TaskType, Accuracy)
 
 # data check: some kids got 1 for immediate but 0 for momentum or 1 for immediate and 1 for momentum (N = 5).Keeping them. 
@@ -540,25 +559,31 @@ Plotting %corr on WCN as function of productivity
 ```{r}
 wcn.data %>%
   dplyr::filter(TaskType == "immediate") %>%
-  dplyr::group_by(LadlabID, Productivity) %>%
+  dplyr::group_by(LadlabID, Productivity, prod.gradient) %>%
   dplyr::summarize(avg.wcn = mean(Accuracy, na.rm=TRUE),
                    sd.wcn = sd(Accuracy, na.rm=TRUE)) %>%
   ggplot(aes(x = Productivity, y = avg.wcn, fill=factor(Productivity))) +
   stat_summary(fun.y = mean, position = position_dodge(width = .95), 
                geom="bar", alpha = .8, colour = "black") +
+  geom_violin(alpha = .3) +
   stat_summary(fun.data = mean_se, geom="errorbar", 
                position = position_dodge(width=0.90), width = 0.2)+
   #scale_fill_discrete(name = "Productivity") +
-  scale_fill_brewer(name="Productivity", palette="Set2") +
+  scale_fill_brewer(name = "Productivity", palette = "Set1", guide = "none") +
+  scale_colour_brewer(palette = "Greys") +
   ylab("Proportion Correct") + 
   xlab('Productivity') + 
   theme_bw(base_size = 13) + 
-  theme(legend.position = "none") +
-  ggtitle("Overall proportion correct on the What Comes Next Task") +
+  theme(legend.position = "none", 
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank()) +
+  ggtitle("Overall proportion correct on Next Number Task") +
   theme(text = element_text(size = 12)) +
-  ylim(0, 1.0) +
-  geom_violin(alpha = .3)
+  ylim(0, 1.0) 
+  
+  
 ggsave('graphs/wcn-percentcorr.png')
+
 
 ```
 
@@ -623,7 +648,7 @@ wcn.data %>%
                geom="bar", colour = "black") +
   stat_summary(fun.data = mean_se, geom="errorbar",
                position = position_dodge(width=0.90), width = 0.2) +
-  scale_fill_brewer(name = "Productivity", palette="Set2") +
+  scale_fill_brewer(name = "Productivity", palette="Set1") +
   scale_y_continuous(lim=c(0,1)) +
   labs(title="Accuracy on WCN by Productivity and trial type", 
        y="Proportion Correct", 
@@ -635,22 +660,26 @@ ggsave('graphs/wcn-within-beyond.png')
 
 
 wcn.data %>%
+  mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels = c("within", "outside"), 
+                                   labels = c("Within", "Outside")))%>%
   dplyr::filter(TaskType == "immediate") %>%
-  dplyr::group_by(Productivity, WithinOutsideIHC, LadlabID) %>%
+  dplyr::group_by(Productivity, WithinOutsideIHC, LadlabID, prod.gradient) %>%
   dplyr::summarize(meansubj = mean(Accuracy, na.rm = TRUE)) %>%
-  ggplot(aes(x=Productivity, y=meansubj, fill=reorder(WithinOutsideIHC, WithinOutsideIHC, length))) +
+  ggplot(aes(x=Productivity, y=meansubj, fill=WithinOutsideIHC)) +
   geom_violin(alpha=0.7, scale="count", position=position_dodge(width=0.8)) +
   #geom_point(position=position_jitterdodge(jitter.width=0.2, dodge.width=.9)) +
   stat_summary(fun.y = mean,position = position_dodge(width=0.8), 
                geom="point", shape=23, size=3, colour = "black") +
   stat_summary(fun.data = mean_cl_boot, geom="errorbar",
-               position = position_dodge(width=0.8), width = 0.2) +
+               position = position_dodge(width=0.8), width = 0.2) +  
   scale_fill_brewer(name = "Trial Type", palette="Set1",direction=-1) +
   scale_y_continuous(limits=c(0,1)) +
   labs(title="Performance on Next Number task by Productivity and trial type", 
        y="Average Proportion Correct", x="",
        fill="Trial Type") +
-  theme_bw()
+  theme_bw() +
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank())
 
 ggsave('graphs/wcn-within-beyond2.png', width=6, height=4)
 ```
@@ -663,6 +692,7 @@ Analysis of WCN accuracy by productivity and trial type
 #   dplyr::summarize(correct = sum(Accuracy, na.rm = TRUE), total=n())
 # 
 wcn_model.df <- wcn.data %>%
+  filter(TaskType == "immediate")%>%
   mutate(IHC = as.integer(IHC),
          LadlabID = factor(LadlabID))%>%
   mutate(IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)), #scale and center for model fit
@@ -754,7 +784,7 @@ wcn.data <- full_join(wcn.data, highest_contiguous_nn, by = "LadlabID")
 Code for checking highest contig NN
 ```{r eval = FALSE}
 full.data %>%
-  filter(LadlabID == "022316-AB") %>%
+  # filter(LadlabID == "022316-AB") %>%
   filter(TaskType == "immediate"|TaskType == "practice") %>%
   select(LadlabID, TaskType, TaskItem, Accuracy)
 
@@ -818,7 +848,7 @@ z <- wcn.data %>%
   spread(TaskItem, Accuracy)
 ```
 
-Median highest contiguous next number by productivity 
+Median highest contiguous next number by productivity  - minus kids who counted to 99 spontaneously
 ```{r}
 wcn.data %>%
   filter(IHC < 99)%>%
@@ -963,6 +993,16 @@ full.data %>%
 
 ```
 
+#Correlation between productivity gradient and IHC/FHC
+```{r}
+ms.cor <- full.data %>%
+  distinct(LadlabID, Age, IHC, FHC, prod.gradient)
+
+cor.test(ms.cor$IHC, ms.cor$prod.gradient) #sig. correlation between IHC and prod. gradient
+cor.test(ms.cor$FHC, ms.cor$prod.gradient) #sig. correlation between FHC and prod. gradient
+
+```
+
 # Analyses
 ## Counting, Productivity, and Infinity Battery
 To identify whether there is connection between counting experience and Infinity Task performance, we will conduct three initial analyses, predicting Infinity Task performance from either (1) Initial Highest Count, (2) Productivity for Decade Rule (defined above), or (3) performance on the Next Number task. 
@@ -976,7 +1016,7 @@ First, we need to make a model data frame that readily has all of this informati
 #model base
 model.df <- full.data %>%
   dplyr::select(LadlabID, Age, AgeGroup, Gender, Task, Response, SuccessorKnower, EndlessKnower, 
-                IHC, FHC, DCE, Productivity)
+                IHC, FHC, DCE, Productivity, prod.gradient)
 ```
 
 Highest Next Number - commented because we're using highest contiguous
@@ -1030,7 +1070,7 @@ Get mean WCN for everyone <span style="color:red">Not using this anymore - RMS</
 #each participant only needs one row here, because we only need to know whether they are a Successor Knower or Endless Knower
 distinct_model.df <- model.df %>%
   distinct(LadlabID, Age, AgeGroup, Gender, SuccessorKnower, EndlessKnower, 
-           IHC, Highest_Contig_NN, FHC, DCE, Productivity)%>%
+           IHC, Highest_Contig_NN, FHC, DCE, Productivity, prod.gradient)%>%
   mutate(SuccessorKnower = factor(SuccessorKnower, levels = c(0,1)), 
          EndlessKnower = factor(EndlessKnower, levels = c(0,1)))%>%
   mutate(IHC = as.integer(IHC), 
@@ -1064,8 +1104,9 @@ model.prod.successor <- glm(SuccessorKnower ~ Productivity + Age.c, family = "bi
                               data = distinct_model.df)
 
 ##EXPLORATORY## - GAIN SCORE
-model.gain.successor <- glm(SuccessorKnower ~ gain.hc + Age.c, family = "binomial",
+model.gain.successor <- glm(SuccessorKnower ~ prod.gradient + Age.c, family = "binomial",
                               data = distinct_model.df)
+summary(model.gain.successor)
 
 ##Regression table for Successor Knower Models (Table 2)
 mtable.sf.knowers <- mtable('Base' = base.successor,
@@ -1085,7 +1126,6 @@ anova(base.successor, model.nn.successor, test = 'LRT')#highest contiguous NN no
 
 #Productivity v. IHC
 anova(base.successor, model.prod.successor, test = 'LRT')#Productivity trending
-
 ```
 
 
@@ -1116,6 +1156,7 @@ mtable.endless.knowers <- mtable('Base' = base.endless,
             'IHC' = model.ihc.endless,
             'Highest Contig.' = model.nn.endless,
             'Productivity' = model.prod.endless,
+            'Prod. gradient' = model.gain.endless,
             #summary.stats = c('R-squared','F','p','N'))
             summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'))
 
@@ -1173,6 +1214,17 @@ anova(large.endless.base, large.endless.nn, test = 'LRT')#Highest contig. NS
 
 #IHC v. Productivity
 anova(large.endless.base, large.endless.prod, test = 'LRT')##Productivity NS
+
+##Exploratory - productivity gradient comparison
+large.endless.gain <- glm(EndlessKnower ~ prod.gradient + Age.c, 
+                          family = "binomial", data = distinct_model.df)
+summary(large.endless.gain) #lower AIC than IHC, significant predictor
+#add IHC to model
+large.endless.gain.ihc <- glm(EndlessKnower ~ IHC.c + prod.gradient + Age.c, 
+                              family = "binomial", data = distinct_model.df)
+summary(large.endless.gain.ihc) #with addition of IHC, prod.gradient is marginal, AIC very slightly decreases, but addition of IHC does not significantly improve the fit of the model
+
+anova(large.endless.gain.ihc, large.endless.gain, test = 'LRT')
 ```
  
 #LM predicting IHC from productivity and age, HCNN and age
