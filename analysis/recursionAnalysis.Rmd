@@ -707,7 +707,7 @@ wcn.model.int <- glmer(Accuracy ~ Productivity*WithinOutsideIHC + IHC.c + age.c 
 wcn.model.base <- glmer(Accuracy ~ IHC.c + 
                           age.c + (1|TaskItem) + (1|LadlabID), family = "binomial", data = wcn_model.df)
 #compare full model to base model
-anova(wcn.model.int, wcn.model.base, test = 'LRT')
+anova(wcn.model.noint, wcn.model.base, test = 'LRT')
 #compare model with interaction to one without 
 anova(wcn.model.noint, wcn.model.int, test = 'LRT')
 ```
@@ -1007,7 +1007,7 @@ cor.test(ms.cor$FHC, ms.cor$prod.gradient) #sig. correlation between FHC and pro
 ## Counting, Productivity, and Infinity Battery
 To identify whether there is connection between counting experience and Infinity Task performance, we will conduct three initial analyses, predicting Infinity Task performance from either (1) Initial Highest Count, (2) Productivity for Decade Rule (defined above), or (3) performance on the Next Number task. 
 
-glmer(inf.0/1 ~ (predictor) + age + (1|subject), family = binomial).
+glm(inf.0/1 ~ (predictor) + age, family = binomial).
 
 ---
 First, we need to make a model data frame that readily has all of this information
@@ -1263,14 +1263,14 @@ tmp <- distinct_model.df %>%
          prop.hc = ifelse(prop.hc == 0 & IHC == 99, 1, as.numeric(prop.hc))) #one kid with IHC and FHC as 99
 
 #plot by IHC
-ggplot(tmp, aes(x = IHC, y = prop.hc, colour = Productivity)) +
-  geom_point()+
-  geom_jitter(width = .01)+
+ggplot(full.data, aes(x = prod.gradient, y = IHC, colour = Productivity)) +
+  geom_point(size = 3, alpha = .1)+
+  geom_jitter()+
   theme_bw(base_size = 13) +
-  theme(legend.position = "bottom", 
-        panel.grid.minor = element_blank()) +
-  scale_x_continuous(breaks = seq(0, 100, 10)) +
-  labs(x = 'IHC', y = 'Productivity Gain Score')
+  theme(legend.position = "bottom") +
+  scale_y_continuous(breaks = seq(0, 100, 10)) +
+  scale_colour_brewer(palette = "Set1") + 
+  labs(x = 'Productivity Gradient', y = 'IHC')
 
 end.gain.ihc <- glm(EndlessKnower ~ IHC.c + Age.c, family = "binomial", 
                 data = distinct_model.df)
