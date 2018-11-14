@@ -1005,6 +1005,17 @@ cor.test(ms.cor$FHC, ms.cor$prod.gradient) #sig. correlation between FHC and pro
 
 ```
 
+#Correlation between Productivity classification and Prod.gradient
+```{r}
+ms.cor <- full.data %>%
+  dplyr::distinct(LadlabID, Productivity, prod.gradient)%>%
+  mutate(Productivity = factor(Productivity, levels = c("Productive", "Nonproductive"),
+                             labels = c(1, 0)), 
+         Productivity = as.integer(as.character(Productivity)))
+
+cor.test(ms.cor$Productivity, ms.cor$prod.gradient)
+```
+
 #Jess graph
 ```{r}
 wcn.data %>%
@@ -1098,18 +1109,14 @@ distinct_model.df <- model.df %>%
   distinct(LadlabID, Age, AgeGroup, Gender, SuccessorKnower, EndlessKnower, 
            IHC, Highest_Contig_NN, FHC, DCE, Productivity, prod.gradient)%>%
   mutate(SuccessorKnower = factor(SuccessorKnower, levels = c(0,1)), 
-         EndlessKnower = factor(EndlessKnower, levels = c(0,1)))%>%
-  mutate(IHC = as.integer(IHC), 
+         EndlessKnower = factor(EndlessKnower, levels = c(0,1)),
+         IHC = as.integer(IHC), 
          Highest_Contig_NN = as.integer(Highest_Contig_NN), 
-         LadlabID = factor(LadlabID))%>%
-  mutate(IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)), #scale and center for model fit
+         LadlabID = factor(LadlabID), 
+         IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)), #scale and center for model fit
          FHC.c = as.vector(scale(FHC, center = TRUE, scale=TRUE)),
          Highest_Contig_NN.c = as.vector(scale(Highest_Contig_NN, center = TRUE, scale=TRUE)), 
-         Age.c = as.vector(scale(Age, center = TRUE, scale=TRUE))) %>%
-  mutate(delta.hc = FHC-IHC, 
-         gain.hc = delta.hc/(100-IHC), 
-         gain.hc = ifelse(gain.hc == "NaN", 1, as.numeric(gain.hc))) %>%
-  mutate(gain.hc = ifelse(gain.hc == 0 & IHC == 99, 1, as.numeric(gain.hc)))
+         Age.c = as.vector(scale(Age, center = TRUE, scale=TRUE)))
 
 # #add mean_nn to model df
 # distinct_model.df <- right_join(distinct_model.df, lookup, by = "LadlabID")
@@ -1139,6 +1146,7 @@ mtable.sf.knowers <- mtable('Base' = base.successor,
             'IHC' = model.ihc.successor,
             'Highest Contig.' = model.nn.successor,
             'Productivity' = model.prod.successor,
+            'Exp. - Prod. gain' = model.gain.successor,
             #summary.stats = c('R-squared','F','p','N'))
             summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'))
 mtable.sf.knowers
@@ -1152,6 +1160,10 @@ anova(base.successor, model.nn.successor, test = 'LRT')#highest contiguous NN no
 
 #Productivity v. IHC
 anova(base.successor, model.prod.successor, test = 'LRT')#Productivity trending
+
+
+##Exploratory
+anova(base.successor, model.gain.successor, test = 'LRT')
 ```
 
 
@@ -1174,7 +1186,7 @@ model.prod.endless <- glm(EndlessKnower ~ Productivity + Age.c, family = "binomi
                             data = distinct_model.df)
 
 ##EXPLORATORY## - GAIN SCORE
-model.gain.endless <- glm(EndlessKnower ~ gain.hc + Age.c, family = "binomial", 
+model.gain.endless <- glm(EndlessKnower ~ prod.gradient + Age.c, family = "binomial", 
                           data = distinct_model.df)
 
 ##Regression table for Endless Models
@@ -1241,6 +1253,7 @@ anova(large.endless.base, large.endless.nn, test = 'LRT')#Highest contig. NS
 #IHC v. Productivity
 anova(large.endless.base, large.endless.prod, test = 'LRT')##Productivity NS
 
+###########
 ##Exploratory - productivity gradient comparison
 large.endless.gain <- glm(EndlessKnower ~ prod.gradient + Age.c, 
                           family = "binomial", data = distinct_model.df)
@@ -1250,7 +1263,7 @@ large.endless.gain.ihc <- glm(EndlessKnower ~ IHC.c + prod.gradient + Age.c,
                               family = "binomial", data = distinct_model.df)
 summary(large.endless.gain.ihc) #with addition of IHC, prod.gradient is marginal, AIC very slightly decreases, but addition of IHC does not significantly improve the fit of the model
 
-anova(large.endless.gain.ihc, large.endless.gain, test = 'LRT')
+anova(large.endless.gain, large.endless.gain.ihc, test = 'LRT')
 ```
  
 #LM predicting IHC from productivity and age, HCNN and age
