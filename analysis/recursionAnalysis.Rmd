@@ -280,18 +280,36 @@ unique.hc.data <- full.data %>%
 
 ggplot(unique.hc.data, aes(x=IHC, color=Productivity)) + 
   geom_dotplot(aes(fill = Productivity),
-               binwidth=1, stackgroups=TRUE, binpositions="all",method="dotdensity") +
+               binwidth=1, stackgroups=TRUE, binpositions="all",method="dotdensity", dotsize = 1) +
   scale_color_brewer(palette="Set1") + 
   scale_fill_brewer(palette="Set1") +
   coord_fixed(ratio=1) +
   scale_y_continuous(breaks=seq(0,40,10), lim=c(0,35)) +
   scale_x_continuous(breaks=seq(0,100,by=10)) +
-  labs(x="IHC (no error)", 
+  labs(x="IHC", 
        y="Frequency") +
-  theme_bw() + 
-  theme(legend.position="bottom")
+  theme_bw(base_size = 13) + 
+  theme(legend.position="bottom", 
+        legend.title = element_blank(), 
+        panel.grid.minor = element_blank())
 ggsave('graphs/ihc-by-prod.png')
 # hist(unique.hc.data$IHC)
+
+#trying with bars, doesn't look better
+# ggplot(unique.hc.data, aes(x=IHC, fill=Productivity)) + 
+#   geom_histogram(binwidth = 1, colour = "black") +
+#   scale_fill_brewer(palette="Set1") +
+#   coord_fixed(ratio=1) +
+#   # scale_y_continuous(breaks=seq(0,40,10), lim=c(0,35)) +
+#   scale_x_continuous(breaks=seq(0,100,by=10)) +
+#   labs(x="IHC", 
+#        y="Frequency") +
+#   theme_bw(base_size = 13) + 
+#   theme(legend.position="bottom", 
+#         legend.title = element_blank(), 
+#         panel.grid.minor = element_blank())
+# ggsave('graphs/ihc-by-prod.png')
+# # hist(unique.hc.data$IHC)
 ```
 
 Plotting productivity as a function of age in months
@@ -321,7 +339,7 @@ ggsave('graphs/prod-by-age.png')
 Restructure data to plot distance between IHC, DCE, and FHC
 ```{r}
 hc.dev.data <- full.data %>%
-  dplyr::select(LadlabID, Age, Productivity, IHC, DCE, FHC) %>%
+  dplyr::select(LadlabID, Age, Productivity, IHC, DCE, FHC, prod.gradient) %>%
   gather(hcprogression, hc, IHC:FHC)%>%
   mutate(hcprogression = factor(hcprogression, levels = c("IHC", "DCE", "FHC"))) %>%
   dplyr::rename(`Highest Count Coding` = hcprogression)
@@ -661,6 +679,7 @@ wcn.data %>%
 
 ggsave('graphs/wcn-within-beyond.png')
 
+prod.pal.1 <- c("#880f10","#214B6E")
 
 wcn.data %>%
   mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels = c("within", "outside"), 
@@ -670,16 +689,20 @@ wcn.data %>%
   dplyr::summarize(meansubj = mean(Accuracy, na.rm = TRUE)) %>%
   ggplot(aes(x=Productivity, y=meansubj, fill=WithinOutsideIHC)) +
   geom_violin(alpha=0.7, scale="count", position=position_dodge(width=0.8)) +
-  #geom_point(position=position_jitterdodge(jitter.width=0.2, dodge.width=.9)) +
+  geom_point(aes(colour = Productivity), position=position_jitterdodge(jitter.width=0.25, 
+                                                                       jitter.height = .1, 
+                                                                       dodge.width=.9), 
+             alpha = .7) +
   stat_summary(fun.y = mean,position = position_dodge(width=0.8), 
                geom="point", shape=23, size=3, colour = "black") +
   stat_summary(fun.data = mean_cl_boot, geom="errorbar",
                position = position_dodge(width=0.8), width = 0.2) +  
   scale_fill_brewer(name = "Trial Type", palette="Dark2",direction=-1) +
+  scale_colour_manual(values = prod.pal.1, guide = "none") + 
   scale_y_continuous(limits=c(0,1)) +
   labs(y="Average Proportion Correct", x="",
        fill="Trial Type") +
-  theme_bw() +
+  theme_bw(base_size = 13) +
   theme(panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank())
 
@@ -1018,9 +1041,11 @@ cor.test(ms.cor$Productivity, ms.cor$prod.gradient)
 
 #Jess graph
 ```{r}
+prod.pal <- c("#E41A1C", "#4DAF4A", "#377EB8")
+
 wcn.data %>%
-  mutate(prod.group = ifelse(IHC > 99, "IHC > 99", 
-                             ifelse(Productivity == "Productive", "Prod. IHC < 99", "Nonproductive")))%>%
+  mutate(prod.group = ifelse(IHC > 99, "Productive (IHC > 99)", 
+                             ifelse(Productivity == "Productive", "Productive (IHC < 99)", "Nonproductive")))%>%
   filter(TaskType == "immediate")%>%
   mutate(TaskItem == factor(TaskItem))%>%
   group_by(TaskItem, prod.group)%>%
@@ -1029,14 +1054,14 @@ wcn.data %>%
             sd = sd(Accuracy, na.rm = TRUE), 
             se = sd/sqrt(n)) %>%
   ggplot(aes(x = factor(TaskItem), y = mean, colour = prod.group, group= prod.group)) +
-  geom_point(size = 2) + 
-  geom_line() +
+  geom_point(size = 2.5) + 
+  geom_line(size = .7) +
   geom_errorbar(aes(ymin = mean - se, ymax = mean + se), 
-                width = .1) +
+                width = 0, size = .5) +
   theme_bw(base_size = 13) + 
-  scale_colour_brewer(palette = "Dark2") +
-  theme(legend.position = "right") +
-  labs(x = "Number queried", y = "Mean performance") +
+  scale_colour_manual(values = prod.pal) +
+  theme(legend.position = "right", legend.title = element_blank()) +
+  labs(x = "Task item", y = "Mean performance") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
@@ -1334,4 +1359,82 @@ tmp %<>%
   mutate(Prod.num = ifelse(Productivity == "Productive", 1, 0))
 
 cor.test(tmp$Prod.num, tmp$prop.hc)
+```
+
+#Plot of prod. gain with IHC - WIP
+```{r}
+# pg.ms <- full.data %>%
+#   distinct(LadlabID, IHC, FHC, prod.gradient, Productivity)
+# 
+# ggplot(pg.ms, aes(x=IHC, y = prod.gradient, colour = Productivity)) +
+#   geom_point(size = 2) +
+#   scale_x_continuous(breaks = seq(0, 100, 10)) +
+#   scale_colour_brewer(palette = "Set1") +
+#   theme_bw(base_size = 13) +
+#   theme(panel.grid.minor = element_blank(), 
+#         legend.position = "bottom", 
+#         legend.title =  element_blank())
+
+ms <- hc.dev.data %>%
+  filter(Productivity == "Productive")
+
+
+hc.dev.data %>%
+  filter(Productivity == "Productive")%>%
+  filter(`Highest Count Coding` != "DCE")%>%
+ggplot(aes(x = reorder(LadlabID, hc, FUN=min), y = hc, colour = prod.gradient)) + 
+  geom_point(aes(shape = `Highest Count Coding`), 
+             size = 1.2, stroke = 1.2) +
+  geom_line() + 
+  # scale_color_brewer(palette="Dark2") +
+  scale_shape_manual(values = c(5, 20)) +
+  scale_y_continuous(breaks = seq(0, 140, 10)) +
+  labs(x = "Each line = individual participant",
+       y="Highest Count") +
+  theme_bw() + 
+  theme(legend.position="bottom", 
+        axis.text.x = element_text(angle = 270, hjust = 1)) + 
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(), 
+        panel.grid.minor = element_blank(), 
+        panel.grid.major = element_blank()) +
+  # scale_colour_gradient(low = "#666666",
+  #                       high = "#00b8e6") +
+  labs(shape = "Highest Count Type", colour = "Productivity Gradient")
+
+
+ggplot(ms, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) + 
+  facet_grid(rows = vars(Productivity)) +
+  geom_line(data=hc.dev.prod[!is.na(hc.dev.prod$hc) + 
+  geom_point(aes(shape = `Highest Count Coding`, colour = `Highest Count Coding`), 
+             size = 2, stroke = 1.5) +
+  scale_color_brewer(palette="Dark2") +
+  scale_shape_manual(values = c(4,5,20)) +
+  ylim(0, 100) +
+  labs(x = "Each line = individual participant",
+       y="Highest Count") +
+  theme_bw(base_size = 13) + 
+  theme(legend.position="bottom", 
+        axis.text.x = element_text(angle = 270, hjust = 1)) + 
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+ggsave('graphs/distance-prod-sorted.png')
+
+#nonproductive
+ggplot(hc.dev.nonprod, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) + 
+  facet_grid(rows = vars(Productivity)) +
+  geom_line(data=hc.dev.nonprod[!is.na(hc.dev.nonprod$hc),]) + 
+  geom_point(aes(shape = `Highest Count Coding`, colour = `Highest Count Coding`), 
+             size = 2, stroke = 1.5) +
+  scale_color_brewer(palette="Dark2") +
+  scale_shape_manual(values = c(4,5,20)) +
+  ylim(0, 100) +
+  labs(x = "Each line = individual participant",
+       y="Highest Count") +
+  theme_bw(base_size = 13) + 
+  theme(legend.position="bottom", 
+        axis.text.x = element_text(angle = 270, hjust = 1)) +
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+ggsave('graphs/distance-nonprod-sorted.png')
 ```
