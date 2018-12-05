@@ -11,9 +11,9 @@ rm(list = ls())
 require("knitr")
 
 # # Set WD
-# opts_knit$set(root.dir = "~/Sites/recursion/")
+ opts_knit$set(root.dir = "~/Sites/recursion/")
 #opts_knit$set(root.dir = "~/Projects/Junyi study/recursiongithub/") #for PC
-opts_knit$set(root.dir = "~/Documents/Projects/recursion/") #this is specific to RMS, change accordinglyz
+#opts_knit$set(root.dir = "~/Documents/Projects/recursion/") #this is specific to RMS, change accordinglyz
 
 # For wrapping lines when knitting
 opts_chunk$set(tidy.opts=list(width.cutoff=80),tidy=TRUE,
@@ -187,7 +187,7 @@ full.data %>%
   dplyr::summarise(n =n())
 ```
 
-#Productivity gradient
+## Productivity gradient
 ```{r}
 full.data %<>%
   mutate(delta.hc = FHC-IHC, 
@@ -229,8 +229,7 @@ full.data %>%
 
 #productivity gradient
 full.data %>%
-  distinct(LadlabID, Productivity, delta.hc, prod.gradient)%>%
-  group_by(Productivity)%>%
+  distinct(LadlabID, delta.hc, prod.gradient)%>%
   summarise(mean_gradient = mean(prod.gradient), 
             sd_gradient = sd(prod.gradient), 
             mean_delta.hc = mean(delta.hc), 
@@ -268,6 +267,16 @@ full.data %>%
                    min_FHC = min(FHC),
                    max_FHC = max(FHC),
                    median_FHC = median(FHC)) %>%
+  kable()
+
+#productivity gradient
+full.data %>%
+  distinct(LadlabID, Productivity, delta.hc, prod.gradient)%>%
+  group_by(Productivity)%>%
+  summarise(mean_gradient = mean(prod.gradient), 
+            sd_gradient = sd(prod.gradient), 
+            mean_delta.hc = mean(delta.hc), 
+            sd_delta.hc = sd(delta.hc))%>%
   kable()
 ```
 
@@ -455,7 +464,7 @@ Number of kids who counted to 99+ spontaneously on IHC plus those whose FHC = 99
 #   distinct(LadlabID, IHC, FHC, HCReceivedSupport) %>%
 #   count() #n=32
 # but some kids made errors past IHC but < 3 so need to account for that
-
+full.data %>%
   filter(FHC > 98 & (is.na(HCReceivedSupport)|HCReceivedSupport != 1)) %>%
   distinct(LadlabID, IHC, FHC, HCReceivedSupport) %>%
   count() #n =42
@@ -660,17 +669,19 @@ wcn.data %>%
 
 
 Plotting WCN as within vs. beyond by productivity 
+### Fig 4
 ```{r}
 wcn.data %>%
+  mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels = c("within", "outside"), 
+                                   labels = c("Within", "Outside")))%>%
   dplyr::filter(TaskType == "immediate") %>%
   dplyr::group_by(Productivity, WithinOutsideIHC, LadlabID) %>%
   dplyr::summarize(meansubj = mean(Accuracy, na.rm = TRUE)) %>%
-  ggplot(aes(x=WithinOutsideIHC, y=meansubj, fill=Productivity)) +
-  stat_summary(fun.y = mean, position = position_dodge(width = .95), 
-               geom="bar", colour = "black") +
-  stat_summary(fun.data = mean_se, geom="errorbar",
-               position = position_dodge(width=0.90), width = 0.2) +
-  scale_fill_brewer(name = "Productivity", palette="Set1") +
+  ggplot(aes(x=WithinOutsideIHC, y=meansubj, color=Productivity)) +
+  stat_summary(fun.data = mean_cl_boot, geom="pointrange",
+               #position = position_dodge(width=0.90), 
+               width = 0.2) +
+  scale_color_brewer(name = "Productivity", palette="Set1") +
   scale_y_continuous(lim=c(0,1)) +
   labs(y="Proportion Correct", 
        fill="Productivity") +
@@ -680,7 +691,10 @@ wcn.data %>%
 ggsave('graphs/wcn-within-beyond.png')
 
 prod.pal.1 <- c("#880f10","#214B6E")
+```
 
+```{r}
+# alternative
 wcn.data %>%
   mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels = c("within", "outside"), 
                                    labels = c("Within", "Outside")))%>%
@@ -707,6 +721,40 @@ wcn.data %>%
         panel.grid.minor = element_blank())
 
 ggsave('graphs/wcn-within-beyond2.png', width=6, height=4)
+```
+
+```{r}
+group_names <- c(`Productive` = "Productive Counters",
+                    `Nonproductive` = "Nonproductive Counters")
+# alternative 2, use fewer colors.
+wcn.data %>%
+  mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels = c("within", "outside"), 
+                                   labels = c("Within IHC", "Outside IHC")))%>%
+  dplyr::filter(TaskType == "immediate") %>%
+  dplyr::group_by(Productivity, WithinOutsideIHC, LadlabID, prod.gradient) %>%
+  dplyr::summarize(meansubj = mean(Accuracy, na.rm = TRUE)) %>%
+  ggplot(aes(x=WithinOutsideIHC, y=meansubj))+
+  geom_violin(aes(color=Productivity), alpha=0.7, scale="count", position=position_dodge(width=0.8)) +
+  geom_point(aes(fill=WithinOutsideIHC),
+             position=position_jitterdodge(jitter.width=0.25,
+                                           dodge.width=.9),
+             alpha = .5) +
+  stat_summary(aes(color=Productivity),
+               fun.data = mean_cl_boot, geom="errorbar",
+               position = position_dodge(width=0.8), width = 0.2)+
+  stat_summary(aes(color=Productivity), fill="white",
+               fun.y = mean,position = position_dodge(width=0.8), 
+               geom="point", shape=23, size=3)+
+  facet_grid(.~Productivity, labeller = as_labeller(group_names)) +
+  scale_colour_brewer(guide=FALSE, palette="Set1", direction=-1) + 
+  scale_fill_brewer(guide=FALSE) +
+  scale_y_continuous(limits=c(0,1)) +
+  labs(y="Average Proportion Correct", x="Trial Type") +
+  theme_bw(base_size = 13) +
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank())
+
+ggsave('graphs/wcn-within-beyond3.png', width=6, height=4)
 ```
 
 Analysis of WCN accuracy by productivity and trial type
@@ -1040,7 +1088,7 @@ cor.test(ms.cor$Productivity, ms.cor$prod.gradient)
 ```
 
 #Jess graph
-```{r}
+```{r fig3}
 prod.pal <- c("#E41A1C", "#4DAF4A", "#377EB8")
 
 wcn.data %>%
@@ -1175,6 +1223,7 @@ mtable.sf.knowers <- mtable('Base' = base.successor,
             #summary.stats = c('R-squared','F','p','N'))
             summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'))
 mtable.sf.knowers
+write.mtable(mtable.sf.knowers, file="graphs/table2.txt")
 
 ###MODEL COMPARISONS##
 #base v. IHC
@@ -1224,6 +1273,7 @@ mtable.endless.knowers <- mtable('Base' = base.endless,
             summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'))
 
 mtable.endless.knowers
+write.mtable(mtable.endless.knowers, file="graphs/table3.txt")
 
 ##SIMPLE MODEL COMPARISONS##
 #base v. IHC
@@ -1340,7 +1390,7 @@ end.gain.ihc <- glm(EndlessKnower ~ IHC.c + Age.c, family = "binomial",
                 data = distinct_model.df)
 end.gain.Prod <- glm(EndlessKnower ~ Productivity + Age.c, family = "binomial", 
                      data = distinct_model.df)
-end.gain.gain <- glm(EndlessKnower ~ gain.hc + Age.c, family = "binomial", 
+end.gain.gain <- glm(EndlessKnower ~ prod.gradient + Age.c, family = "binomial", 
                      data = distinct_model.df)
 end.gain.nn <- glm(EndlessKnower ~ Highest_Contig_NN + Age.c, 
                    family = "binomial", data = distinct_model.df)
@@ -1350,7 +1400,7 @@ summary(end.gain.gain)
 summary(end.gain.nn)
 
 #add IHC to model with gain score
-end.gain.ihcgain <- glm(EndlessKnower ~ IHC.c + gain.hc + Age.c, family = "binomial", 
+end.gain.ihcgain <- glm(EndlessKnower ~ IHC.c + prod.gradient + Age.c, family = "binomial", 
                         data = distinct_model.df)
 anova(end.gain.ihcgain, end.gain.gain, test = 'LRT')
 
@@ -1362,7 +1412,7 @@ cor.test(tmp$Prod.num, tmp$prop.hc)
 ```
 
 #Plot of prod. gain with IHC - WIP
-```{r}
+```{r fig2}
 # pg.ms <- full.data %>%
 #   distinct(LadlabID, IHC, FHC, prod.gradient, Productivity)
 # 
@@ -1405,7 +1455,7 @@ ggplot(aes(x = reorder(LadlabID, hc, FUN=min), y = hc, colour = prod.gradient)) 
 
 ggplot(ms, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) + 
   facet_grid(rows = vars(Productivity)) +
-  geom_line(data=hc.dev.prod[!is.na(hc.dev.prod$hc) + 
+  geom_line(data=hc.dev.prod[!is.na(hc.dev.prod$hc),]) + 
   geom_point(aes(shape = `Highest Count Coding`, colour = `Highest Count Coding`), 
              size = 2, stroke = 1.5) +
   scale_color_brewer(palette="Dark2") +
@@ -1437,4 +1487,27 @@ ggplot(hc.dev.nonprod, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) +
   theme(axis.text.x=element_blank(),
         axis.ticks.x=element_blank())
 ggsave('graphs/distance-nonprod-sorted.png')
+```
+
+
+##Visualizing the regressions
+```{r regression-graphs}
+# Successor knowledge
+fullmodel.sf.prod <- glm(SuccessorKnower ~ Productivity + Highest_Contig_NN.c + 
+                              IHC.c + Age.c, 
+                            family = "binomial", data = distinct_model.df)
+summary(fullmodel.sf.prod)
+fullmodel.sf.gain <- glm(SuccessorKnower ~ prod.gradient + Highest_Contig_NN.c + 
+                              IHC.c + Age.c, 
+                            family = "binomial", data = distinct_model.df)
+summary(fullmodel.sf.gain)
+# Endless knowledge
+fullmodel.end.prod <- glm(EndlessKnower ~ Productivity + Highest_Contig_NN.c + 
+                              IHC.c + Age.c, 
+                            family = "binomial", data = distinct_model.df)
+summary(fullmodel.end.prod)
+fullmodel.end.gain <- glm(EndlessKnower ~ prod.gradient + Highest_Contig_NN.c + 
+                              IHC.c + Age.c, 
+                            family = "binomial", data = distinct_model.df)
+summary(fullmodel.end.gain)
 ```
