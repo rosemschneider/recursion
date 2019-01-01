@@ -191,8 +191,8 @@ full.data %>%
 ```{r}
 full.data %<>%
   mutate(delta.hc = FHC-IHC, 
-         prod.gradient = delta.hc/(100-IHC), 
-         prod.gradient = ifelse(IHC == 100, 1, as.numeric(prod.gradient)), 
+         prod.gradient = delta.hc/(99-IHC), 
+         prod.gradient = ifelse(IHC >= 99, 1, as.numeric(prod.gradient)), 
          prod.gradient = ifelse(prod.gradient == 0 & IHC == 99, 1, as.numeric(prod.gradient)))
 ```
 
@@ -671,56 +671,33 @@ wcn.data %>%
 Plotting WCN as within vs. beyond by productivity 
 ### Fig 4
 ```{r}
-wcn.data %>%
-  mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels = c("within", "outside"), 
-                                   labels = c("Within", "Outside")))%>%
-  dplyr::filter(TaskType == "immediate") %>%
-  dplyr::group_by(Productivity, WithinOutsideIHC, LadlabID) %>%
-  dplyr::summarize(meansubj = mean(Accuracy, na.rm = TRUE)) %>%
-  ggplot(aes(x=WithinOutsideIHC, y=meansubj, color=Productivity)) +
-  stat_summary(fun.data = mean_cl_boot, geom="pointrange",
-               #position = position_dodge(width=0.90), 
-               width = 0.2) +
-  scale_color_brewer(name = "Productivity", palette="Set1") +
-  scale_y_continuous(lim=c(0,1)) +
-  labs(y="Proportion Correct", 
-       fill="Productivity") +
-  theme_bw() +
-  theme(text = element_text(size = 12))
-
-ggsave('graphs/wcn-within-beyond.png')
-
-prod.pal.1 <- c("#880f10","#214B6E")
-```
-
-```{r}
-# alternative
-wcn.data %>%
-  mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels = c("within", "outside"), 
-                                   labels = c("Within", "Outside")))%>%
-  dplyr::filter(TaskType == "immediate") %>%
-  dplyr::group_by(Productivity, WithinOutsideIHC, LadlabID, prod.gradient) %>%
-  dplyr::summarize(meansubj = mean(Accuracy, na.rm = TRUE)) %>%
-  ggplot(aes(x=Productivity, y=meansubj, fill=WithinOutsideIHC)) +
-  geom_violin(alpha=0.7, scale="count", position=position_dodge(width=0.8)) +
-  geom_point(aes(colour = Productivity), position=position_jitterdodge(jitter.width=0.25, 
-                                                                       jitter.height = .1, 
-                                                                       dodge.width=.9), 
-             alpha = .7) +
-  stat_summary(fun.y = mean,position = position_dodge(width=0.8), 
-               geom="point", shape=23, size=3, colour = "black") +
-  stat_summary(fun.data = mean_cl_boot, geom="errorbar",
-               position = position_dodge(width=0.8), width = 0.2) +  
-  scale_fill_brewer(name = "Trial Type", palette="Dark2",direction=-1) +
-  scale_colour_manual(values = prod.pal.1, guide = "none") + 
-  scale_y_continuous(limits=c(0,1)) +
-  labs(y="Average Proportion Correct", x="",
-       fill="Trial Type") +
-  theme_bw(base_size = 13) +
-  theme(panel.grid.major = element_blank(), 
-        panel.grid.minor = element_blank())
-
-ggsave('graphs/wcn-within-beyond2.png', width=6, height=4)
+# # alternative
+# wcn.data %>%
+#   mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels = c("within", "outside"), 
+#                                    labels = c("Within", "Outside")))%>%
+#   dplyr::filter(TaskType == "immediate") %>%
+#   dplyr::group_by(Productivity, WithinOutsideIHC, LadlabID, prod.gradient) %>%
+#   dplyr::summarize(meansubj = mean(Accuracy, na.rm = TRUE)) %>%
+#   ggplot(aes(x=Productivity, y=meansubj, fill=WithinOutsideIHC)) +
+#   geom_violin(alpha=0.7, scale="count", position=position_dodge(width=0.8)) +
+#   geom_point(aes(colour = Productivity), position=position_jitterdodge(jitter.width=0.25, 
+#                                                                        jitter.height = .1, 
+#                                                                        dodge.width=.9), 
+#              alpha = .7) +
+#   stat_summary(fun.y = mean,position = position_dodge(width=0.8), 
+#                geom="point", shape=23, size=3, colour = "black") +
+#   stat_summary(fun.data = mean_cl_boot, geom="errorbar",
+#                position = position_dodge(width=0.8), width = 0.2) +  
+#   scale_fill_brewer(name = "Trial Type", palette="Dark2",direction=-1) +
+#   scale_colour_manual(values = prod.pal.1, guide = "none") + 
+#   scale_y_continuous(limits=c(0,1)) +
+#   labs(y="Average Proportion Correct", x="",
+#        fill="Trial Type") +
+#   theme_bw(base_size = 13) +
+#   theme(panel.grid.major = element_blank(), 
+#         panel.grid.minor = element_blank())
+# 
+# ggsave('graphs/wcn-within-beyond2.png', width=6, height=4)
 ```
 
 ```{r}
@@ -729,7 +706,7 @@ group_names <- c(`Productive` = "Productive Counters",
 # alternative 2, use fewer colors.
 wcn.data %>%
   mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels = c("within", "outside"), 
-                                   labels = c("Within IHC", "Outside IHC")))%>%
+                                   labels = c("Within IHC", "Beyond IHC")))%>%
   dplyr::filter(TaskType == "immediate") %>%
   dplyr::group_by(Productivity, WithinOutsideIHC, LadlabID, prod.gradient) %>%
   dplyr::summarize(meansubj = mean(Accuracy, na.rm = TRUE)) %>%
@@ -755,8 +732,40 @@ wcn.data %>%
         panel.grid.minor = element_blank())
 
 ggsave('graphs/wcn-within-beyond3.png', width=6, height=4)
+
+# Alternative
+wcn.data %>%
+  mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels = c("within", "outside"), 
+                                   labels = c("Within IHC", "Beyond IHC")))%>%
+  dplyr::filter(TaskType == "immediate") %>%
+  dplyr::group_by(Productivity, WithinOutsideIHC, LadlabID, prod.gradient) %>%
+  dplyr::summarize(meansubj = mean(Accuracy, na.rm = TRUE)) %>%
+  ggplot(aes(x=Productivity, y=meansubj))+
+  geom_violin(aes(color=Productivity), alpha=0.7, scale="count", position=position_dodge(width=0.8)) +
+  geom_point(aes(fill=Productivity),
+             position=position_jitterdodge(jitter.width=0.25,
+                                           dodge.width=.9),
+             alpha = .4) +
+  stat_summary(aes(color=Productivity),
+               fun.data = mean_cl_boot, geom="errorbar",
+               position = position_dodge(width=0.8), width = 0.2)+
+  stat_summary(aes(color=Productivity), fill="white",
+               fun.y = mean,position = position_dodge(width=0.8), 
+               geom="point", shape=23, size=3)+
+  facet_wrap(.~WithinOutsideIHC, strip.position="bottom") +
+  scale_colour_brewer(palette="Set1", direction=-1) + 
+  scale_y_continuous(limits=c(0,1)) +
+  labs(y="Average Proportion Correct", x="Trial Type") +
+  theme_bw(base_size = 13) +
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text.x = element_blank())
+ggsave('graphs/wcn-within-beyond4.png', width=6, height=4)
+
 ```
 
+#### Analysis for fig 4
 Analysis of WCN accuracy by productivity and trial type
 ```{r}
 # wcn_score.df <- wcn.data %>%
@@ -785,6 +794,9 @@ wcn.model.int <- glmer(Accuracy ~ Productivity+ WithinOutsideIHC +
 
 #comparison of models
 anova(wcn.model.int, wcn.model.noint, wcn.model.ihc, wcn.model.base, test = 'LRT')
+
+# summary of final model
+summary(wcn.model.int)
 ```
 
 
@@ -798,7 +810,7 @@ wcn.data %>%
 
 ## Highest contiguous NN
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 wcn.wide %<>%
   dplyr::mutate(TaskItem = as.numeric(as.character(TaskItem)))
 
@@ -923,39 +935,61 @@ z <- wcn.data %>%
   spread(TaskItem, Accuracy)
 ```
 
+#### Test of medians
 Median highest contiguous next number by productivity  - minus kids who counted to 99 spontaneously
 ```{r}
-wcn.data %>%
-  filter(IHC < 99)%>%
-  dplyr::distinct(LadlabID, Highest_Contig_NN, Productivity) %>%
+wcn.data.bysubject<- wcn.data %>%
+  dplyr::distinct(LadlabID, Highest_Contig_NN, Productivity, IHC)
+wcn.data.bysubject%>%
   dplyr::group_by(Productivity) %>%
   dplyr::summarise(n = n(),
                    median_NN = median(Highest_Contig_NN),
                    mean_NN = mean(Highest_Contig_NN)) %>%
   kable()
 
+# independent 2-group Mann-Whitney U Test 
+# wilcox.test(continuous variable ~ binary factor)
+wilcox.test(wcn.data.bysubject$Highest_Contig_NN
+            ~ wcn.data.bysubject$Productivity, paired=FALSE) 
 ```
 
+
+Median highest contiguous next number by productivity  - minus kids who counted to 99 spontaneously
+```{r}
+wcn.data.bysubject %>%
+  filter(IHC < 99)%>%
+  dplyr::group_by(Productivity) %>%
+  dplyr::summarise(n = n(),
+                   median_NN = median(Highest_Contig_NN),
+                   mean_NN = mean(Highest_Contig_NN)) %>%
+  kable()
+# independent 2-group Mann-Whitney U Test 
+# wilcox.test(continuous variable ~ binary factor)
+wilcox.test(wcn.data.bysubject[wcn.data.bysubject$IHC<99,]$Highest_Contig_NN
+            ~ wcn.data.bysubject[wcn.data.bysubject$IHC<99,]$Productivity) 
+```
+
+#### Histogram
 Plotting freq of highest contiguous as a function of productivity
 ``` {r}
-full.data %>%
-  dplyr::right_join(highest_contiguous_nn) %>%
-  dplyr::distinct(LadlabID, Highest_Contig_NN, Productivity) %>%
-  ggplot(aes(x=Highest_Contig_NN, color=Productivity)) + 
-  geom_dotplot(aes(fill = Productivity),
-               binwidth=1, stackgroups=TRUE, binpositions="all",method="dotdensity") +
-  scale_color_brewer(palette="Set1") + 
-  scale_fill_brewer(palette="Set1") +
-  coord_fixed(ratio=1) +
-  scale_y_continuous(breaks=seq(0,50,10), lim=c(0,50)) +
-  #scale_x_continuous(breaks=seq(0,100,by=10)) +
-  scale_x_continuous(breaks = c(0, 1, 5, 23, 29, 37, 40, 62, 70, 86),
-                     labels=c("0", "1", "5", "23", "29", "37", "40", "62", "70", "86")) +
-  labs(x="Highest Contiguous Next Number", 
-       y="Frequency") +
-  theme_bw() + 
-  theme(legend.position="bottom")
-ggsave('graphs/highestcontig-by-prod.png')
+# full.data %>%
+#   dplyr::right_join(highest_contiguous_nn) %>%
+#   dplyr::distinct(LadlabID, Highest_Contig_NN, Productivity) %>%
+#   ggplot(aes(x=Highest_Contig_NN, color=Productivity)) + 
+#   geom_dotplot(aes(fill = Productivity),
+#                binwidth=1, stackgroups=TRUE, binpositions="all",method="dotdensity") +
+#   scale_color_brewer(palette="Set1") + 
+#   scale_fill_brewer(palette="Set1") +
+#   coord_fixed(ratio=1) +
+#   scale_y_continuous(breaks=seq(0,50,10), lim=c(0,50)) +
+#   #scale_x_continuous(breaks=seq(0,100,by=10)) +
+#   scale_x_continuous(breaks = c(0, 1, 5, 23, 29, 37, 40, 62, 70, 86),
+#                      labels=c("0", "1", "5", "23", "29", "37", "40", "62", "70", "86")) +
+#   labs(x="Highest Contiguous Next Number", 
+#        y="Frequency") +
+#   theme_bw() + 
+#   theme(legend.position="bottom")
+# ggsave('graphs/highestcontig-by-prod.png')
 
 # side by side
 full.data %>%
@@ -979,7 +1013,7 @@ ggsave('graphs/highestcontig-by-prod-2.png')
 ```
 
 
-Correlations
+#### Correlations
 ```{r}
 corrdf <- full.data %>%
   dplyr::right_join(highest_contiguous_nn) %>%
@@ -989,6 +1023,33 @@ corrdf <- full.data %>%
 rcorr(as.matrix(corrdf), type = "pearson")
 ```
 
+#### Fig 3
+Jess graph
+```{r fig3}
+prod.pal <- c("#E41A1C", "#4DAF4A", "#377EB8")
+
+wcn.data %>%
+  mutate(prod.group = ifelse(IHC > 99, "Productive (IHC > 99)", 
+                             ifelse(Productivity == "Productive", "Productive (IHC < 99)", "Nonproductive")))%>%
+  filter(TaskType == "immediate")%>%
+  mutate(TaskItem == factor(TaskItem))%>%
+  group_by(TaskItem, prod.group)%>%
+   summarise(mean = mean(Accuracy, na.rm = TRUE), 
+            n = n(), 
+            sd = sd(Accuracy, na.rm = TRUE), 
+            se = sd/sqrt(n)) %>%
+  ggplot(aes(x = factor(TaskItem), y = mean, colour = prod.group, group= prod.group)) +
+  geom_point(size = 2.5) + 
+  geom_line(size = .7) +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), 
+                width = 0, size = .5) +
+  theme_bw(base_size = 13) + 
+  scale_colour_manual(values = prod.pal) +
+  theme(legend.position = "right", legend.title = element_blank()) +
+  labs(x = "Task item", y = "Mean performance") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+ggsave('graphs/wcn-trial-accuracy.png')
+```
 # Infinity Descriptives
 
 Number of kids in each infinity category
@@ -1087,31 +1148,6 @@ ms.cor <- full.data %>%
 cor.test(ms.cor$Productivity, ms.cor$prod.gradient)
 ```
 
-#Jess graph
-```{r fig3}
-prod.pal <- c("#E41A1C", "#4DAF4A", "#377EB8")
-
-wcn.data %>%
-  mutate(prod.group = ifelse(IHC > 99, "Productive (IHC > 99)", 
-                             ifelse(Productivity == "Productive", "Productive (IHC < 99)", "Nonproductive")))%>%
-  filter(TaskType == "immediate")%>%
-  mutate(TaskItem == factor(TaskItem))%>%
-  group_by(TaskItem, prod.group)%>%
-   summarise(mean = mean(Accuracy, na.rm = TRUE), 
-            n = n(), 
-            sd = sd(Accuracy, na.rm = TRUE), 
-            se = sd/sqrt(n)) %>%
-  ggplot(aes(x = factor(TaskItem), y = mean, colour = prod.group, group= prod.group)) +
-  geom_point(size = 2.5) + 
-  geom_line(size = .7) +
-  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), 
-                width = 0, size = .5) +
-  theme_bw(base_size = 13) + 
-  scale_colour_manual(values = prod.pal) +
-  theme(legend.position = "right", legend.title = element_blank()) +
-  labs(x = "Task item", y = "Mean performance") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-```
 
 # Analyses
 ## Counting, Productivity, and Infinity Battery
@@ -1372,7 +1408,7 @@ end.nn <- glm(EndlessKnower ~Highest_Contig_NN + Age.c, family = "binomial", dat
 ```{r}
 tmp <- distinct_model.df %>%
   mutate(delta.hc = FHC-IHC)%>%
-  mutate(prop.hc = delta.hc/(100-IHC), 
+  mutate(prop.hc = delta.hc/(99-IHC), 
          prop.hc = ifelse(prop.hc == "NaN", 1, as.numeric(prop.hc)), 
          prop.hc = ifelse(prop.hc == 0 & IHC == 99, 1, as.numeric(prop.hc))) #one kid with IHC and FHC as 99
 

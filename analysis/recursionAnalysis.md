@@ -1,7 +1,7 @@
 RecursionAnalysis
 ================
 Junyi Chu, Rose M. Schneider, Pierina Cheung
-2018-11-20
+2019-01-01
 
 # Setup
 
@@ -167,8 +167,8 @@ full.data %>% dplyr::filter(TaskType == "productivity") %>% droplevels() %>% dpl
 ## Productivity gradient
 
 ``` r
-full.data %<>% mutate(delta.hc = FHC - IHC, prod.gradient = delta.hc/(100 - IHC), 
-    prod.gradient = ifelse(IHC == 100, 1, as.numeric(prod.gradient)), prod.gradient = ifelse(prod.gradient == 
+full.data %<>% mutate(delta.hc = FHC - IHC, prod.gradient = delta.hc/(99 - IHC), 
+    prod.gradient = ifelse(IHC >= 99, 1, as.numeric(prod.gradient)), prod.gradient = ifelse(prod.gradient == 
         0 & IHC == 99, 1, as.numeric(prod.gradient)))
 ```
 
@@ -219,7 +219,7 @@ full.data %>% distinct(LadlabID, delta.hc, prod.gradient) %>% summarise(mean_gra
 
 | mean\_gradient | sd\_gradient | mean\_delta.hc | sd\_delta.hc |
 | -------------: | -----------: | -------------: | -----------: |
-|      0.6267619 |      0.44344 |       21.13934 |      25.5331 |
+|      0.6340588 |    0.4485848 |       21.13934 |      25.5331 |
 
 Similar data by decade
 productivity
@@ -267,8 +267,8 @@ full.data %>% distinct(LadlabID, Productivity, delta.hc, prod.gradient) %>% grou
 
 | Productivity  | mean\_gradient | sd\_gradient | mean\_delta.hc | sd\_delta.hc |
 | :------------ | -------------: | -----------: | -------------: | -----------: |
-| Nonproductive |      0.0651454 |    0.0864379 |       5.372093 |     7.240834 |
-| Productive    |      0.9324518 |    0.1802594 |      29.721519 |    27.775167 |
+| Nonproductive |       0.065951 |    0.0874923 |       5.372093 |     7.240834 |
+| Productive    |       0.943282 |    0.1824027 |      29.721519 |    27.775167 |
 
 Plotting distribution of IHC, as a function of productivity (\~ junyi’s
 graph)
@@ -660,103 +660,79 @@ wcn.data %>% dplyr::filter(TaskType == "immediate") %>% dplyr::group_by(Producti
     ## 3 Productive    outside          0.518 0.501
     ## 4 Productive    within           0.783 0.413
 
-Plotting WCN as within vs. beyond by productivity
+Plotting WCN as within vs. beyond by productivity \#\#\# Fig
+4
 
 ``` r
-wcn.data %>%
-  mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels = c("within", "outside"), 
-                                   labels = c("Within", "Outside")))%>%
-  dplyr::filter(TaskType == "immediate") %>%
-  dplyr::group_by(Productivity, WithinOutsideIHC, LadlabID) %>%
-  dplyr::summarize(meansubj = mean(Accuracy, na.rm = TRUE)) %>%
-  ggplot(aes(x=WithinOutsideIHC, y=meansubj, color=Productivity)) +
-  stat_summary(fun.data = mean_cl_boot, geom="pointrange",
-               #position = position_dodge(width=0.90), 
-               width = 0.2) +
-  scale_color_brewer(name = "Productivity", palette="Set1") +
-  scale_y_continuous(lim=c(0,1)) +
-  labs(y="Proportion Correct", 
-       fill="Productivity") +
-  theme_bw() +
-  theme(text = element_text(size = 12))
+# # alternative wcn.data %>% mutate(WithinOutsideIHC = factor(WithinOutsideIHC,
+# levels = c('within', 'outside'), labels = c('Within', 'Outside')))%>%
+# dplyr::filter(TaskType == 'immediate') %>% dplyr::group_by(Productivity,
+# WithinOutsideIHC, LadlabID, prod.gradient) %>% dplyr::summarize(meansubj =
+# mean(Accuracy, na.rm = TRUE)) %>% ggplot(aes(x=Productivity, y=meansubj,
+# fill=WithinOutsideIHC)) + geom_violin(alpha=0.7, scale='count',
+# position=position_dodge(width=0.8)) + geom_point(aes(colour = Productivity),
+# position=position_jitterdodge(jitter.width=0.25, jitter.height = .1,
+# dodge.width=.9), alpha = .7) + stat_summary(fun.y = mean,position =
+# position_dodge(width=0.8), geom='point', shape=23, size=3, colour = 'black') +
+# stat_summary(fun.data = mean_cl_boot, geom='errorbar', position =
+# position_dodge(width=0.8), width = 0.2) + scale_fill_brewer(name = 'Trial
+# Type', palette='Dark2',direction=-1) + scale_colour_manual(values = prod.pal.1,
+# guide = 'none') + scale_y_continuous(limits=c(0,1)) + labs(y='Average
+# Proportion Correct', x='', fill='Trial Type') + theme_bw(base_size = 13) +
+# theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+# ggsave('graphs/wcn-within-beyond2.png', width=6, height=4)
 ```
-
-![](recursionAnalysis_files/figure-gfm/fig4-1.png)<!-- -->
 
 ``` r
-ggsave('graphs/wcn-within-beyond.png')
+group_names <- c(Productive = "Productive Counters", Nonproductive = "Nonproductive Counters")
+# alternative 2, use fewer colors.
+wcn.data %>% mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels = c("within", 
+    "outside"), labels = c("Within IHC", "Beyond IHC"))) %>% dplyr::filter(TaskType == 
+    "immediate") %>% dplyr::group_by(Productivity, WithinOutsideIHC, LadlabID, prod.gradient) %>% 
+    dplyr::summarize(meansubj = mean(Accuracy, na.rm = TRUE)) %>% ggplot(aes(x = WithinOutsideIHC, 
+    y = meansubj)) + geom_violin(aes(color = Productivity), alpha = 0.7, scale = "count", 
+    position = position_dodge(width = 0.8)) + geom_point(aes(fill = WithinOutsideIHC), 
+    position = position_jitterdodge(jitter.width = 0.25, dodge.width = 0.9), alpha = 0.5) + 
+    stat_summary(aes(color = Productivity), fun.data = mean_cl_boot, geom = "errorbar", 
+        position = position_dodge(width = 0.8), width = 0.2) + stat_summary(aes(color = Productivity), 
+    fill = "white", fun.y = mean, position = position_dodge(width = 0.8), geom = "point", 
+    shape = 23, size = 3) + facet_grid(. ~ Productivity, labeller = as_labeller(group_names)) + 
+    scale_colour_brewer(guide = FALSE, palette = "Set1", direction = -1) + scale_fill_brewer(guide = FALSE) + 
+    scale_y_continuous(limits = c(0, 1)) + labs(y = "Average Proportion Correct", 
+    x = "Trial Type") + theme_bw(base_size = 13) + theme(panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank())
 ```
 
-    ## Saving 7 x 5 in image
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
 
 ``` r
-prod.pal.1 <- c("#880f10","#214B6E")
+ggsave("graphs/wcn-within-beyond3.png", width = 6, height = 4)
 
-# alternative
-wcn.data %>%
-  mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels = c("within", "outside"), 
-                                   labels = c("Within", "Outside")))%>%
-  dplyr::filter(TaskType == "immediate") %>%
-  dplyr::group_by(Productivity, WithinOutsideIHC, LadlabID, prod.gradient) %>%
-  dplyr::summarize(meansubj = mean(Accuracy, na.rm = TRUE)) %>%
-  ggplot(aes(x=Productivity, y=meansubj, fill=WithinOutsideIHC)) +
-  geom_violin(alpha=0.7, scale="count", position=position_dodge(width=0.8)) +
-  geom_point(aes(colour = Productivity), position=position_jitterdodge(jitter.width=0.25, 
-                                                                       jitter.height = .1, 
-                                                                       dodge.width=.9), 
-             alpha = .7) +
-  stat_summary(fun.y = mean,position = position_dodge(width=0.8), 
-               geom="point", shape=23, size=3, colour = "black") +
-  stat_summary(fun.data = mean_cl_boot, geom="errorbar",
-               position = position_dodge(width=0.8), width = 0.2) +  
-  scale_fill_brewer(name = "Trial Type", palette="Dark2",direction=-1) +
-  scale_colour_manual(values = prod.pal.1, guide = "none") + 
-  scale_y_continuous(limits=c(0,1)) +
-  labs(y="Average Proportion Correct", x="",
-       fill="Trial Type") +
-  theme_bw(base_size = 13) +
-  theme(panel.grid.major = element_blank(), 
-        panel.grid.minor = element_blank())
+# Alternative
+wcn.data %>% mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels = c("within", 
+    "outside"), labels = c("Within IHC", "Beyond IHC"))) %>% dplyr::filter(TaskType == 
+    "immediate") %>% dplyr::group_by(Productivity, WithinOutsideIHC, LadlabID, prod.gradient) %>% 
+    dplyr::summarize(meansubj = mean(Accuracy, na.rm = TRUE)) %>% ggplot(aes(x = Productivity, 
+    y = meansubj)) + geom_violin(aes(color = Productivity), alpha = 0.7, scale = "count", 
+    position = position_dodge(width = 0.8)) + geom_point(aes(fill = Productivity), 
+    position = position_jitterdodge(jitter.width = 0.25, dodge.width = 0.9), alpha = 0.4) + 
+    stat_summary(aes(color = Productivity), fun.data = mean_cl_boot, geom = "errorbar", 
+        position = position_dodge(width = 0.8), width = 0.2) + stat_summary(aes(color = Productivity), 
+    fill = "white", fun.y = mean, position = position_dodge(width = 0.8), geom = "point", 
+    shape = 23, size = 3) + facet_wrap(. ~ WithinOutsideIHC, strip.position = "bottom") + 
+    scale_colour_brewer(palette = "Set1", direction = -1) + scale_y_continuous(limits = c(0, 
+    1)) + labs(y = "Average Proportion Correct", x = "Trial Type") + theme_bw(base_size = 13) + 
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
+        axis.ticks = element_blank(), axis.text.x = element_blank())
 ```
 
-![](recursionAnalysis_files/figure-gfm/fig4-2.png)<!-- -->
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-29-2.png)<!-- -->
 
 ``` r
-ggsave('graphs/wcn-within-beyond2.png', width=6, height=4)
-
-# alternative 2
-wcn.data %>%
-  mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels = c("within", "outside"), 
-                                   labels = c("Within", "Outside")))%>%
-  dplyr::filter(TaskType == "immediate") %>%
-  dplyr::group_by(Productivity, WithinOutsideIHC, LadlabID, prod.gradient) %>%
-  dplyr::summarize(meansubj = mean(Accuracy, na.rm = TRUE)) %>%
-  ggplot(aes(x=WithinOutsideIHC, y=meansubj)) +
-  geom_violin(alpha=0.7, scale="count", position=position_dodge(width=0.8)) +
-  geom_point(aes(colour = Productivity), position=position_jitterdodge(jitter.width=0.25,
-                                                                       #jitter.height = .1,
-                                                                       dodge.width=.9),
-             alpha = .7) +
-  facet_grid(.~Productivity) +
-  stat_summary(fun.data = mean_cl_boot, geom="crossbar",
-               position = position_dodge(width=0.8), width = 0.5, shape=23) +  
-  stat_summary(fun.y = mean,position = position_dodge(width=0.8), 
-               geom="point", shape=23, size=5, colour = "black") +
-#  scale_fill_brewer(name = "Trial Type", palette="Set1", direction=-1) +
-  scale_colour_brewer(name = NULL, palette="Set1", direction=-1) + 
-  scale_y_continuous(limits=c(0,1)) +
-  labs(y="Average Proportion Correct", x="Trial Type",
-       fill="Trial Type") +
-  theme_bw(base_size = 13) +
-  theme(panel.grid.major = element_blank(), 
-        panel.grid.minor = element_blank())
+ggsave("graphs/wcn-within-beyond4.png", width = 6, height = 4)
 ```
 
-![](recursionAnalysis_files/figure-gfm/fig4-3.png)<!-- -->
-
-``` r
-ggsave('graphs/wcn-within-beyond3.png', width=6, height=4)
-```
+#### Analysis for fig 4
 
 Analysis of WCN accuracy by productivity and trial type
 
@@ -809,6 +785,58 @@ anova(wcn.model.int, wcn.model.noint, wcn.model.ihc, wcn.model.base, test = 'LRT
     ## wcn.model.int      0.02469 *  
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+``` r
+# summary of final model
+summary(wcn.model.int)
+```
+
+    ## Generalized linear mixed model fit by maximum likelihood (Laplace
+    ##   Approximation) [glmerMod]
+    ##  Family: binomial  ( logit )
+    ## Formula: 
+    ## Accuracy ~ Productivity + WithinOutsideIHC + Productivity:WithinOutsideIHC +  
+    ##     IHC.c + age.c + (1 | TaskItem) + (1 | LadlabID)
+    ##    Data: wcn_model.df
+    ## 
+    ##      AIC      BIC   logLik deviance df.resid 
+    ##    903.5    942.6   -443.7    887.5      967 
+    ## 
+    ## Scaled residuals: 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -4.4322 -0.4363  0.1059  0.4358  7.3483 
+    ## 
+    ## Random effects:
+    ##  Groups   Name        Variance Std.Dev.
+    ##  LadlabID (Intercept) 1.407    1.186   
+    ##  TaskItem (Intercept) 1.044    1.022   
+    ## Number of obs: 975, groups:  LadlabID, 122; TaskItem, 8
+    ## 
+    ## Fixed effects:
+    ##                                               Estimate Std. Error z value
+    ## (Intercept)                                   -0.27166    0.48763  -0.557
+    ## ProductivityProductive                         1.28022    0.39696   3.225
+    ## WithinOutsideIHCwithin                         0.54920    0.48548   1.131
+    ## IHC.c                                          1.83029    0.25014   7.317
+    ## age.c                                         -0.01936    0.18037  -0.107
+    ## ProductivityProductive:WithinOutsideIHCwithin -1.16809    0.52021  -2.245
+    ##                                               Pr(>|z|)    
+    ## (Intercept)                                    0.57746    
+    ## ProductivityProductive                         0.00126 ** 
+    ## WithinOutsideIHCwithin                         0.25795    
+    ## IHC.c                                         2.54e-13 ***
+    ## age.c                                          0.91451    
+    ## ProductivityProductive:WithinOutsideIHCwithin  0.02474 *  
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Correlation of Fixed Effects:
+    ##             (Intr) PrdctP WtOIHC IHC.c  age.c 
+    ## PrdctvtyPrd -0.504                            
+    ## WthnOtsdIHC -0.253  0.201                     
+    ## IHC.c        0.305 -0.166 -0.255              
+    ## age.c        0.165 -0.318 -0.027 -0.245       
+    ## PrdcP:WOIHC  0.074 -0.299 -0.746 -0.125  0.018
 
 How many trials do kids have beyond their
 IHC?
@@ -962,14 +990,47 @@ z <- wcn.data %>%
 
     ## Joining, by = c("LadlabID", "Highest_Contig_NN")
 
+#### Test of medians
+
 Median highest contiguous next number by productivity - minus kids who
 counted to 99
 spontaneously
 
 ``` r
-wcn.data %>% filter(IHC < 99) %>% dplyr::distinct(LadlabID, Highest_Contig_NN, Productivity) %>% 
-    dplyr::group_by(Productivity) %>% dplyr::summarise(n = n(), median_NN = median(Highest_Contig_NN), 
-    mean_NN = mean(Highest_Contig_NN)) %>% kable()
+wcn.data.bysubject <- wcn.data %>% dplyr::distinct(LadlabID, Highest_Contig_NN, Productivity, 
+    IHC)
+wcn.data.bysubject %>% dplyr::group_by(Productivity) %>% dplyr::summarise(n = n(), 
+    median_NN = median(Highest_Contig_NN), mean_NN = mean(Highest_Contig_NN)) %>% 
+    kable()
+```
+
+| Productivity  |  n | median\_NN | mean\_NN |
+| :------------ | -: | ---------: | -------: |
+| Nonproductive | 43 |          5 | 13.53488 |
+| Productive    | 79 |         23 | 41.54430 |
+
+``` r
+# independent 2-group Mann-Whitney U Test wilcox.test(continuous variable ~
+# binary factor)
+wilcox.test(wcn.data.bysubject$Highest_Contig_NN ~ wcn.data.bysubject$Productivity, 
+    paired = FALSE)
+```
+
+    ## 
+    ##  Wilcoxon rank sum test with continuity correction
+    ## 
+    ## data:  wcn.data.bysubject$Highest_Contig_NN by wcn.data.bysubject$Productivity
+    ## W = 673, p-value = 1.12e-08
+    ## alternative hypothesis: true location shift is not equal to 0
+
+Median highest contiguous next number by productivity - minus kids who
+counted to 99
+spontaneously
+
+``` r
+wcn.data.bysubject %>% filter(IHC < 99) %>% dplyr::group_by(Productivity) %>% dplyr::summarise(n = n(), 
+    median_NN = median(Highest_Contig_NN), mean_NN = mean(Highest_Contig_NN)) %>% 
+    kable()
 ```
 
 | Productivity  |  n | median\_NN | mean\_NN |
@@ -977,32 +1038,38 @@ wcn.data %>% filter(IHC < 99) %>% dplyr::distinct(LadlabID, Highest_Contig_NN, P
 | Nonproductive | 43 |          5 | 13.53488 |
 | Productive    | 47 |         23 | 24.36170 |
 
-Plotting freq of highest contiguous as a function of
-productivity
-
 ``` r
-full.data %>% dplyr::right_join(highest_contiguous_nn) %>% dplyr::distinct(LadlabID, 
-    Highest_Contig_NN, Productivity) %>% ggplot(aes(x = Highest_Contig_NN, color = Productivity)) + 
-    geom_dotplot(aes(fill = Productivity), binwidth = 1, stackgroups = TRUE, binpositions = "all", 
-        method = "dotdensity") + scale_color_brewer(palette = "Set1") + scale_fill_brewer(palette = "Set1") + 
-    coord_fixed(ratio = 1) + scale_y_continuous(breaks = seq(0, 50, 10), lim = c(0, 
-    50)) + # scale_x_continuous(breaks=seq(0,100,by=10)) +
-scale_x_continuous(breaks = c(0, 1, 5, 23, 29, 37, 40, 62, 70, 86), labels = c("0", 
-    "1", "5", "23", "29", "37", "40", "62", "70", "86")) + labs(x = "Highest Contiguous Next Number", 
-    y = "Frequency") + theme_bw() + theme(legend.position = "bottom")
+# independent 2-group Mann-Whitney U Test wilcox.test(continuous variable ~
+# binary factor)
+wilcox.test(wcn.data.bysubject[wcn.data.bysubject$IHC < 99, ]$Highest_Contig_NN ~ 
+    wcn.data.bysubject[wcn.data.bysubject$IHC < 99, ]$Productivity)
 ```
 
-    ## Joining, by = "LadlabID"
+    ## 
+    ##  Wilcoxon rank sum test with continuity correction
+    ## 
+    ## data:  wcn.data.bysubject[wcn.data.bysubject$IHC < 99, ]$Highest_Contig_NN by wcn.data.bysubject[wcn.data.bysubject$IHC < 99, ]$Productivity
+    ## W = 613.5, p-value = 0.0005546
+    ## alternative hypothesis: true location shift is not equal to 0
 
-![](recursionAnalysis_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
+#### Histogram
+
+Plotting freq of highest contiguous as a function of productivity
 
 ``` r
-ggsave("graphs/highestcontig-by-prod.png")
-```
+# full.data %>% dplyr::right_join(highest_contiguous_nn) %>%
+# dplyr::distinct(LadlabID, Highest_Contig_NN, Productivity) %>%
+# ggplot(aes(x=Highest_Contig_NN, color=Productivity)) + geom_dotplot(aes(fill =
+# Productivity), binwidth=1, stackgroups=TRUE,
+# binpositions='all',method='dotdensity') + scale_color_brewer(palette='Set1') +
+# scale_fill_brewer(palette='Set1') + coord_fixed(ratio=1) +
+# scale_y_continuous(breaks=seq(0,50,10), lim=c(0,50)) +
+# #scale_x_continuous(breaks=seq(0,100,by=10)) + scale_x_continuous(breaks = c(0,
+# 1, 5, 23, 29, 37, 40, 62, 70, 86), labels=c('0', '1', '5', '23', '29', '37',
+# '40', '62', '70', '86')) + labs(x='Highest Contiguous Next Number',
+# y='Frequency') + theme_bw() + theme(legend.position='bottom')
+# ggsave('graphs/highestcontig-by-prod.png')
 
-    ## Saving 7 x 5 in image
-
-``` r
 # side by side
 full.data %>% dplyr::right_join(highest_contiguous_nn) %>% dplyr::distinct(LadlabID, 
     Highest_Contig_NN, Productivity) %>% ggplot(aes(x = Highest_Contig_NN, color = Productivity)) + 
@@ -1017,7 +1084,7 @@ scale_x_continuous(breaks = c(0, 1, 5, 23, 29, 37, 40, 62, 70, 86), labels = c("
 
     ## Joining, by = "LadlabID"
 
-![](recursionAnalysis_files/figure-gfm/unnamed-chunk-34-2.png)<!-- -->
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-37-1.png)<!-- -->
 
 ``` r
 ggsave("graphs/highestcontig-by-prod-2.png")
@@ -1025,7 +1092,7 @@ ggsave("graphs/highestcontig-by-prod-2.png")
 
     ## Saving 7 x 5 in image
 
-Correlations
+#### Correlations
 
 ``` r
 corrdf <- full.data %>% dplyr::right_join(highest_contiguous_nn) %>% dplyr::distinct(LadlabID, 
@@ -1053,6 +1120,33 @@ rcorr(as.matrix(corrdf), type = "pearson")
     ## IHC                0       0   0               
     ## FHC                0   0       0               
     ## Highest_Contig_NN  0   0   0
+
+#### Fig 3
+
+Jess graph
+
+``` r
+prod.pal <- c("#E41A1C", "#4DAF4A", "#377EB8")
+
+wcn.data %>% mutate(prod.group = ifelse(IHC > 99, "Productive (IHC > 99)", ifelse(Productivity == 
+    "Productive", "Productive (IHC < 99)", "Nonproductive"))) %>% filter(TaskType == 
+    "immediate") %>% mutate(TaskItem == factor(TaskItem)) %>% group_by(TaskItem, 
+    prod.group) %>% summarise(mean = mean(Accuracy, na.rm = TRUE), n = n(), sd = sd(Accuracy, 
+    na.rm = TRUE), se = sd/sqrt(n)) %>% ggplot(aes(x = factor(TaskItem), y = mean, 
+    colour = prod.group, group = prod.group)) + geom_point(size = 2.5) + geom_line(size = 0.7) + 
+    geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0, size = 0.5) + 
+    theme_bw(base_size = 13) + scale_colour_manual(values = prod.pal) + theme(legend.position = "right", 
+    legend.title = element_blank()) + labs(x = "Task item", y = "Mean performance") + 
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+![](recursionAnalysis_files/figure-gfm/fig3-1.png)<!-- -->
+
+``` r
+ggsave("graphs/wcn-trial-accuracy.png")
+```
+
+    ## Saving 7 x 5 in image
 
 # Infinity Descriptives
 
@@ -1210,13 +1304,13 @@ cor.test(ms.cor$IHC, ms.cor$prod.gradient)  #sig. correlation between IHC and pr
     ##  Pearson's product-moment correlation
     ## 
     ## data:  ms.cor$IHC and ms.cor$prod.gradient
-    ## t = 9.8276, df = 120, p-value < 2.2e-16
+    ## t = 9.6098, df = 120, p-value < 2.2e-16
     ## alternative hypothesis: true correlation is not equal to 0
     ## 95 percent confidence interval:
-    ##  0.5560260 0.7558237
+    ##  0.5456677 0.7493760
     ## sample estimates:
     ##       cor 
-    ## 0.6677834
+    ## 0.6594619
 
 ``` r
 cor.test(ms.cor$FHC, ms.cor$prod.gradient)  #sig. correlation between FHC and prod. gradient
@@ -1226,13 +1320,13 @@ cor.test(ms.cor$FHC, ms.cor$prod.gradient)  #sig. correlation between FHC and pr
     ##  Pearson's product-moment correlation
     ## 
     ## data:  ms.cor$FHC and ms.cor$prod.gradient
-    ## t = 41.22, df = 120, p-value < 2.2e-16
+    ## t = 41.106, df = 120, p-value < 2.2e-16
     ## alternative hypothesis: true correlation is not equal to 0
     ## 95 percent confidence interval:
-    ##  0.9522946 0.9764607
+    ##  0.9520457 0.9763364
     ## sample estimates:
     ##       cor 
-    ## 0.9664535
+    ## 0.9662772
 
 \#Correlation between Productivity classification and
 Prod.gradient
@@ -1249,32 +1343,13 @@ cor.test(ms.cor$Productivity, ms.cor$prod.gradient)
     ##  Pearson's product-moment correlation
     ## 
     ## data:  ms.cor$Productivity and ms.cor$prod.gradient
-    ## t = 29.706, df = 120, p-value < 2.2e-16
+    ## t = 29.695, df = 120, p-value < 2.2e-16
     ## alternative hypothesis: true correlation is not equal to 0
     ## 95 percent confidence interval:
-    ##  0.9126986 0.9564758
+    ##  0.9126420 0.9564469
     ## sample estimates:
     ##       cor 
-    ## 0.9382378
-
-\#Jess graph
-
-``` r
-prod.pal <- c("#E41A1C", "#4DAF4A", "#377EB8")
-
-wcn.data %>% mutate(prod.group = ifelse(IHC > 99, "Productive (IHC > 99)", ifelse(Productivity == 
-    "Productive", "Productive (IHC < 99)", "Nonproductive"))) %>% filter(TaskType == 
-    "immediate") %>% mutate(TaskItem == factor(TaskItem)) %>% group_by(TaskItem, 
-    prod.group) %>% summarise(mean = mean(Accuracy, na.rm = TRUE), n = n(), sd = sd(Accuracy, 
-    na.rm = TRUE), se = sd/sqrt(n)) %>% ggplot(aes(x = factor(TaskItem), y = mean, 
-    colour = prod.group, group = prod.group)) + geom_point(size = 2.5) + geom_line(size = 0.7) + 
-    geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0, size = 0.5) + 
-    theme_bw(base_size = 13) + scale_colour_manual(values = prod.pal) + theme(legend.position = "right", 
-    legend.title = element_blank()) + labs(x = "Task item", y = "Mean performance") + 
-    theme(axis.text.x = element_text(angle = 45, hjust = 1))
-```
-
-![](recursionAnalysis_files/figure-gfm/fig3-1.png)<!-- -->
+    ## 0.9381972
 
 # Analyses
 
@@ -1379,21 +1454,19 @@ summary(model.gain.successor)
     ## 
     ## Deviance Residuals: 
     ##     Min       1Q   Median       3Q      Max  
-    ## -1.2860  -1.0552  -0.8403   1.1953   1.6239  
+    ## -1.2951  -1.0462  -0.8427   1.1977   1.6211  
     ## 
     ## Coefficients:
-    ##               Estimate Std. Error z value Pr(>|z|)  
-    ## (Intercept)    -0.6407     0.3816  -1.679   0.0932 .
-    ## prod.gradient   0.5282     0.5187   1.018   0.3085  
-    ## Age.c           0.2098     0.2284   0.918   0.3584  
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ##               Estimate Std. Error z value Pr(>|z|)
+    ## (Intercept)    -0.6222     0.3810  -1.633    0.102
+    ## prod.gradient   0.4936     0.5124   0.963    0.335
+    ## Age.c           0.2168     0.2284   0.949    0.342
     ## 
     ## (Dispersion parameter for binomial family taken to be 1)
     ## 
     ##     Null deviance: 166.46  on 121  degrees of freedom
-    ## Residual deviance: 162.03  on 119  degrees of freedom
-    ## AIC: 168.03
+    ## Residual deviance: 162.14  on 119  degrees of freedom
+    ## AIC: 168.14
     ## 
     ## Number of Fisher Scoring iterations: 4
 
@@ -1424,9 +1497,9 @@ mtable.sf.knowers
     ## ================================================================================================================
     ##                                             Base      IHC     Highest Contig.  Productivity  Exp. - Prod. gain  
     ## ----------------------------------------------------------------------------------------------------------------
-    ##   (Intercept)                              -0.306    -0.306       -0.307          -0.847*         -0.641        
-    ##                                            (0.186)   (0.186)      (0.187)         (0.370)         (0.382)       
-    ##   Age.c                                     0.342     0.313        0.245           0.149           0.210        
+    ##   (Intercept)                              -0.306    -0.306       -0.307          -0.847*         -0.622        
+    ##                                            (0.186)   (0.186)      (0.187)         (0.370)         (0.381)       
+    ##   Age.c                                     0.342     0.313        0.245           0.149           0.217        
     ##                                            (0.188)   (0.218)      (0.202)         (0.218)         (0.228)       
     ##   IHC.c                                               0.058                                                     
     ##                                                      (0.216)                                                    
@@ -1434,12 +1507,12 @@ mtable.sf.knowers
     ##                                                                   (0.200)                                       
     ##   Productivity: Productive/Nonproductive                                           0.816                        
     ##                                                                                   (0.468)                       
-    ##   prod.gradient                                                                                    0.528        
-    ##                                                                                                   (0.519)       
+    ##   prod.gradient                                                                                    0.494        
+    ##                                                                                                   (0.512)       
     ## ----------------------------------------------------------------------------------------------------------------
-    ##   Nagelkerke R-sq.                          0.037     0.038        0.056           0.070           0.048        
-    ##   Log-likelihood                          -81.539   -81.503      -80.610         -79.977         -81.016        
-    ##   AIC                                     167.077   169.006      167.221         165.954         168.033        
+    ##   Nagelkerke R-sq.                          0.037     0.038        0.056           0.070           0.047        
+    ##   Log-likelihood                          -81.539   -81.503      -80.610         -79.977         -81.072        
+    ##   AIC                                     167.077   169.006      167.221         165.954         168.143        
     ##   N                                       122       122          122             122             122            
     ## ================================================================================================================
 
@@ -1498,7 +1571,7 @@ anova(base.successor, model.gain.successor, test = 'LRT')
     ## Model 2: SuccessorKnower ~ prod.gradient + Age.c
     ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)
     ## 1       120     163.08                     
-    ## 2       119     162.03  1   1.0444   0.3068
+    ## 2       119     162.14  1  0.93365   0.3339
 
 ## Endless Models
 
@@ -1550,9 +1623,9 @@ mtable.endless.knowers
     ## =================================================================================================================
     ##                                              Base        IHC      Highest Contig.  Productivity  Prod. gradient  
     ## -----------------------------------------------------------------------------------------------------------------
-    ##   (Intercept)                              -1.057***   -1.131***     -1.091***       -2.010***      -2.440***    
-    ##                                            (0.221)     (0.235)       (0.228)         (0.542)        (0.615)      
-    ##   Age.c                                     0.707**     0.407         0.535*          0.446          0.305       
+    ##   (Intercept)                              -1.057***   -1.131***     -1.091***       -2.010***      -2.403***    
+    ##                                            (0.221)     (0.235)       (0.228)         (0.542)        (0.608)      
+    ##   Age.c                                     0.707**     0.407         0.535*          0.446          0.313       
     ##                                            (0.224)     (0.250)       (0.238)         (0.249)        (0.264)      
     ##   IHC.c                                                 0.666**                                                  
     ##                                                        (0.242)                                                   
@@ -1560,12 +1633,12 @@ mtable.endless.knowers
     ##                                                                      (0.215)                                     
     ##   Productivity: Productive/Nonproductive                                              1.329*                     
     ##                                                                                      (0.627)                     
-    ##   prod.gradient                                                                                      1.962**     
-    ##                                                                                                     (0.731)      
+    ##   prod.gradient                                                                                      1.893**     
+    ##                                                                                                     (0.717)      
     ## -----------------------------------------------------------------------------------------------------------------
-    ##   Nagelkerke R-sq.                          0.125       0.205         0.183           0.179          0.215       
-    ##   Log-likelihood                          -66.655     -62.810       -63.884         -64.095        -62.312       
-    ##   AIC                                     137.311     131.619       133.767         134.190        130.624       
+    ##   Nagelkerke R-sq.                          0.125       0.205         0.183           0.179          0.212       
+    ##   Log-likelihood                          -66.655     -62.810       -63.884         -64.095        -62.485       
+    ##   AIC                                     137.311     131.619       133.767         134.190        130.971       
     ##   N                                       122         122           122             122            122           
     ## =================================================================================================================
 
@@ -1730,21 +1803,21 @@ summary(large.endless.gain) #lower AIC than IHC, significant predictor
     ## 
     ## Deviance Residuals: 
     ##     Min       1Q   Median       3Q      Max  
-    ## -1.1996  -0.9643  -0.4202   1.1769   2.3054  
+    ## -1.2320  -0.9693  -0.4233   1.1815   2.2947  
     ## 
     ## Coefficients:
     ##               Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)    -2.4398     0.6153  -3.965 7.33e-05 ***
-    ## prod.gradient   1.9624     0.7314   2.683   0.0073 ** 
-    ## Age.c           0.3050     0.2644   1.154   0.2486    
+    ## (Intercept)    -2.4029     0.6084  -3.950 7.83e-05 ***
+    ## prod.gradient   1.8929     0.7172   2.639   0.0083 ** 
+    ## Age.c           0.3126     0.2644   1.183   0.2370    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## (Dispersion parameter for binomial family taken to be 1)
     ## 
     ##     Null deviance: 144.38  on 121  degrees of freedom
-    ## Residual deviance: 124.62  on 119  degrees of freedom
-    ## AIC: 130.62
+    ## Residual deviance: 124.97  on 119  degrees of freedom
+    ## AIC: 130.97
     ## 
     ## Number of Fisher Scoring iterations: 5
 
@@ -1762,22 +1835,22 @@ summary(large.endless.gain.ihc) #with addition of IHC, prod.gradient is marginal
     ## 
     ## Deviance Residuals: 
     ##     Min       1Q   Median       3Q      Max  
-    ## -1.3195  -0.9178  -0.4104   1.0633   2.3337  
+    ## -1.3178  -0.9173  -0.4128   1.0649   2.3300  
     ## 
     ## Coefficients:
     ##               Estimate Std. Error z value Pr(>|z|)   
-    ## (Intercept)    -2.0857     0.6456  -3.231  0.00124 **
-    ## IHC.c           0.4047     0.2782   1.455  0.14570   
-    ## prod.gradient   1.3878     0.8177   1.697  0.08964 . 
-    ## Age.c           0.2490     0.2666   0.934  0.35027   
+    ## (Intercept)    -2.0553     0.6369  -3.227  0.00125 **
+    ## IHC.c           0.4207     0.2753   1.528  0.12647   
+    ## prod.gradient   1.3282     0.7965   1.668  0.09541 . 
+    ## Age.c           0.2502     0.2669   0.937  0.34852   
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## (Dispersion parameter for binomial family taken to be 1)
     ## 
     ##     Null deviance: 144.38  on 121  degrees of freedom
-    ## Residual deviance: 122.47  on 118  degrees of freedom
-    ## AIC: 130.47
+    ## Residual deviance: 122.59  on 118  degrees of freedom
+    ## AIC: 130.59
     ## 
     ## Number of Fisher Scoring iterations: 5
 
@@ -1790,8 +1863,8 @@ anova(large.endless.gain, large.endless.gain.ihc, test = 'LRT')
     ## Model 1: EndlessKnower ~ prod.gradient + Age.c
     ## Model 2: EndlessKnower ~ IHC.c + prod.gradient + Age.c
     ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)
-    ## 1       119     124.62                     
-    ## 2       118     122.47  1   2.1545   0.1422
+    ## 1       119     124.97                     
+    ## 2       118     122.59  1   2.3782    0.123
 
 \#LM predicting IHC from productivity and age, HCNN and
 age
@@ -1866,7 +1939,7 @@ end.nn <- glm(EndlessKnower ~ Highest_Contig_NN + Age.c, family = "binomial", da
 FHC
 
 ``` r
-tmp <- distinct_model.df %>% mutate(delta.hc = FHC - IHC) %>% mutate(prop.hc = delta.hc/(100 - 
+tmp <- distinct_model.df %>% mutate(delta.hc = FHC - IHC) %>% mutate(prop.hc = delta.hc/(99 - 
     IHC), prop.hc = ifelse(prop.hc == "NaN", 1, as.numeric(prop.hc)), prop.hc = ifelse(prop.hc == 
     0 & IHC == 99, 1, as.numeric(prop.hc)))  #one kid with IHC and FHC as 99
 
@@ -1877,7 +1950,7 @@ ggplot(full.data, aes(x = prod.gradient, y = IHC, colour = Productivity)) + geom
     labs(x = "Productivity Gradient", y = "IHC")
 ```
 
-![](recursionAnalysis_files/figure-gfm/unnamed-chunk-51-1.png)<!-- -->
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-54-1.png)<!-- -->
 
 ``` r
 end.gain.ihc <- glm(EndlessKnower ~ IHC.c + Age.c, family = "binomial", data = distinct_model.df)
@@ -1954,21 +2027,21 @@ summary(end.gain.gain)
     ## 
     ## Deviance Residuals: 
     ##     Min       1Q   Median       3Q      Max  
-    ## -1.1996  -0.9643  -0.4202   1.1769   2.3054  
+    ## -1.2320  -0.9693  -0.4233   1.1815   2.2947  
     ## 
     ## Coefficients:
     ##               Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)    -2.4398     0.6153  -3.965 7.33e-05 ***
-    ## prod.gradient   1.9624     0.7314   2.683   0.0073 ** 
-    ## Age.c           0.3050     0.2644   1.154   0.2486    
+    ## (Intercept)    -2.4029     0.6084  -3.950 7.83e-05 ***
+    ## prod.gradient   1.8929     0.7172   2.639   0.0083 ** 
+    ## Age.c           0.3126     0.2644   1.183   0.2370    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## (Dispersion parameter for binomial family taken to be 1)
     ## 
     ##     Null deviance: 144.38  on 121  degrees of freedom
-    ## Residual deviance: 124.62  on 119  degrees of freedom
-    ## AIC: 130.62
+    ## Residual deviance: 124.97  on 119  degrees of freedom
+    ## AIC: 130.97
     ## 
     ## Number of Fisher Scoring iterations: 5
 
@@ -2013,8 +2086,8 @@ anova(end.gain.ihcgain, end.gain.gain, test = "LRT")
     ## Model 1: EndlessKnower ~ IHC.c + prod.gradient + Age.c
     ## Model 2: EndlessKnower ~ prod.gradient + Age.c
     ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)
-    ## 1       118     122.47                     
-    ## 2       119     124.62 -1  -2.1545   0.1422
+    ## 1       118     122.59                     
+    ## 2       119     124.97 -1  -2.3782    0.123
 
 ``` r
 # correlation between productivity and gain score
@@ -2027,13 +2100,13 @@ cor.test(tmp$Prod.num, tmp$prop.hc)
     ##  Pearson's product-moment correlation
     ## 
     ## data:  tmp$Prod.num and tmp$prop.hc
-    ## t = 29.706, df = 120, p-value < 2.2e-16
+    ## t = 6.5641, df = 120, p-value = 1.402e-09
     ## alternative hypothesis: true correlation is not equal to 0
     ## 95 percent confidence interval:
-    ##  0.9126986 0.9564758
+    ##  0.3700520 0.6338481
     ## sample estimates:
     ##       cor 
-    ## 0.9382378
+    ## 0.5140015
 
 \#Plot of prod. gain with IHC - WIP
 
@@ -2147,22 +2220,22 @@ summary(fullmodel.sf.gain)
     ##     IHC.c + Age.c, family = "binomial", data = distinct_model.df)
     ## 
     ## Deviance Residuals: 
-    ##    Min      1Q  Median      3Q     Max  
-    ## -1.682  -1.014  -0.812   1.207   1.643  
+    ##     Min       1Q   Median       3Q      Max  
+    ## -1.6787  -1.0146  -0.8134   1.2088   1.6397  
     ## 
     ## Coefficients:
     ##                     Estimate Std. Error z value Pr(>|z|)
-    ## (Intercept)          -0.6795     0.4387  -1.549    0.121
-    ## prod.gradient         0.5879     0.6201   0.948    0.343
-    ## Highest_Contig_NN.c   0.4636     0.2927   1.584    0.113
-    ## IHC.c                -0.4306     0.3422  -1.258    0.208
-    ## Age.c                 0.2473     0.2376   1.041    0.298
+    ## (Intercept)          -0.6534     0.4347  -1.503    0.133
+    ## prod.gradient         0.5406     0.6067   0.891    0.373
+    ## Highest_Contig_NN.c   0.4664     0.2926   1.594    0.111
+    ## IHC.c                -0.4210     0.3412  -1.234    0.217
+    ## Age.c                 0.2515     0.2378   1.058    0.290
     ## 
     ## (Dispersion parameter for binomial family taken to be 1)
     ## 
     ##     Null deviance: 166.46  on 121  degrees of freedom
-    ## Residual deviance: 159.32  on 117  degrees of freedom
-    ## AIC: 169.32
+    ## Residual deviance: 159.43  on 117  degrees of freedom
+    ## AIC: 169.43
     ## 
     ## Number of Fisher Scoring iterations: 4
 
@@ -2213,22 +2286,22 @@ summary(fullmodel.end.gain)
     ## 
     ## Deviance Residuals: 
     ##     Min       1Q   Median       3Q      Max  
-    ## -1.3747  -0.9027  -0.4164   1.0235   2.3396  
+    ## -1.3747  -0.9026  -0.4183   1.0236   2.3367  
     ## 
     ## Coefficients:
     ##                     Estimate Std. Error z value Pr(>|z|)   
-    ## (Intercept)          -2.0796     0.6486  -3.206  0.00134 **
-    ## prod.gradient         1.3800     0.8220   1.679  0.09318 . 
-    ## Highest_Contig_NN.c   0.1513     0.2951   0.512  0.60831   
-    ## IHC.c                 0.2877     0.3591   0.801  0.42311   
-    ## Age.c                 0.2516     0.2674   0.941  0.34671   
+    ## (Intercept)          -2.0518     0.6402  -3.205  0.00135 **
+    ## prod.gradient         1.3243     0.8011   1.653  0.09833 . 
+    ## Highest_Contig_NN.c   0.1563     0.2951   0.530  0.59630   
+    ## IHC.c                 0.2990     0.3577   0.836  0.40322   
+    ## Age.c                 0.2525     0.2677   0.943  0.34558   
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## (Dispersion parameter for binomial family taken to be 1)
     ## 
     ##     Null deviance: 144.38  on 121  degrees of freedom
-    ## Residual deviance: 122.21  on 117  degrees of freedom
-    ## AIC: 132.21
+    ## Residual deviance: 122.31  on 117  degrees of freedom
+    ## AIC: 132.31
     ## 
     ## Number of Fisher Scoring iterations: 5
