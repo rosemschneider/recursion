@@ -1,0 +1,17 @@
+	Base	IHC	Highest Contig.	Productivity	Exp. - Prod. gain
+(Intercept)	-0.306	-0.306	-0.307	-0.847*	-0.641
+	(0.186)	(0.186)	(0.187)	(0.370)	(0.382)
+Age.c	0.342	0.313	0.245	0.149	0.210
+	(0.188)	(0.218)	(0.202)	(0.218)	(0.228)
+IHC.c		0.058			
+		(0.216)			
+Highest_Contig_NN.c			0.271		
+			(0.200)		
+Productivity: Productive/Nonproductive				0.816	
+				(0.468)	
+prod.gradient					0.528
+					(0.519)
+Nagelkerke R-sq.	0.037	0.038	0.056	0.070	0.048
+Log-likelihood	-81.539	-81.503	-80.610	-79.977	-81.016
+AIC	167.077	169.006	167.221	165.954	168.033
+N	122	122	122	122	122
