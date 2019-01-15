@@ -1,7 +1,7 @@
 RecursionAnalysis
 ================
 Junyi Chu, Rose M. Schneider, Pierina Cheung
-2019-01-01
+2019-01-11
 
 # Setup
 
@@ -1150,21 +1150,31 @@ ggsave("graphs/wcn-trial-accuracy.png")
 
 # Infinity Descriptives
 
-Number of kids in each infinity
-category
+Number of kids in each infinity category
 
 ``` r
-full.data %>% dplyr::distinct(LadlabID, Category) %>% dplyr::group_by(Category) %>% 
-    dplyr::summarise(n = n())
+# Code the categories
+full.data <- full.data %>% mutate(Category = case_when(SuccessorKnower == 0 & EndlessKnower == 
+    0 ~ "A Non-knower", SuccessorKnower == 0 & EndlessKnower == 1 ~ "B Endless-only", 
+    SuccessorKnower == 1 & EndlessKnower == 0 ~ "C Successor-only", SuccessorKnower == 
+        1 & EndlessKnower == 1 ~ "D Full-knower"))
+
+full.data %>% dplyr::distinct(LadlabID, Category, Productivity) %>% dplyr::group_by(Productivity, 
+    Category) %>% dplyr::summarise(n = n())
 ```
 
-    ## # A tibble: 4 x 2
-    ##   Category             n
-    ##   <fct>            <int>
-    ## 1 A Non-knower        62
-    ## 2 B Endless-only      14
-    ## 3 C Successor-only    27
-    ## 4 D Full-knower       19
+    ## # A tibble: 8 x 3
+    ## # Groups:   Productivity [?]
+    ##   Productivity  Category             n
+    ##   <fct>         <chr>            <int>
+    ## 1 Nonproductive A Non-knower        30
+    ## 2 Nonproductive B Endless-only       1
+    ## 3 Nonproductive C Successor-only     9
+    ## 4 Nonproductive D Full-knower        3
+    ## 5 Productive    A Non-knower        29
+    ## 6 Productive    B Endless-only      10
+    ## 7 Productive    C Successor-only    20
+    ## 8 Productive    D Full-knower       20
 
 ``` r
 classification.data <- full.data %>% dplyr::distinct(LadlabID, EndlessKnower, SuccessorKnower, 
@@ -1687,6 +1697,21 @@ anova(model.prod.endless, base.endless, test = 'LRT')#Prod significant
     ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)  
     ## 1       119     128.19                       
     ## 2       120     133.31 -1   -5.121  0.02364 *
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+``` r
+##Exploratory base v. productivity gradient
+anova(base.endless, model.gain.endless, test = 'LRT')
+```
+
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: EndlessKnower ~ Age.c
+    ## Model 2: EndlessKnower ~ prod.gradient + Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)   
+    ## 1       120     133.31                        
+    ## 2       119     124.97  1     8.34 0.003878 **
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 

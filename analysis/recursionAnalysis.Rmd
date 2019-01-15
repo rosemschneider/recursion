@@ -417,6 +417,7 @@ ggsave('graphs/distance-nonprod.png')
 
 ```
 
+### Fig 2a/b
 Separate graphs for productivity groups, sorted by ascending IHC
 ```{r}
 #productive
@@ -425,17 +426,20 @@ ggplot(hc.dev.prod, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) +
   geom_line(data=hc.dev.prod[!is.na(hc.dev.prod$hc),]) + 
   geom_point(aes(shape = `Highest Count Coding`, colour = `Highest Count Coding`), 
              size = 2, stroke = 1.5) +
-  scale_color_brewer(palette="Dark2") +
-  scale_shape_manual(values = c(4,5,20)) +
+  scale_color_brewer(palette="Dark2", labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
+  scale_shape_manual(values = c(4,5,20), labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
   ylim(0, 100) +
-  labs(x = "Each line = individual participant",
-       y="Highest Count") +
+  labs(title="a. Distance, Productive Decade Counters",
+       x = "Each line = individual participant",
+       y="Highest Count",
+       colour="Highest Count Coding",
+       shape="Highest Count Coding") +
   theme_bw(base_size = 13) + 
   theme(legend.position="bottom", 
-        axis.text.x = element_text(angle = 270, hjust = 1)) + 
-  theme(axis.text.x=element_blank(),
+        #axis.text.x = element_text(angle = 270, hjust = 1),
+        axis.text.x=element_blank(),
         axis.ticks.x=element_blank())
-ggsave('graphs/distance-prod-sorted.png')
+ggsave('graphs/distance-prod-sorted.png', width=8, height=4)
 
 #nonproductive
 ggplot(hc.dev.nonprod, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) + 
@@ -443,17 +447,20 @@ ggplot(hc.dev.nonprod, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) +
   geom_line(data=hc.dev.nonprod[!is.na(hc.dev.nonprod$hc),]) + 
   geom_point(aes(shape = `Highest Count Coding`, colour = `Highest Count Coding`), 
              size = 2, stroke = 1.5) +
-  scale_color_brewer(palette="Dark2") +
-  scale_shape_manual(values = c(4,5,20)) +
+  scale_color_brewer(palette="Dark2", labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
+  scale_shape_manual(values = c(4,5,20), labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
   ylim(0, 100) +
-  labs(x = "Each line = individual participant",
-       y="Highest Count") +
+  labs(title="b. Distance, Non-productive Decade Counters",
+       x = "Each line = individual participant",
+       y="Highest Count",
+       colour="Highest Count Coding",
+       shape="Highest Count Coding") +
   theme_bw(base_size = 13) + 
   theme(legend.position="bottom", 
-        axis.text.x = element_text(angle = 270, hjust = 1)) +
-  theme(axis.text.x=element_blank(),
-        axis.ticks.x=element_blank())
-ggsave('graphs/distance-nonprod-sorted.png')
+        #axis.text.x = element_text(angle = 270, hjust = 1),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) 
+ggsave('graphs/distance-nonprod-sorted.png', width=8, height=4)
 
 ```
 
@@ -1054,9 +1061,18 @@ ggsave('graphs/wcn-trial-accuracy.png')
 
 Number of kids in each infinity category
 ```{r}
+# Code the categories
+full.data <- full.data %>% 
+  mutate(Category = case_when(
+    SuccessorKnower==0 & EndlessKnower==0 ~ "A Non-knower",
+    SuccessorKnower==0 & EndlessKnower==1 ~ "B Endless-only",
+    SuccessorKnower==1 & EndlessKnower==0 ~ "C Successor-only",
+    SuccessorKnower==1 & EndlessKnower==1 ~ "D Full-knower"
+  ))
+
 full.data %>%
-  dplyr::distinct(LadlabID, Category)%>%
-  dplyr::group_by(Category)%>%
+  dplyr::distinct(LadlabID, Category, Productivity)%>%
+  dplyr::group_by(Productivity, Category)%>%
   dplyr::summarise(n = n())
 
 classification.data <- full.data %>%
@@ -1127,7 +1143,20 @@ full.data %>%
 
 ```
 
-#Correlation between productivity gradient and IHC/FHC
+# Productivity gradient
+
+```{r}
+ggplot(full.data, aes(x = IHC, y= prod.gradient, colour = Productivity)) +
+  geom_point(size = 3, alpha = .1)+
+  geom_jitter()+
+  theme_bw(base_size = 13) +
+  theme(legend.position = "bottom") +
+  scale_x_continuous(breaks = seq(0, 100, 10)) +
+  scale_colour_brewer(palette = "Set1") + 
+  labs(y = 'Productivity Gradient', x = 'IHC')
+```
+
+## Correlation between productivity gradient and IHC/FHC
 ```{r}
 ms.cor <- full.data %>%
   distinct(LadlabID, Age, IHC, FHC, prod.gradient)
@@ -1137,7 +1166,7 @@ cor.test(ms.cor$FHC, ms.cor$prod.gradient) #sig. correlation between FHC and pro
 
 ```
 
-#Correlation between Productivity classification and Prod.gradient
+## Correlation between Productivity classification and Prod.gradient
 ```{r}
 ms.cor <- full.data %>%
   dplyr::distinct(LadlabID, Productivity, prod.gradient)%>%
@@ -1321,6 +1350,9 @@ anova(model.nn.endless, base.endless, test = 'LRT')#Highest contig NN significan
 #base v. productivity
 anova(model.prod.endless, base.endless, test = 'LRT')#Prod significant
 
+##Exploratory base v. productivity gradient
+anova(base.endless, model.gain.endless, test = 'LRT')
+
 # #okay with about mean NN
 # model2.endless <- glmer(EndlessKnower ~ mean.NN + Age + (1|LadlabID), family = "binomial", 
 #                         data = distinct_model.df)
@@ -1364,7 +1396,10 @@ anova(large.endless.base, large.endless.nn, test = 'LRT')#Highest contig. NS
 #IHC v. Productivity
 anova(large.endless.base, large.endless.prod, test = 'LRT')##Productivity NS
 
-###########
+```
+
+### Endless: prod gradient
+```{r}
 ##Exploratory - productivity gradient comparison
 large.endless.gain <- glm(EndlessKnower ~ prod.gradient + Age.c, 
                           family = "binomial", data = distinct_model.df)
@@ -1377,7 +1412,8 @@ summary(large.endless.gain.ihc) #with addition of IHC, prod.gradient is marginal
 anova(large.endless.gain, large.endless.gain.ihc, test = 'LRT')
 ```
  
-#LM predicting IHC from productivity and age, HCNN and age
+ 
+## LM predicting IHC from productivity and age, HCNN and age
 ```{r}
 lm.prod <- full.data %>%
   distinct(LadlabID, Productivity, Age, IHC)%>%
@@ -1404,48 +1440,6 @@ end.prod <- glm(EndlessKnower ~ Productivity + Age.c, family = "binomial", data 
 end.nn <- glm(EndlessKnower ~Highest_Contig_NN + Age.c, family = "binomial", data = explore.dat)
 ```
 
-#Exploratory - trying to account for distance between IHC and FHC
-```{r}
-tmp <- distinct_model.df %>%
-  mutate(delta.hc = FHC-IHC)%>%
-  mutate(prop.hc = delta.hc/(99-IHC), 
-         prop.hc = ifelse(prop.hc == "NaN", 1, as.numeric(prop.hc)), 
-         prop.hc = ifelse(prop.hc == 0 & IHC == 99, 1, as.numeric(prop.hc))) #one kid with IHC and FHC as 99
-
-#plot by IHC
-ggplot(full.data, aes(x = prod.gradient, y = IHC, colour = Productivity)) +
-  geom_point(size = 3, alpha = .1)+
-  geom_jitter()+
-  theme_bw(base_size = 13) +
-  theme(legend.position = "bottom") +
-  scale_y_continuous(breaks = seq(0, 100, 10)) +
-  scale_colour_brewer(palette = "Set1") + 
-  labs(x = 'Productivity Gradient', y = 'IHC')
-
-end.gain.ihc <- glm(EndlessKnower ~ IHC.c + Age.c, family = "binomial", 
-                data = distinct_model.df)
-end.gain.Prod <- glm(EndlessKnower ~ Productivity + Age.c, family = "binomial", 
-                     data = distinct_model.df)
-end.gain.gain <- glm(EndlessKnower ~ prod.gradient + Age.c, family = "binomial", 
-                     data = distinct_model.df)
-end.gain.nn <- glm(EndlessKnower ~ Highest_Contig_NN + Age.c, 
-                   family = "binomial", data = distinct_model.df)
-summary(end.gain.ihc)
-summary(end.gain.Prod)
-summary(end.gain.gain)
-summary(end.gain.nn)
-
-#add IHC to model with gain score
-end.gain.ihcgain <- glm(EndlessKnower ~ IHC.c + prod.gradient + Age.c, family = "binomial", 
-                        data = distinct_model.df)
-anova(end.gain.ihcgain, end.gain.gain, test = 'LRT')
-
-#correlation between productivity and gain score
-tmp %<>%
-  mutate(Prod.num = ifelse(Productivity == "Productive", 1, 0))
-
-cor.test(tmp$Prod.num, tmp$prop.hc)
-```
 
 #Plot of prod. gain with IHC - WIP
 ```{r fig2}
@@ -1487,46 +1481,10 @@ ggplot(aes(x = reorder(LadlabID, hc, FUN=min), y = hc, colour = prod.gradient)) 
   # scale_colour_gradient(low = "#666666",
   #                       high = "#00b8e6") +
   labs(shape = "Highest Count Type", colour = "Productivity Gradient")
-
-
-ggplot(ms, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) + 
-  facet_grid(rows = vars(Productivity)) +
-  geom_line(data=hc.dev.prod[!is.na(hc.dev.prod$hc),]) + 
-  geom_point(aes(shape = `Highest Count Coding`, colour = `Highest Count Coding`), 
-             size = 2, stroke = 1.5) +
-  scale_color_brewer(palette="Dark2") +
-  scale_shape_manual(values = c(4,5,20)) +
-  ylim(0, 100) +
-  labs(x = "Each line = individual participant",
-       y="Highest Count") +
-  theme_bw(base_size = 13) + 
-  theme(legend.position="bottom", 
-        axis.text.x = element_text(angle = 270, hjust = 1)) + 
-  theme(axis.text.x=element_blank(),
-        axis.ticks.x=element_blank())
-ggsave('graphs/distance-prod-sorted.png')
-
-#nonproductive
-ggplot(hc.dev.nonprod, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) + 
-  facet_grid(rows = vars(Productivity)) +
-  geom_line(data=hc.dev.nonprod[!is.na(hc.dev.nonprod$hc),]) + 
-  geom_point(aes(shape = `Highest Count Coding`, colour = `Highest Count Coding`), 
-             size = 2, stroke = 1.5) +
-  scale_color_brewer(palette="Dark2") +
-  scale_shape_manual(values = c(4,5,20)) +
-  ylim(0, 100) +
-  labs(x = "Each line = individual participant",
-       y="Highest Count") +
-  theme_bw(base_size = 13) + 
-  theme(legend.position="bottom", 
-        axis.text.x = element_text(angle = 270, hjust = 1)) +
-  theme(axis.text.x=element_blank(),
-        axis.ticks.x=element_blank())
-ggsave('graphs/distance-nonprod-sorted.png')
 ```
 
 
-##Visualizing the regressions
+# Visualizing the regressions
 ```{r regression-graphs}
 # Successor knowledge
 fullmodel.sf.prod <- glm(SuccessorKnower ~ Productivity + Highest_Contig_NN.c + 
