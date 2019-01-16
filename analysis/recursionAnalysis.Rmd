@@ -730,7 +730,7 @@ wcn.data %>%
                fun.y = mean,position = position_dodge(width=0.8), 
                geom="point", shape=23, size=3)+
   facet_grid(.~Productivity, labeller = as_labeller(group_names)) +
-  scale_colour_brewer(guide=FALSE, palette="Set1", direction=-1) + 
+  scale_colour_brewer(guide=FALSE, palette="Set1") + 
   scale_fill_brewer(guide=FALSE) +
   scale_y_continuous(limits=c(0,1)) +
   labs(y="Average Proportion Correct", x="Trial Type") +
@@ -738,8 +738,10 @@ wcn.data %>%
   theme(panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank())
 
-ggsave('graphs/wcn-within-beyond3.png', width=6, height=4)
+ggsave('graphs/wcn-within-beyond-final.png', width=6, height=4)
+```
 
+```{r}
 # Alternative
 wcn.data %>%
   mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels = c("within", "outside"), 
@@ -1334,8 +1336,7 @@ mtable.endless.knowers <- mtable('Base' = base.endless,
             'Highest Contig.' = model.nn.endless,
             'Productivity' = model.prod.endless,
             'Prod. gradient' = model.gain.endless,
-            #summary.stats = c('R-squared','F','p','N'))
-            summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'))
+            summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','F','p','N'))
 
 mtable.endless.knowers
 write.mtable(mtable.endless.knowers, file="graphs/table3.txt")
@@ -1351,7 +1352,7 @@ anova(model.nn.endless, base.endless, test = 'LRT')#Highest contig NN significan
 anova(model.prod.endless, base.endless, test = 'LRT')#Prod significant
 
 ##Exploratory base v. productivity gradient
-anova(base.endless, model.gain.endless, test = 'LRT')
+anova(base.endless, model.gain.endless, test = 'LRT')# prod. gradient significant (better than IHC)
 
 # #okay with about mean NN
 # model2.endless <- glmer(EndlessKnower ~ mean.NN + Age + (1|LadlabID), family = "binomial", 
@@ -1370,24 +1371,19 @@ large.endless.base <- glm(EndlessKnower ~ IHC.c + Age.c,
 large.endless.nn <- glm(EndlessKnower ~ Highest_Contig_NN.c + IHC.c + Age.c, 
                           family = "binomial", data = distinct_model.df)
 
-##Productivity v. IHC##
+##Productivity + IHC
 large.endless.prod <- glm(EndlessKnower ~ Productivity + IHC.c + Age.c, 
                             family = "binomial", data = distinct_model.df)
+
+##Prod. Gain + IHC
+large.endless.gain.ihc <- glm(EndlessKnower ~ IHC.c + prod.gradient + Age.c, 
+                              family = "binomial", data = distinct_model.df)
+summary(large.endless.gain.ihc) #with addition of IHC, prod.gradient is marginal, AIC very slightly decreases
 
 ##ALL THREE TOGETHER
 large.endless.full <- glm(EndlessKnower ~ Productivity + Highest_Contig_NN.c + 
                               IHC.c + Age.c, 
                             family = "binomial", data = distinct_model.df)
-
-#regression table
-mtable.endless.large <- mtable('IHC alone' = large.endless.base,
-            'Highest contiguous NN + IHC' = large.endless.nn,
-            'Productivity + IHC' = large.endless.prod,
-            'Prod. + Highest contig. + IHC' = large.endless.full,
-            #summary.stats = c('R-squared','F','p','N'))
-            summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'))
-
-mtable.endless.large
 
 ##MODEL COMPARISONS
 #IHC v. Highest contig.
@@ -1396,20 +1392,23 @@ anova(large.endless.base, large.endless.nn, test = 'LRT')#Highest contig. NS
 #IHC v. Productivity
 anova(large.endless.base, large.endless.prod, test = 'LRT')##Productivity NS
 
+#IHC v. Prod. Gain
+anova(model.gain.endless, large.endless.gain.ihc, test = 'LRT') #n.s. addition of ihc to gradient.
 ```
 
-### Endless: prod gradient
+### Endless: regression table
 ```{r}
-##Exploratory - productivity gradient comparison
-large.endless.gain <- glm(EndlessKnower ~ prod.gradient + Age.c, 
-                          family = "binomial", data = distinct_model.df)
-summary(large.endless.gain) #lower AIC than IHC, significant predictor
-#add IHC to model
-large.endless.gain.ihc <- glm(EndlessKnower ~ IHC.c + prod.gradient + Age.c, 
-                              family = "binomial", data = distinct_model.df)
-summary(large.endless.gain.ihc) #with addition of IHC, prod.gradient is marginal, AIC very slightly decreases, but addition of IHC does not significantly improve the fit of the model
+mtable.endless.large <- mtable(#'IHC alone' = large.endless.base,
+            'HCNN + IHC' = large.endless.nn,
+            'Prod.Group + IHC' = large.endless.prod,
+#            'Prod.Group + Highest contig. + IHC' = large.endless.full,
+#            'Prod.Gradient alone' = model.gain.endless,
+            'Prod.Gradient + IHC' = large.endless.gain.ihc,
+            #summary.stats = c('R-squared','F','p','N'))
+            summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'))
 
-anova(large.endless.gain, large.endless.gain.ihc, test = 'LRT')
+mtable.endless.large
+write.mtable(mtable.endless.large, file="graphs/table3b.txt")
 ```
  
  
@@ -1426,6 +1425,65 @@ summary(lm1)
 lm2 <- lm(IHC ~ Highest_Contig_NN + Age.c, data = distinct_model.df)
 summary(lm2)
 ```
+
+## Full Infinity Knowledge models
+### build models
+```{r}
+# Add full infinity knowledge classification to data frame
+distinct_model.df <- distinct_model.df %>%
+  mutate(InfinityKnower = factor(
+    case_when(SuccessorKnower==0 | EndlessKnower==0 ~ 0,
+              SuccessorKnower==1 & EndlessKnower==1 ~ 1),
+    levels=c(0,1))
+  )
+
+###MODEL BUILDING AND COMPARISONS###
+#base model for successor knower
+base.infinity <- glm(InfinityKnower ~ Age.c, family = "binomial", 
+                        data = distinct_model.df)
+
+##IHC model
+model.ihc.infinity <- glm(InfinityKnower ~ IHC.c + Age.c, family = "binomial", 
+                             data = distinct_model.df)
+##Highest NN Model
+model.nn.infinity <- glm(InfinityKnower ~ Highest_Contig_NN.c + Age.c, family = "binomial", 
+                            data = distinct_model.df)
+##Productivity model
+model.prod.infinity <- glm(InfinityKnower ~ Productivity + Age.c, family = "binomial",
+                              data = distinct_model.df)
+
+##Gain Score model
+model.gain.infinity <- glm(InfinityKnower ~ prod.gradient + Age.c, family = "binomial",
+                              data = distinct_model.df)
+
+##Regression table for Infinity Knower Models (Table 4)
+mtable.inf.knowers <- mtable('Base' = base.infinity,
+            'IHC' = model.ihc.infinity,
+            'Highest Contig.' = model.nn.infinity,
+            'Prod. Group' = model.prod.infinity,
+            'Prod. Gain' = model.gain.infinity,
+            #summary.stats = c('R-squared','F','p','N'))
+            summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'))
+mtable.inf.knowers
+# save as txt
+write.mtable(mtable.inf.knowers, file="graphs/table4.txt")
+```
+
+### Simple comparison
+```{r}
+#base v. IHC
+anova(base.infinity, model.ihc.infinity, test = 'LRT') #n.s.
+
+#base v. highest contiguous
+anova(base.infinity, model.nn.infinity, test = 'LRT')#n.s.
+
+#base v. productivity
+anova(base.infinity, model.prod.infinity, test = 'LRT')#n.s. 
+
+#base v. productivity gradient
+anova(base.infinity, model.gain.infinity, test = 'LRT')#n.s.
+```
+### 
 
 #Exploratory - what about with participants who did not reach 99?
 ```{r}

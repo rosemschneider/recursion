@@ -1,0 +1,17 @@
+	HCNN + IHC	Prod.Group + IHC	Prod.Gradient + IHC
+(Intercept)	-1.129***	-1.710**	-2.086**
+	(0.235)	(0.563)	(0.646)
+Highest_Contig_NN.c	0.173		
+	(0.299)		
+IHC.c	0.529	0.523*	0.405
+	(0.336)	(0.263)	(0.278)
+Age.c	0.411	0.315	0.249
+	(0.250)	(0.260)	(0.267)
+Productivity: Productive/Nonproductive		0.823	
+		(0.687)	
+prod.gradient			1.388
+			(0.818)
+Nagelkerke R-sq.	0.209	0.221	0.237
+Log-likelihood	-62.642	-62.059	-61.235
+AIC	133.284	132.118	130.470
+N	122	122	122
