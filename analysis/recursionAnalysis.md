@@ -1,7 +1,7 @@
 RecursionAnalysis
 ================
 Junyi Chu, Rose M. Schneider, Pierina Cheung
-2019-01-11
+2019-01-16
 
 # Setup
 
@@ -356,45 +356,63 @@ hc.dev.nonprod <- subset(hc.dev.data, Productivity == "Nonproductive")
 
 Separate graphs for productivity groups (for easier viewing)
 
+### Fig 2a/b
+
 Separate graphs for productivity groups, sorted by ascending IHC
 
 ``` r
-# productive
-ggplot(hc.dev.prod, aes(x = reorder(LadlabID, hc, FUN = min), y = hc)) + facet_grid(rows = vars(Productivity)) + 
-    geom_line(data = hc.dev.prod[!is.na(hc.dev.prod$hc), ]) + geom_point(aes(shape = `Highest Count Coding`, 
-    colour = `Highest Count Coding`), size = 2, stroke = 1.5) + scale_color_brewer(palette = "Dark2") + 
-    scale_shape_manual(values = c(4, 5, 20)) + ylim(0, 100) + labs(x = "Each line = individual participant", 
-    y = "Highest Count") + theme_bw(base_size = 13) + theme(legend.position = "bottom", 
-    axis.text.x = element_text(angle = 270, hjust = 1)) + theme(axis.text.x = element_blank(), 
-    axis.ticks.x = element_blank())
+#productive
+ggplot(hc.dev.prod, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) + 
+  facet_grid(rows = vars(Productivity)) +
+  geom_line(data=hc.dev.prod[!is.na(hc.dev.prod$hc),]) + 
+  geom_point(aes(shape = `Highest Count Coding`, colour = `Highest Count Coding`), 
+             size = 2, stroke = 1.5) +
+  scale_color_brewer(palette="Dark2", labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
+  scale_shape_manual(values = c(4,5,20), labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
+  ylim(0, 100) +
+  labs(title="a. Distance, Productive Decade Counters",
+       x = "Each line = individual participant",
+       y="Highest Count",
+       colour="Highest Count Coding",
+       shape="Highest Count Coding") +
+  theme_bw(base_size = 13) + 
+  theme(legend.position="bottom", 
+        #axis.text.x = element_text(angle = 270, hjust = 1),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
 ```
 
 ![](recursionAnalysis_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 
 ``` r
-ggsave("graphs/distance-prod-sorted.png")
-```
+ggsave('graphs/distance-prod-sorted.png', width=8, height=4)
 
-    ## Saving 7 x 5 in image
-
-``` r
-# nonproductive
-ggplot(hc.dev.nonprod, aes(x = reorder(LadlabID, hc, FUN = min), y = hc)) + facet_grid(rows = vars(Productivity)) + 
-    geom_line(data = hc.dev.nonprod[!is.na(hc.dev.nonprod$hc), ]) + geom_point(aes(shape = `Highest Count Coding`, 
-    colour = `Highest Count Coding`), size = 2, stroke = 1.5) + scale_color_brewer(palette = "Dark2") + 
-    scale_shape_manual(values = c(4, 5, 20)) + ylim(0, 100) + labs(x = "Each line = individual participant", 
-    y = "Highest Count") + theme_bw(base_size = 13) + theme(legend.position = "bottom", 
-    axis.text.x = element_text(angle = 270, hjust = 1)) + theme(axis.text.x = element_blank(), 
-    axis.ticks.x = element_blank())
+#nonproductive
+ggplot(hc.dev.nonprod, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) + 
+  facet_grid(rows = vars(Productivity)) +
+  geom_line(data=hc.dev.nonprod[!is.na(hc.dev.nonprod$hc),]) + 
+  geom_point(aes(shape = `Highest Count Coding`, colour = `Highest Count Coding`), 
+             size = 2, stroke = 1.5) +
+  scale_color_brewer(palette="Dark2", labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
+  scale_shape_manual(values = c(4,5,20), labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
+  ylim(0, 100) +
+  labs(title="b. Distance, Non-productive Decade Counters",
+       x = "Each line = individual participant",
+       y="Highest Count",
+       colour="Highest Count Coding",
+       shape="Highest Count Coding") +
+  theme_bw(base_size = 13) + 
+  theme(legend.position="bottom", 
+        #axis.text.x = element_text(angle = 270, hjust = 1),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) 
 ```
 
 ![](recursionAnalysis_files/figure-gfm/unnamed-chunk-17-2.png)<!-- -->
 
 ``` r
-ggsave("graphs/distance-nonprod-sorted.png")
+ggsave('graphs/distance-nonprod-sorted.png', width=8, height=4)
 ```
-
-    ## Saving 7 x 5 in image
 
 Number of kids who counted to 99+ spontaneously on IHC plus those whose
 FHC = 99+ without prompting
@@ -697,7 +715,7 @@ wcn.data %>% mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels = c("with
         position = position_dodge(width = 0.8), width = 0.2) + stat_summary(aes(color = Productivity), 
     fill = "white", fun.y = mean, position = position_dodge(width = 0.8), geom = "point", 
     shape = 23, size = 3) + facet_grid(. ~ Productivity, labeller = as_labeller(group_names)) + 
-    scale_colour_brewer(guide = FALSE, palette = "Set1", direction = -1) + scale_fill_brewer(guide = FALSE) + 
+    scale_colour_brewer(guide = FALSE, palette = "Set1") + scale_fill_brewer(guide = FALSE) + 
     scale_y_continuous(limits = c(0, 1)) + labs(y = "Average Proportion Correct", 
     x = "Trial Type") + theme_bw(base_size = 13) + theme(panel.grid.major = element_blank(), 
     panel.grid.minor = element_blank())
@@ -706,8 +724,10 @@ wcn.data %>% mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels = c("with
 ![](recursionAnalysis_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
 
 ``` r
-ggsave("graphs/wcn-within-beyond3.png", width = 6, height = 4)
+ggsave("graphs/wcn-within-beyond-final.png", width = 6, height = 4)
+```
 
+``` r
 # Alternative
 wcn.data %>% mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels = c("within", 
     "outside"), labels = c("Within IHC", "Beyond IHC"))) %>% dplyr::filter(TaskType == 
@@ -726,7 +746,7 @@ wcn.data %>% mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels = c("with
         axis.ticks = element_blank(), axis.text.x = element_blank())
 ```
 
-![](recursionAnalysis_files/figure-gfm/unnamed-chunk-29-2.png)<!-- -->
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
 
 ``` r
 ggsave("graphs/wcn-within-beyond4.png", width = 6, height = 4)
@@ -1084,7 +1104,7 @@ scale_x_continuous(breaks = c(0, 1, 5, 23, 29, 37, 40, 62, 70, 86), labels = c("
 
     ## Joining, by = "LadlabID"
 
-![](recursionAnalysis_files/figure-gfm/unnamed-chunk-37-1.png)<!-- -->
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-38-1.png)<!-- -->
 
 ``` r
 ggsave("graphs/highestcontig-by-prod-2.png")
@@ -1302,7 +1322,18 @@ full.data %>% dplyr::right_join(highest_contiguous_nn) %>% dplyr::distinct(Ladla
     ## 1               0           27.4               23
     ## 2               1           37.4               23
 
-\#Correlation between productivity gradient and IHC/FHC
+# Productivity gradient
+
+``` r
+ggplot(full.data, aes(x = IHC, y = prod.gradient, colour = Productivity)) + geom_point(size = 3, 
+    alpha = 0.1) + geom_jitter() + theme_bw(base_size = 13) + theme(legend.position = "bottom") + 
+    scale_x_continuous(breaks = seq(0, 100, 10)) + scale_colour_brewer(palette = "Set1") + 
+    labs(y = "Productivity Gradient", x = "IHC")
+```
+
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-44-1.png)<!-- -->
+
+## Correlation between productivity gradient and IHC/FHC
 
 ``` r
 ms.cor <- full.data %>% distinct(LadlabID, Age, IHC, FHC, prod.gradient)
@@ -1338,8 +1369,7 @@ cor.test(ms.cor$FHC, ms.cor$prod.gradient)  #sig. correlation between FHC and pr
     ##       cor 
     ## 0.9662772
 
-\#Correlation between Productivity classification and
-Prod.gradient
+## Correlation between Productivity classification and Prod.gradient
 
 ``` r
 ms.cor <- full.data %>% dplyr::distinct(LadlabID, Productivity, prod.gradient) %>% 
@@ -1586,34 +1616,28 @@ anova(base.successor, model.gain.successor, test = 'LRT')
 ## Endless Models
 
 ``` r
-#Base model
-base.endless <- glm(EndlessKnower ~ Age.c, family = "binomial", 
-                      data = distinct_model.df)
+# Base model
+base.endless <- glm(EndlessKnower ~ Age.c, family = "binomial", data = distinct_model.df)
 
-###IHC MODEL###
-model.ihc.endless <- glm(EndlessKnower ~ IHC.c + Age.c, family = "binomial", 
-                           data = distinct_model.df)
+### IHC MODEL###
+model.ihc.endless <- glm(EndlessKnower ~ IHC.c + Age.c, family = "binomial", data = distinct_model.df)
 
-###HIGHEST CONTIG NN MODEL###
+### HIGHEST CONTIG NN MODEL###
 model.nn.endless <- glm(EndlessKnower ~ Highest_Contig_NN.c + Age.c, family = "binomial", 
-                          data = distinct_model.df) 
+    data = distinct_model.df)
 
-###PRODUCTIVITY MODEL###
+### PRODUCTIVITY MODEL###
 model.prod.endless <- glm(EndlessKnower ~ Productivity + Age.c, family = "binomial", 
-                            data = distinct_model.df)
+    data = distinct_model.df)
 
-##EXPLORATORY## - GAIN SCORE
+## EXPLORATORY## - GAIN SCORE
 model.gain.endless <- glm(EndlessKnower ~ prod.gradient + Age.c, family = "binomial", 
-                          data = distinct_model.df)
+    data = distinct_model.df)
 
-##Regression table for Endless Models
-mtable.endless.knowers <- mtable('Base' = base.endless,
-            'IHC' = model.ihc.endless,
-            'Highest Contig.' = model.nn.endless,
-            'Productivity' = model.prod.endless,
-            'Prod. gradient' = model.gain.endless,
-            #summary.stats = c('R-squared','F','p','N'))
-            summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'))
+## Regression table for Endless Models
+mtable.endless.knowers <- mtable(Base = base.endless, IHC = model.ihc.endless, `Highest Contig.` = model.nn.endless, 
+    Productivity = model.prod.endless, `Prod. gradient` = model.gain.endless, summary.stats = c("Nagelkerke R-sq.", 
+        "Log-likelihood", "AIC", "F", "p", "N"))
 
 mtable.endless.knowers
 ```
@@ -1649,15 +1673,15 @@ mtable.endless.knowers
     ##   Nagelkerke R-sq.                          0.125       0.205         0.183           0.179          0.212       
     ##   Log-likelihood                          -66.655     -62.810       -63.884         -64.095        -62.485       
     ##   AIC                                     137.311     131.619       133.767         134.190        130.971       
+    ##   p                                         0.001       0.000         0.000           0.000          0.000       
     ##   N                                       122         122           122             122            122           
     ## =================================================================================================================
 
 ``` r
-write.mtable(mtable.endless.knowers, file="graphs/table3.txt")
+write.mtable(mtable.endless.knowers, file = "graphs/table3.txt")
 
-##SIMPLE MODEL COMPARISONS##
-#base v. IHC
-anova(base.endless, model.ihc.endless, test = 'LRT') #IHC significant
+## SIMPLE MODEL COMPARISONS## base v. IHC
+anova(base.endless, model.ihc.endless, test = "LRT")  #IHC significant
 ```
 
     ## Analysis of Deviance Table
@@ -1671,8 +1695,8 @@ anova(base.endless, model.ihc.endless, test = 'LRT') #IHC significant
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 ``` r
-#base v. highest contiguous
-anova(model.nn.endless, base.endless, test = 'LRT')#Highest contig NN significant
+# base v. highest contiguous
+anova(model.nn.endless, base.endless, test = "LRT")  #Highest contig NN significant
 ```
 
     ## Analysis of Deviance Table
@@ -1686,8 +1710,8 @@ anova(model.nn.endless, base.endless, test = 'LRT')#Highest contig NN significan
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 ``` r
-#base v. productivity
-anova(model.prod.endless, base.endless, test = 'LRT')#Prod significant
+# base v. productivity
+anova(model.prod.endless, base.endless, test = "LRT")  #Prod significant
 ```
 
     ## Analysis of Deviance Table
@@ -1701,8 +1725,8 @@ anova(model.prod.endless, base.endless, test = 'LRT')#Prod significant
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 ``` r
-##Exploratory base v. productivity gradient
-anova(base.endless, model.gain.endless, test = 'LRT')
+## Exploratory base v. productivity gradient
+anova(base.endless, model.gain.endless, test = "LRT")  # prod. gradient significant (better than IHC)
 ```
 
     ## Analysis of Deviance Table
@@ -1716,9 +1740,8 @@ anova(base.endless, model.gain.endless, test = 'LRT')
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 ``` r
-# #okay with about mean NN
-# model2.endless <- glmer(EndlessKnower ~ mean.NN + Age + (1|LadlabID), family = "binomial", 
-#                         data = distinct_model.df)
+# #okay with about mean NN model2.endless <- glmer(EndlessKnower ~ mean.NN + Age
+# + (1|LadlabID), family = 'binomial', data = distinct_model.df)
 # anova(model2.endless, base.endless, test = 'LRT')#mean NN significant
 ```
 
@@ -1728,129 +1751,20 @@ Put all significant Endless predictors into large model, run model
 comparison
 
 ``` r
-##BASE MODEL WITH IHC
-large.endless.base <- glm(EndlessKnower ~ IHC.c + Age.c, 
-                            family = "binomial", data = distinct_model.df)
-##add highest contig
-large.endless.nn <- glm(EndlessKnower ~ Highest_Contig_NN.c + IHC.c + Age.c, 
-                          family = "binomial", data = distinct_model.df)
+## BASE MODEL WITH IHC
+large.endless.base <- glm(EndlessKnower ~ IHC.c + Age.c, family = "binomial", data = distinct_model.df)
+## add highest contig
+large.endless.nn <- glm(EndlessKnower ~ Highest_Contig_NN.c + IHC.c + Age.c, family = "binomial", 
+    data = distinct_model.df)
 
-##Productivity v. IHC##
-large.endless.prod <- glm(EndlessKnower ~ Productivity + IHC.c + Age.c, 
-                            family = "binomial", data = distinct_model.df)
+## Productivity + IHC
+large.endless.prod <- glm(EndlessKnower ~ Productivity + IHC.c + Age.c, family = "binomial", 
+    data = distinct_model.df)
 
-##ALL THREE TOGETHER
-large.endless.full <- glm(EndlessKnower ~ Productivity + Highest_Contig_NN.c + 
-                              IHC.c + Age.c, 
-                            family = "binomial", data = distinct_model.df)
-
-#regression table
-mtable.endless.large <- mtable('IHC alone' = large.endless.base,
-            'Highest contiguous NN + IHC' = large.endless.nn,
-            'Productivity + IHC' = large.endless.prod,
-            'Prod. + Highest contig. + IHC' = large.endless.full,
-            #summary.stats = c('R-squared','F','p','N'))
-            summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'))
-
-mtable.endless.large
-```
-
-    ## 
-    ## Calls:
-    ## IHC alone: glm(formula = EndlessKnower ~ IHC.c + Age.c, family = "binomial", 
-    ##     data = distinct_model.df)
-    ## Highest contiguous NN + IHC: glm(formula = EndlessKnower ~ Highest_Contig_NN.c + IHC.c + Age.c, 
-    ##     family = "binomial", data = distinct_model.df)
-    ## Productivity + IHC: glm(formula = EndlessKnower ~ Productivity + IHC.c + Age.c, family = "binomial", 
-    ##     data = distinct_model.df)
-    ## Prod. + Highest contig. + IHC: glm(formula = EndlessKnower ~ Productivity + Highest_Contig_NN.c + 
-    ##     IHC.c + Age.c, family = "binomial", data = distinct_model.df)
-    ## 
-    ## ======================================================================================================================================
-    ##                                           IHC alone   Highest contiguous NN + IHC  Productivity + IHC  Prod. + Highest contig. + IHC  
-    ## --------------------------------------------------------------------------------------------------------------------------------------
-    ##   (Intercept)                              -1.131***           -1.129***                -1.710**                  -1.694**            
-    ##                                            (0.235)             (0.235)                  (0.563)                   (0.565)             
-    ##   IHC.c                                     0.666**             0.529                    0.523*                    0.411              
-    ##                                            (0.242)             (0.336)                  (0.263)                   (0.345)             
-    ##   Age.c                                     0.407               0.411                    0.315                     0.320              
-    ##                                            (0.250)             (0.250)                  (0.260)                   (0.260)             
-    ##   Highest_Contig_NN.c                                           0.173                                              0.148              
-    ##                                                                (0.299)                                            (0.297)             
-    ##   Productivity: Productive/Nonproductive                                                 0.823                     0.802              
-    ##                                                                                         (0.687)                   (0.689)             
-    ## --------------------------------------------------------------------------------------------------------------------------------------
-    ##   Nagelkerke R-sq.                          0.205               0.209                    0.221                     0.223              
-    ##   Log-likelihood                          -62.810             -62.642                  -62.059                   -61.934              
-    ##   AIC                                     131.619             133.284                  132.118                   133.868              
-    ##   N                                       122                 122                      122                       122                  
-    ## ======================================================================================================================================
-
-``` r
-##MODEL COMPARISONS
-#IHC v. Highest contig.
-anova(large.endless.base, large.endless.nn, test = 'LRT')#Highest contig. NS
-```
-
-    ## Analysis of Deviance Table
-    ## 
-    ## Model 1: EndlessKnower ~ IHC.c + Age.c
-    ## Model 2: EndlessKnower ~ Highest_Contig_NN.c + IHC.c + Age.c
-    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)
-    ## 1       119     125.62                     
-    ## 2       118     125.28  1   0.3351   0.5627
-
-``` r
-#IHC v. Productivity
-anova(large.endless.base, large.endless.prod, test = 'LRT')##Productivity NS
-```
-
-    ## Analysis of Deviance Table
-    ## 
-    ## Model 1: EndlessKnower ~ IHC.c + Age.c
-    ## Model 2: EndlessKnower ~ Productivity + IHC.c + Age.c
-    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)
-    ## 1       119     125.62                     
-    ## 2       118     124.12  1   1.5013   0.2205
-
-``` r
-###########
-##Exploratory - productivity gradient comparison
-large.endless.gain <- glm(EndlessKnower ~ prod.gradient + Age.c, 
-                          family = "binomial", data = distinct_model.df)
-summary(large.endless.gain) #lower AIC than IHC, significant predictor
-```
-
-    ## 
-    ## Call:
-    ## glm(formula = EndlessKnower ~ prod.gradient + Age.c, family = "binomial", 
-    ##     data = distinct_model.df)
-    ## 
-    ## Deviance Residuals: 
-    ##     Min       1Q   Median       3Q      Max  
-    ## -1.2320  -0.9693  -0.4233   1.1815   2.2947  
-    ## 
-    ## Coefficients:
-    ##               Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)    -2.4029     0.6084  -3.950 7.83e-05 ***
-    ## prod.gradient   1.8929     0.7172   2.639   0.0083 ** 
-    ## Age.c           0.3126     0.2644   1.183   0.2370    
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-    ## 
-    ## (Dispersion parameter for binomial family taken to be 1)
-    ## 
-    ##     Null deviance: 144.38  on 121  degrees of freedom
-    ## Residual deviance: 124.97  on 119  degrees of freedom
-    ## AIC: 130.97
-    ## 
-    ## Number of Fisher Scoring iterations: 5
-
-``` r
-#add IHC to model
-large.endless.gain.ihc <- glm(EndlessKnower ~ IHC.c + prod.gradient + Age.c, 
-                              family = "binomial", data = distinct_model.df)
-summary(large.endless.gain.ihc) #with addition of IHC, prod.gradient is marginal, AIC very slightly decreases, but addition of IHC does not significantly improve the fit of the model
+## Prod. Gain + IHC
+large.endless.gain.ihc <- glm(EndlessKnower ~ IHC.c + prod.gradient + Age.c, family = "binomial", 
+    data = distinct_model.df)
+summary(large.endless.gain.ihc)  #with addition of IHC, prod.gradient is marginal, AIC very slightly decreases
 ```
 
     ## 
@@ -1880,7 +1794,38 @@ summary(large.endless.gain.ihc) #with addition of IHC, prod.gradient is marginal
     ## Number of Fisher Scoring iterations: 5
 
 ``` r
-anova(large.endless.gain, large.endless.gain.ihc, test = 'LRT')
+## ALL THREE TOGETHER
+large.endless.full <- glm(EndlessKnower ~ Productivity + Highest_Contig_NN.c + IHC.c + 
+    Age.c, family = "binomial", data = distinct_model.df)
+
+## MODEL COMPARISONS IHC v. Highest contig.
+anova(large.endless.base, large.endless.nn, test = "LRT")  #Highest contig. NS
+```
+
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: EndlessKnower ~ IHC.c + Age.c
+    ## Model 2: EndlessKnower ~ Highest_Contig_NN.c + IHC.c + Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)
+    ## 1       119     125.62                     
+    ## 2       118     125.28  1   0.3351   0.5627
+
+``` r
+# IHC v. Productivity
+anova(large.endless.base, large.endless.prod, test = "LRT")  ##Productivity NS
+```
+
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: EndlessKnower ~ IHC.c + Age.c
+    ## Model 2: EndlessKnower ~ Productivity + IHC.c + Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)
+    ## 1       119     125.62                     
+    ## 2       118     124.12  1   1.5013   0.2205
+
+``` r
+# IHC v. Prod. Gain
+anova(model.gain.endless, large.endless.gain.ihc, test = "LRT")  #n.s. addition of ihc to gradient.
 ```
 
     ## Analysis of Deviance Table
@@ -1891,8 +1836,57 @@ anova(large.endless.gain, large.endless.gain.ihc, test = 'LRT')
     ## 1       119     124.97                     
     ## 2       118     122.59  1   2.3782    0.123
 
-\#LM predicting IHC from productivity and age, HCNN and
-age
+### Endless: regression table
+
+``` r
+mtable.endless.large <- mtable(#'IHC alone' = large.endless.base,
+            'HCNN + IHC' = large.endless.nn,
+            'Prod.Group + IHC' = large.endless.prod,
+#            'Prod.Group + Highest contig. + IHC' = large.endless.full,
+#            'Prod.Gradient alone' = model.gain.endless,
+            'Prod.Gradient + IHC' = large.endless.gain.ihc,
+            #summary.stats = c('R-squared','F','p','N'))
+            summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'))
+
+mtable.endless.large
+```
+
+    ## 
+    ## Calls:
+    ## HCNN + IHC: glm(formula = EndlessKnower ~ Highest_Contig_NN.c + IHC.c + Age.c, 
+    ##     family = "binomial", data = distinct_model.df)
+    ## Prod.Group + IHC: glm(formula = EndlessKnower ~ Productivity + IHC.c + Age.c, family = "binomial", 
+    ##     data = distinct_model.df)
+    ## Prod.Gradient + IHC: glm(formula = EndlessKnower ~ IHC.c + prod.gradient + Age.c, 
+    ##     family = "binomial", data = distinct_model.df)
+    ## 
+    ## =============================================================================================
+    ##                                           HCNN + IHC  Prod.Group + IHC  Prod.Gradient + IHC  
+    ## ---------------------------------------------------------------------------------------------
+    ##   (Intercept)                              -1.129***      -1.710**            -2.055**       
+    ##                                            (0.235)        (0.563)             (0.637)        
+    ##   Highest_Contig_NN.c                       0.173                                            
+    ##                                            (0.299)                                           
+    ##   IHC.c                                     0.529          0.523*              0.421         
+    ##                                            (0.336)        (0.263)             (0.275)        
+    ##   Age.c                                     0.411          0.315               0.250         
+    ##                                            (0.250)        (0.260)             (0.267)        
+    ##   Productivity: Productive/Nonproductive                   0.823                             
+    ##                                                           (0.687)                            
+    ##   prod.gradient                                                                1.328         
+    ##                                                                               (0.797)        
+    ## ---------------------------------------------------------------------------------------------
+    ##   Nagelkerke R-sq.                          0.209          0.221               0.236         
+    ##   Log-likelihood                          -62.642        -62.059             -61.296         
+    ##   AIC                                     133.284        132.118             130.592         
+    ##   N                                       122            122                 122             
+    ## =============================================================================================
+
+``` r
+write.mtable(mtable.endless.large, file="graphs/table3b.txt")
+```
+
+## LM predicting IHC from productivity and age, HCNN and age
 
 ``` r
 lm.prod <- full.data %>% distinct(LadlabID, Productivity, Age, IHC) %>% mutate(Age.c = as.vector(scale(Age, 
@@ -1947,6 +1941,144 @@ summary(lm2)
     ## Multiple R-squared:  0.6302, Adjusted R-squared:  0.624 
     ## F-statistic: 101.4 on 2 and 119 DF,  p-value: < 2.2e-16
 
+## Full Infinity Knowledge models
+
+### build models
+
+``` r
+# Add full infinity knowledge classification to data frame
+distinct_model.df <- distinct_model.df %>%
+  mutate(InfinityKnower = factor(
+    case_when(SuccessorKnower==0 | EndlessKnower==0 ~ 0,
+              SuccessorKnower==1 & EndlessKnower==1 ~ 1),
+    levels=c(0,1))
+  )
+
+###MODEL BUILDING AND COMPARISONS###
+#base model for successor knower
+base.infinity <- glm(InfinityKnower ~ Age.c, family = "binomial", 
+                        data = distinct_model.df)
+
+##IHC model
+model.ihc.infinity <- glm(InfinityKnower ~ IHC.c + Age.c, family = "binomial", 
+                             data = distinct_model.df)
+##Highest NN Model
+model.nn.infinity <- glm(InfinityKnower ~ Highest_Contig_NN.c + Age.c, family = "binomial", 
+                            data = distinct_model.df)
+##Productivity model
+model.prod.infinity <- glm(InfinityKnower ~ Productivity + Age.c, family = "binomial",
+                              data = distinct_model.df)
+
+##Gain Score model
+model.gain.infinity <- glm(InfinityKnower ~ prod.gradient + Age.c, family = "binomial",
+                              data = distinct_model.df)
+
+##Regression table for Infinity Knower Models (Table 4)
+mtable.inf.knowers <- mtable('Base' = base.infinity,
+            'IHC' = model.ihc.infinity,
+            'Highest Contig.' = model.nn.infinity,
+            'Prod. Group' = model.prod.infinity,
+            'Prod. Gain' = model.gain.infinity,
+            #summary.stats = c('R-squared','F','p','N'))
+            summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'))
+mtable.inf.knowers
+```
+
+    ## 
+    ## Calls:
+    ## Base: glm(formula = InfinityKnower ~ Age.c, family = "binomial", data = distinct_model.df)
+    ## IHC: glm(formula = InfinityKnower ~ IHC.c + Age.c, family = "binomial", 
+    ##     data = distinct_model.df)
+    ## Highest Contig.: glm(formula = InfinityKnower ~ Highest_Contig_NN.c + Age.c, family = "binomial", 
+    ##     data = distinct_model.df)
+    ## Prod. Group: glm(formula = InfinityKnower ~ Productivity + Age.c, family = "binomial", 
+    ##     data = distinct_model.df)
+    ## Prod. Gain: glm(formula = InfinityKnower ~ prod.gradient + Age.c, family = "binomial", 
+    ##     data = distinct_model.df)
+    ## 
+    ## ============================================================================================================
+    ##                                              Base        IHC      Highest Contig.  Prod. Group  Prod. Gain  
+    ## ------------------------------------------------------------------------------------------------------------
+    ##   (Intercept)                              -1.629***   -1.664***     -1.662***      -2.270***    -2.475***  
+    ##                                            (0.266)     (0.273)       (0.272)        (0.615)      (0.662)    
+    ##   Age.c                                     0.752**     0.567*        0.609*         0.572*       0.497     
+    ##                                            (0.260)     (0.289)       (0.275)        (0.291)      (0.304)    
+    ##   IHC.c                                                 0.385                                               
+    ##                                                        (0.273)                                              
+    ##   Highest_Contig_NN.c                                                 0.383                                 
+    ##                                                                      (0.234)                                
+    ##   Productivity: Productive/Nonproductive                                             0.904                  
+    ##                                                                                     (0.723)                 
+    ##   prod.gradient                                                                                   1.209     
+    ##                                                                                                  (0.796)    
+    ## ------------------------------------------------------------------------------------------------------------
+    ##   Nagelkerke R-sq.                          0.120       0.143         0.151          0.140        0.151     
+    ##   Log-likelihood                          -54.355     -53.375       -53.040        -53.497      -53.064     
+    ##   AIC                                     112.711     112.750       112.080        112.995      112.129     
+    ##   N                                       122         122           122            122          122         
+    ## ============================================================================================================
+
+``` r
+# save as txt
+write.mtable(mtable.inf.knowers, file="graphs/table4.txt")
+```
+
+### Simple comparison
+
+``` r
+# base v. IHC
+anova(base.infinity, model.ihc.infinity, test = "LRT")  #n.s.
+```
+
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: InfinityKnower ~ Age.c
+    ## Model 2: InfinityKnower ~ IHC.c + Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)
+    ## 1       120     108.71                     
+    ## 2       119     106.75  1   1.9604   0.1615
+
+``` r
+# base v. highest contiguous
+anova(base.infinity, model.nn.infinity, test = "LRT")  #n.s.
+```
+
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: InfinityKnower ~ Age.c
+    ## Model 2: InfinityKnower ~ Highest_Contig_NN.c + Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)
+    ## 1       120     108.71                     
+    ## 2       119     106.08  1   2.6302   0.1048
+
+``` r
+# base v. productivity
+anova(base.infinity, model.prod.infinity, test = "LRT")  #n.s. 
+```
+
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: InfinityKnower ~ Age.c
+    ## Model 2: InfinityKnower ~ Productivity + Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)
+    ## 1       120     108.71                     
+    ## 2       119     107.00  1   1.7158   0.1902
+
+``` r
+# base v. productivity gradient
+anova(base.infinity, model.gain.infinity, test = "LRT")  #n.s.
+```
+
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: InfinityKnower ~ Age.c
+    ## Model 2: InfinityKnower ~ prod.gradient + Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)
+    ## 1       120     108.71                     
+    ## 2       119     106.13  1   2.5818   0.1081
+
+### 
+
 \#Exploratory - what about with participants who did not reach 99?
 
 ``` r
@@ -1959,179 +2091,6 @@ end.ihc <- glm(EndlessKnower ~ IHC.c + Age.c, family = "binomial", data = explor
 end.prod <- glm(EndlessKnower ~ Productivity + Age.c, family = "binomial", data = explore.dat)
 end.nn <- glm(EndlessKnower ~ Highest_Contig_NN + Age.c, family = "binomial", data = explore.dat)
 ```
-
-\#Exploratory - trying to account for distance between IHC and
-FHC
-
-``` r
-tmp <- distinct_model.df %>% mutate(delta.hc = FHC - IHC) %>% mutate(prop.hc = delta.hc/(99 - 
-    IHC), prop.hc = ifelse(prop.hc == "NaN", 1, as.numeric(prop.hc)), prop.hc = ifelse(prop.hc == 
-    0 & IHC == 99, 1, as.numeric(prop.hc)))  #one kid with IHC and FHC as 99
-
-# plot by IHC
-ggplot(full.data, aes(x = prod.gradient, y = IHC, colour = Productivity)) + geom_point(size = 3, 
-    alpha = 0.1) + geom_jitter() + theme_bw(base_size = 13) + theme(legend.position = "bottom") + 
-    scale_y_continuous(breaks = seq(0, 100, 10)) + scale_colour_brewer(palette = "Set1") + 
-    labs(x = "Productivity Gradient", y = "IHC")
-```
-
-![](recursionAnalysis_files/figure-gfm/unnamed-chunk-54-1.png)<!-- -->
-
-``` r
-end.gain.ihc <- glm(EndlessKnower ~ IHC.c + Age.c, family = "binomial", data = distinct_model.df)
-end.gain.Prod <- glm(EndlessKnower ~ Productivity + Age.c, family = "binomial", data = distinct_model.df)
-end.gain.gain <- glm(EndlessKnower ~ prod.gradient + Age.c, family = "binomial", 
-    data = distinct_model.df)
-end.gain.nn <- glm(EndlessKnower ~ Highest_Contig_NN + Age.c, family = "binomial", 
-    data = distinct_model.df)
-summary(end.gain.ihc)
-```
-
-    ## 
-    ## Call:
-    ## glm(formula = EndlessKnower ~ IHC.c + Age.c, family = "binomial", 
-    ##     data = distinct_model.df)
-    ## 
-    ## Deviance Residuals: 
-    ##     Min       1Q   Median       3Q      Max  
-    ## -1.4191  -0.7919  -0.5063   0.9874   2.1580  
-    ## 
-    ## Coefficients:
-    ##             Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)  -1.1309     0.2353  -4.805 1.54e-06 ***
-    ## IHC.c         0.6657     0.2419   2.752  0.00592 ** 
-    ## Age.c         0.4071     0.2498   1.630  0.10320    
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-    ## 
-    ## (Dispersion parameter for binomial family taken to be 1)
-    ## 
-    ##     Null deviance: 144.38  on 121  degrees of freedom
-    ## Residual deviance: 125.62  on 119  degrees of freedom
-    ## AIC: 131.62
-    ## 
-    ## Number of Fisher Scoring iterations: 4
-
-``` r
-summary(end.gain.Prod)
-```
-
-    ## 
-    ## Call:
-    ## glm(formula = EndlessKnower ~ Productivity + Age.c, family = "binomial", 
-    ##     data = distinct_model.df)
-    ## 
-    ## Deviance Residuals: 
-    ##     Min       1Q   Median       3Q      Max  
-    ## -1.2171  -0.9112  -0.4585   1.1695   2.2490  
-    ## 
-    ## Coefficients:
-    ##                        Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)             -2.0101     0.5422  -3.707 0.000209 ***
-    ## ProductivityProductive   1.3286     0.6272   2.118 0.034152 *  
-    ## Age.c                    0.4461     0.2494   1.789 0.073693 .  
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-    ## 
-    ## (Dispersion parameter for binomial family taken to be 1)
-    ## 
-    ##     Null deviance: 144.38  on 121  degrees of freedom
-    ## Residual deviance: 128.19  on 119  degrees of freedom
-    ## AIC: 134.19
-    ## 
-    ## Number of Fisher Scoring iterations: 5
-
-``` r
-summary(end.gain.gain)
-```
-
-    ## 
-    ## Call:
-    ## glm(formula = EndlessKnower ~ prod.gradient + Age.c, family = "binomial", 
-    ##     data = distinct_model.df)
-    ## 
-    ## Deviance Residuals: 
-    ##     Min       1Q   Median       3Q      Max  
-    ## -1.2320  -0.9693  -0.4233   1.1815   2.2947  
-    ## 
-    ## Coefficients:
-    ##               Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)    -2.4029     0.6084  -3.950 7.83e-05 ***
-    ## prod.gradient   1.8929     0.7172   2.639   0.0083 ** 
-    ## Age.c           0.3126     0.2644   1.183   0.2370    
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-    ## 
-    ## (Dispersion parameter for binomial family taken to be 1)
-    ## 
-    ##     Null deviance: 144.38  on 121  degrees of freedom
-    ## Residual deviance: 124.97  on 119  degrees of freedom
-    ## AIC: 130.97
-    ## 
-    ## Number of Fisher Scoring iterations: 5
-
-``` r
-summary(end.gain.nn)
-```
-
-    ## 
-    ## Call:
-    ## glm(formula = EndlessKnower ~ Highest_Contig_NN + Age.c, family = "binomial", 
-    ##     data = distinct_model.df)
-    ## 
-    ## Deviance Residuals: 
-    ##     Min       1Q   Median       3Q      Max  
-    ## -1.5377  -0.7802  -0.5512   0.9176   2.1025  
-    ## 
-    ## Coefficients:
-    ##                    Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)       -1.661111   0.353485  -4.699 2.61e-06 ***
-    ## Highest_Contig_NN  0.017996   0.007671   2.346   0.0190 *  
-    ## Age.c              0.535431   0.237536   2.254   0.0242 *  
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-    ## 
-    ## (Dispersion parameter for binomial family taken to be 1)
-    ## 
-    ##     Null deviance: 144.38  on 121  degrees of freedom
-    ## Residual deviance: 127.77  on 119  degrees of freedom
-    ## AIC: 133.77
-    ## 
-    ## Number of Fisher Scoring iterations: 4
-
-``` r
-# add IHC to model with gain score
-end.gain.ihcgain <- glm(EndlessKnower ~ IHC.c + prod.gradient + Age.c, family = "binomial", 
-    data = distinct_model.df)
-anova(end.gain.ihcgain, end.gain.gain, test = "LRT")
-```
-
-    ## Analysis of Deviance Table
-    ## 
-    ## Model 1: EndlessKnower ~ IHC.c + prod.gradient + Age.c
-    ## Model 2: EndlessKnower ~ prod.gradient + Age.c
-    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)
-    ## 1       118     122.59                     
-    ## 2       119     124.97 -1  -2.3782    0.123
-
-``` r
-# correlation between productivity and gain score
-tmp %<>% mutate(Prod.num = ifelse(Productivity == "Productive", 1, 0))
-
-cor.test(tmp$Prod.num, tmp$prop.hc)
-```
-
-    ## 
-    ##  Pearson's product-moment correlation
-    ## 
-    ## data:  tmp$Prod.num and tmp$prop.hc
-    ## t = 6.5641, df = 120, p-value = 1.402e-09
-    ## alternative hypothesis: true correlation is not equal to 0
-    ## 95 percent confidence interval:
-    ##  0.3700520 0.6338481
-    ## sample estimates:
-    ##       cor 
-    ## 0.5140015
 
 \#Plot of prod. gain with IHC - WIP
 
@@ -2160,44 +2119,7 @@ labs(shape = "Highest Count Type", colour = "Productivity Gradient")
 
 ![](recursionAnalysis_files/figure-gfm/fig2-1.png)<!-- -->
 
-``` r
-ggplot(ms, aes(x = reorder(LadlabID, hc, FUN = min), y = hc)) + facet_grid(rows = vars(Productivity)) + 
-    geom_line(data = hc.dev.prod[!is.na(hc.dev.prod$hc), ]) + geom_point(aes(shape = `Highest Count Coding`, 
-    colour = `Highest Count Coding`), size = 2, stroke = 1.5) + scale_color_brewer(palette = "Dark2") + 
-    scale_shape_manual(values = c(4, 5, 20)) + ylim(0, 100) + labs(x = "Each line = individual participant", 
-    y = "Highest Count") + theme_bw(base_size = 13) + theme(legend.position = "bottom", 
-    axis.text.x = element_text(angle = 270, hjust = 1)) + theme(axis.text.x = element_blank(), 
-    axis.ticks.x = element_blank())
-```
-
-![](recursionAnalysis_files/figure-gfm/fig2-2.png)<!-- -->
-
-``` r
-ggsave("graphs/distance-prod-sorted.png")
-```
-
-    ## Saving 7 x 5 in image
-
-``` r
-# nonproductive
-ggplot(hc.dev.nonprod, aes(x = reorder(LadlabID, hc, FUN = min), y = hc)) + facet_grid(rows = vars(Productivity)) + 
-    geom_line(data = hc.dev.nonprod[!is.na(hc.dev.nonprod$hc), ]) + geom_point(aes(shape = `Highest Count Coding`, 
-    colour = `Highest Count Coding`), size = 2, stroke = 1.5) + scale_color_brewer(palette = "Dark2") + 
-    scale_shape_manual(values = c(4, 5, 20)) + ylim(0, 100) + labs(x = "Each line = individual participant", 
-    y = "Highest Count") + theme_bw(base_size = 13) + theme(legend.position = "bottom", 
-    axis.text.x = element_text(angle = 270, hjust = 1)) + theme(axis.text.x = element_blank(), 
-    axis.ticks.x = element_blank())
-```
-
-![](recursionAnalysis_files/figure-gfm/fig2-3.png)<!-- -->
-
-``` r
-ggsave("graphs/distance-nonprod-sorted.png")
-```
-
-    ## Saving 7 x 5 in image
-
-\#\#Visualizing the regressions
+# Visualizing the regressions
 
 ``` r
 # Successor knowledge
