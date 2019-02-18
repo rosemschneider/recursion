@@ -137,6 +137,14 @@ tmp <- hc.data %>%
 #good to go - the only kids who are not included in full data are the ones who we excluded
 ```
 
+Add in coding for reminder prompts and recovery from reminders
+```{r}
+reminders.data <- read.csv('data/sara-HC-datawide-forcoding - hc.datawide.csv') %>%
+  dplyr::select(LadlabID, reminders.total, reminders.recovered)
+full.data <- dplyr::left_join(full.data, reminders.data, by="LadlabID")
+```
+
+## Post-exclusion summary
 Number of kids by age group and average age
 ```{r}
 full.data %>%
@@ -151,7 +159,6 @@ full.data %>%
                    meanAge = mean(Age),
                    sdAge = sd(Age)) %>%
   kable()
-
 ```
 
 Number of kids who were classified as decade productive & nonproductive
@@ -515,6 +522,42 @@ full.data %>%
 # assume 0 = NA
 # error in supported.times coding, should only count to 90
 # but one kid got prompted with 100 and 110 and times should be 0
+```
+
+## Reminder prompts
+How many kids have coded data for receiving reminders?
+```{r}
+full.data %>%
+  dplyr::select(LadlabID, Productivity, reminders.total, reminders.recovered) %>%
+  unique()%>%
+  na.omit() %>%
+  summarise(Ncoded=n(), 
+            total.min=min(reminders.total),
+            total.max=max(reminders.total),
+            total.mean=mean(reminders.total),
+            total.median=median(reminders.total))
+```
+
+How often did kids miss a reminder? Remember that the experiment ended when kids failed to recover from a reminder, unless that failure occured at a decade transition in which case the experimenter would provide a decade prompt and continue the experiment. 
+```{r}
+full.data %>%
+  dplyr::select(LadlabID, Productivity, reminders.total, reminders.recovered) %>%
+  unique()%>%
+  na.omit() %>%
+  mutate(missed = reminders.total-reminders.recovered) %>%
+  summarise(Ncoded=n(), 
+            missed.min=min(missed),
+            missed.max=max(missed),
+            missed.mean=mean(missed),
+            missed.median=median(missed))
+# look at proportion of kids who failed to recover from reminders.
+full.data %>%
+  dplyr::select(LadlabID, Productivity, reminders.total, reminders.recovered) %>%
+  unique()%>%
+  na.omit() %>%
+  mutate(missed = reminders.total-reminders.recovered) %>%
+  group_by(reminders.total) %>%
+  summarise(Nkids=n(),N.kids.missed=sum(missed),Perc.kids.missed=sum(missed)/n())
 ```
 
 
@@ -1180,6 +1223,8 @@ cor.test(ms.cor$Productivity, ms.cor$prod.gradient)
 ```
 
 
+***
+
 # Analyses
 ## Counting, Productivity, and Infinity Battery
 To identify whether there is connection between counting experience and Infinity Task performance, we will conduct three initial analyses, predicting Infinity Task performance from either (1) Initial Highest Count, (2) Productivity for Decade Rule (defined above), or (3) performance on the Next Number task. 
@@ -1542,7 +1587,14 @@ ggplot(aes(x = reorder(LadlabID, hc, FUN=min), y = hc, colour = prod.gradient)) 
 ```
 
 
-# Visualizing the regressions
+# WIP- How often do children recover from reminder prompts? 
+```{r}
+recovery.df <- 
+```
+
+# TODO: Visualizing the regressions
+ 
+Regression tables are saved in a separate Excel sheet for easier formatting. Here we try a plot of betas.
 ```{r regression-graphs}
 # Successor knowledge
 fullmodel.sf.prod <- glm(SuccessorKnower ~ Productivity + Highest_Contig_NN.c + 
