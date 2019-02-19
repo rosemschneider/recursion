@@ -771,6 +771,61 @@ ggplot(fig3.model.full.df,
        aes(x=TaskItem_type,y=fit,color=prod.group, ymin=lower,ymax=upper)) + 
     geom_pointrange(position=position_dodge(width=.1)) 
 ```
+### Analyses including all participants
+```{r}
+fig3.model2.df <- fig3.data %>%
+  dplyr::select(c(LadlabID, IHC, FHC, Age, prod.group,
+                  TaskItem, TaskItem_type, Accuracy)) %>%
+  mutate(IHC = as.integer(IHC),
+         LadlabID=as.factor(LadlabID),
+         prod.group=as.factor(prod.group),
+         TaskItem_type=as.factor(TaskItem_type))%>%
+  mutate(IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)), #scale and center for model fit
+         FHC.c = as.vector(scale(FHC, center = TRUE, scale=TRUE)), 
+         age.c = as.vector(scale(Age, center = TRUE, scale=TRUE)))
+str(fig3.model2.df)
+
+# means by item type
+fig3.model2.df %>%
+  group_by(LadlabID, TaskItem_type) %>%
+  summarise(score=mean(Accuracy, na.rm=T)) %>%
+  ungroup() %>%
+  group_by(TaskItem_type) %>%
+  summarise(mean=mean(score, na.rm=T), sd=sd(score, na.rm=T), n=n())
+# means by productivity
+fig3.model2.df %>%
+  group_by(LadlabID, prod.group) %>%
+  summarise(score=mean(Accuracy, na.rm=T)) %>%
+  ungroup() %>%
+  group_by(prod.group) %>%
+  summarise(mean=mean(score, na.rm=T), sd=sd(score, na.rm=T), n=n())
+
+## regressions
+fig3.model2.noint <- glmer(Accuracy ~ prod.group + TaskItem_type+ IHC.c + age.c + (1|TaskItem) +
+                     (1|LadlabID), family = "binomial", data = fig3.model2.df)
+fig3.model2.full <- glmer(Accuracy ~ prod.group + TaskItem_type + prod.group:TaskItem_type 
+                         + IHC.c + age.c + (1|TaskItem) +
+                     (1|LadlabID), family = "binomial", data = fig3.model2.df)
+#comparison of models
+anova(fig3.model2.full, fig3.model2.noint, test = 'LRT')
+
+# LRT tests
+drop1(fig3.model2.full,test="Chisq")
+drop1(fig3.model2.noint,test="Chisq")
+
+# summary of full model
+summary(fig3.model.noint)
+
+# random effects
+ranef(fig3.model.prod)
+
+# visualization
+library(effects)
+fig3.model.full.df <- as.data.frame(allEffects(fig3.model.full)[[3]])
+ggplot(fig3.model.full.df,
+       aes(x=TaskItem_type,y=fit,color=prod.group, ymin=lower,ymax=upper)) + 
+    geom_pointrange(position=position_dodge(width=.1)) 
+```
 
 
 
@@ -962,6 +1017,29 @@ anova(wcn.model.int, wcn.model.noint, wcn.model.ihc, wcn.model.base, test = 'LRT
 summary(wcn.model.int)
 ```
 
+
+#### analysis removing IHC=99
+```{r}
+wcn_model.df2 <- wcn_model.df %>%
+    filter(prod.group != "Productive (IHC \u2265 99)")
+
+##WCN model looking at interaction between productivity and trial type in WCN task
+wcn.model2.base <- glmer(Accuracy ~ age.c + (1|TaskItem) + (1|LadlabID), 
+                        family = "binomial", data = wcn_model.df2)
+wcn.model2.ihc <- glmer(Accuracy ~ IHC.c + age.c + (1|TaskItem) + (1|LadlabID), 
+                       family = "binomial", data = wcn_model.df2)
+wcn.model2.noint <- glmer(Accuracy ~ Productivity + WithinOutsideIHC + IHC.c + age.c + (1|TaskItem) +
+                     (1|LadlabID), family = "binomial", data = wcn_model.df2)
+wcn.model2.int <- glmer(Accuracy ~ Productivity+ WithinOutsideIHC + 
+                         Productivity:WithinOutsideIHC + IHC.c + age.c + (1|TaskItem) +
+                     (1|LadlabID), family = "binomial", data = wcn_model.df2)
+
+#comparison of models
+anova(wcn.model2.int, wcn.model2.noint, wcn.model2.ihc, wcn.model2.base, test = 'LRT')
+
+# summary of final model
+summary(wcn.model2.int)
+```
 
 How many trials do kids have beyond their IHC?
 ```{r}
@@ -1310,7 +1388,7 @@ cor.test(ms.cor$Productivity, ms.cor$prod.gradient)
 
 ***
 
-# Analyses
+# Infinity Regression Analyses
 ## Counting, Productivity, and Infinity Battery
 To identify whether there is connection between counting experience and Infinity Task performance, we will conduct three initial analyses, predicting Infinity Task performance from either (1) Initial Highest Count, (2) Productivity for Decade Rule (defined above), or (3) performance on the Next Number task. 
 
@@ -1365,12 +1443,6 @@ model.df <- right_join(model.df, highest_contiguous_nn, by = "LadlabID")
 # #median is 86 for all groups
 ```
 
-Get mean WCN for everyone <span style="color:red">Not using this anymore - RMS</span>
-```{r}
-# lookup <- wcn.wide %>%
-#   group_by(LadlabID)%>%
-#   summarise(mean.NN = mean(immediate, na.rm = TRUE))
-```
 
 ## Successor models
 ```{r}
@@ -1523,6 +1595,7 @@ anova(large.endless.base, large.endless.nn, test = 'LRT')#Highest contig. NS
 anova(large.endless.base, large.endless.prod, test = 'LRT')##Productivity NS
 
 #IHC v. Prod. Gain
+anova(large.endless.base, large.endless.gain.ihc, test = 'LRT') #n.s. addition of gradient to ihc
 anova(model.gain.endless, large.endless.gain.ihc, test = 'LRT') #n.s. addition of ihc to gradient.
 ```
 
@@ -1681,7 +1754,7 @@ ggplot(aes(x = reorder(LadlabID, hc, FUN=min), y = hc, colour = prod.gradient)) 
 
 # WIP- How often do children recover from reminder prompts? 
 ```{r}
-recovery.df <- 
+
 ```
 
 # TODO: Visualizing the regressions
@@ -1690,5 +1763,6 @@ Regression tables are saved in a separate Excel sheet for easier formatting. Her
 ```{r regression-graphs}
 # visualization
 library(effects)
-plot(allEffects(fig3.model.int))
+plot(allEffects(large.endless.full))
+
 ```
