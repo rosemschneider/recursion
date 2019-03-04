@@ -709,14 +709,15 @@ Productive (IHC<99) vs. Nonproductive on NN accuracy
 fig3.model.df <- fig3.data %>%
   filter(prod.group != "Productive (IHC \u2265 99)") %>%
   dplyr::select(c(LadlabID, IHC, FHC, Age, prod.group,
-                  TaskItem, TaskItem_type, Accuracy)) %>%
+                  TaskItem_num, TaskItem_type, Accuracy)) %>%
   mutate(IHC = as.integer(IHC),
          LadlabID=as.factor(LadlabID),
          prod.group=as.factor(prod.group),
          TaskItem_type=as.factor(TaskItem_type))%>%
   mutate(IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)), #scale and center for model fit
          FHC.c = as.vector(scale(FHC, center = TRUE, scale=TRUE)), 
-         age.c = as.vector(scale(Age, center = TRUE, scale=TRUE)))
+         age.c = as.vector(scale(Age, center = TRUE, scale=TRUE)),
+         TaskItem.c = as.vector(scale(TaskItem_num, center=TRUE, scale=TRUE)))
 str(fig3.model.df)
 
 # means by item type
@@ -740,16 +741,17 @@ fig3.model.df %>%
 ### Analyses of Figure 3 data
 ```{r}
 ##WCN model looking at interaction between productivity and decade/non-decade item accuracy
-fig3.model.base <- glmer(Accuracy ~ age.c + (1|TaskItem) + (1|LadlabID), 
+fig3.model.base <- glmer(Accuracy ~ age.c + TaskItem.c + (1|LadlabID), 
                         family = "binomial", data = fig3.model.df)
-fig3.model.ihc <- glmer(Accuracy ~ IHC.c + age.c + (1|TaskItem) + (1|LadlabID), 
+fig3.model.ihc <- glmer(Accuracy ~ IHC.c + age.c + TaskItem.c + (1|LadlabID), 
                        family = "binomial", data = fig3.model.df)
-fig3.model.prod <- glmer(Accuracy ~ prod.group + IHC.c + age.c + (1|TaskItem) +
+fig3.model.prod <- glmer(Accuracy ~ prod.group + IHC.c + age.c + TaskItem.c +
                      (1|LadlabID), family = "binomial", data = fig3.model.df)
-fig3.model.noint <- glmer(Accuracy ~ prod.group + TaskItem_type+ IHC.c + age.c + (1|TaskItem) +
+fig3.model.noint <- glmer(Accuracy ~ prod.group + TaskItem_type+ IHC.c + age.c +
+                            TaskItem.c +
                      (1|LadlabID), family = "binomial", data = fig3.model.df)
-fig3.model.full <- glmer(Accuracy ~ prod.group + TaskItem_type + prod.group:TaskItem_type 
-                         + IHC.c + age.c + (TaskItem_type|TaskItem) +
+fig3.model.full <- glmer(Accuracy ~ prod.group + TaskItem_type +
+                           prod.group:TaskItem_type + IHC.c + age.c + TaskItem.c +
                      (1|LadlabID), family = "binomial", data = fig3.model.df)
 #comparison of models
 anova(fig3.model.full, fig3.model.noint, fig3.model.prod, fig3.model.ihc, fig3.model.base, test = 'LRT')
@@ -765,24 +767,28 @@ summary(fig3.model.noint)
 ranef(fig3.model.prod)
 
 # visualization
+
+## TODO
 library(effects)
 fig3.model.full.df <- as.data.frame(allEffects(fig3.model.full)[[3]])
 ggplot(fig3.model.full.df,
        aes(x=TaskItem_type,y=fit,color=prod.group, ymin=lower,ymax=upper)) + 
     geom_pointrange(position=position_dodge(width=.1)) 
 ```
+
 ### Analyses including all participants
 ```{r}
 fig3.model2.df <- fig3.data %>%
   dplyr::select(c(LadlabID, IHC, FHC, Age, prod.group,
-                  TaskItem, TaskItem_type, Accuracy)) %>%
+                  TaskItem_num, TaskItem_type, Accuracy)) %>%
   mutate(IHC = as.integer(IHC),
          LadlabID=as.factor(LadlabID),
          prod.group=as.factor(prod.group),
          TaskItem_type=as.factor(TaskItem_type))%>%
   mutate(IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)), #scale and center for model fit
          FHC.c = as.vector(scale(FHC, center = TRUE, scale=TRUE)), 
-         age.c = as.vector(scale(Age, center = TRUE, scale=TRUE)))
+         age.c = as.vector(scale(Age, center = TRUE, scale=TRUE)),
+         TaskItem.c = as.vector(scale(TaskItem, center=TRUE, scale=TRUE)))
 str(fig3.model2.df)
 
 # means by item type
@@ -801,10 +807,12 @@ fig3.model2.df %>%
   summarise(mean=mean(score, na.rm=T), sd=sd(score, na.rm=T), n=n())
 
 ## regressions
-fig3.model2.noint <- glmer(Accuracy ~ prod.group + TaskItem_type+ IHC.c + age.c + (1|TaskItem) +
+fig3.model2.noint <- glmer(Accuracy ~ prod.group + TaskItem_type+ 
+                             IHC.c + age.c + TaskItem.c +
                      (1|LadlabID), family = "binomial", data = fig3.model2.df)
-fig3.model2.full <- glmer(Accuracy ~ prod.group + TaskItem_type + prod.group:TaskItem_type 
-                         + IHC.c + age.c + (1|TaskItem) +
+fig3.model2.full <- glmer(Accuracy ~ prod.group + TaskItem_type +
+                            prod.group:TaskItem_type +
+                         IHC.c + age.c + TaskItem.c +
                      (1|LadlabID), family = "binomial", data = fig3.model2.df)
 #comparison of models
 anova(fig3.model2.full, fig3.model2.noint, test = 'LRT')
@@ -1000,14 +1008,16 @@ wcn_model.df <- wcn.data %>%
          age.c = as.vector(scale(Age, center = TRUE, scale=TRUE)))
 
 ##WCN model looking at interaction between productivity and trial type in WCN task
-wcn.model.base <- glmer(Accuracy ~ age.c + (1|TaskItem) + (1|LadlabID), 
+wcn.model.base <- glmer(Accuracy ~ age.c + TaskItem.c + (1|LadlabID), 
                         family = "binomial", data = wcn_model.df)
-wcn.model.ihc <- glmer(Accuracy ~ IHC.c + age.c + (1|TaskItem) + (1|LadlabID), 
+wcn.model.ihc <- glmer(Accuracy ~ IHC.c + age.c + TaskItem.c + (1|LadlabID), 
                        family = "binomial", data = wcn_model.df)
-wcn.model.noint <- glmer(Accuracy ~ Productivity + WithinOutsideIHC + IHC.c + age.c + (1|TaskItem) +
+wcn.model.noint <- glmer(Accuracy ~ Productivity + WithinOutsideIHC + 
+                           IHC.c + age.c + TaskItem.c +
                      (1|LadlabID), family = "binomial", data = wcn_model.df)
 wcn.model.int <- glmer(Accuracy ~ Productivity+ WithinOutsideIHC + 
-                         Productivity:WithinOutsideIHC + IHC.c + age.c + (1|TaskItem) +
+                         Productivity:WithinOutsideIHC + 
+                         IHC.c + age.c + TaskItem.c +
                      (1|LadlabID), family = "binomial", data = wcn_model.df)
 
 #comparison of models

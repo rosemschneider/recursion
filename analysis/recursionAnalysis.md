@@ -1,7 +1,7 @@
 RecursionAnalysis
 ================
 Junyi Chu, Rose M. Schneider, Pierina Cheung
-2019-02-19
+2019-02-25
 
 # Setup
 
@@ -149,8 +149,8 @@ full.data %>% dplyr::distinct(LadlabID, Productivity, Age) %>% dplyr::group_by(P
 
 | Productivity  |  n |  meanage |     sdage | minage | maxage |
 | :------------ | -: | -------: | --------: | -----: | -----: |
-| Nonproductive | 43 | 4.598837 | 0.4192125 |   4.00 |   5.61 |
-| Productive    | 79 | 5.215443 | 0.5253760 |   4.05 |   5.99 |
+| Nonproductive | 44 | 4.599091 | 0.4143126 |   4.00 |   5.61 |
+| Productive    | 78 | 5.223205 | 0.5241976 |   4.05 |   5.99 |
 
 Just for reference, this is the number of kids who switched
 classifications from PC, JC, RMS
@@ -170,8 +170,8 @@ full.data %>% dplyr::filter(TaskType == "productivity") %>% droplevels() %>% dpl
     ## # A tibble: 4 x 2
     ##   changed_classification     n
     ##   <chr>                  <int>
-    ## 1 NA_toNonprod              29
-    ## 2 NA_toProd                  7
+    ## 1 NA_toNonprod              30
+    ## 2 NA_toProd                  6
     ## 3 no_change                 85
     ## 4 Nonprod_toProd             1
 
@@ -243,8 +243,8 @@ full.data %>% dplyr::distinct(LadlabID, Productivity, IHC) %>% dplyr::group_by(P
 
 | Productivity  | mean\_IHC |  sd\_IHC | min\_IHC | max\_IHC | median\_IHC |
 | :------------ | --------: | -------: | -------: | -------: | ----------: |
-| Nonproductive |  23.76744 | 15.20156 |        5 |       77 |          18 |
-| Productive    |  64.92405 | 32.30693 |       12 |      100 |          59 |
+| Nonproductive |  23.50000 | 15.12813 |        5 |       77 |          17 |
+| Productive    |  65.60256 | 31.94449 |       12 |      100 |          61 |
 
 ``` r
 full.data %>% dplyr::distinct(LadlabID, Productivity, DCE) %>% dplyr::group_by(Productivity) %>% 
@@ -266,8 +266,8 @@ full.data %>% dplyr::distinct(LadlabID, Productivity, FHC) %>% dplyr::group_by(P
 
 | Productivity  | mean\_FHC |  sd\_FHC | min\_FHC | max\_FHC | median\_FHC |
 | :------------ | --------: | -------: | -------: | -------: | ----------: |
-| Nonproductive |  29.13953 | 14.46438 |        5 |       77 |          29 |
-| Productive    |  94.64557 | 14.74922 |       38 |      100 |         100 |
+| Nonproductive |  29.81818 | 14.98724 |        5 |       77 |          29 |
+| Productive    |  95.10256 | 14.27066 |       38 |      100 |         100 |
 
 ``` r
 # productivity gradient
@@ -278,8 +278,8 @@ full.data %>% distinct(LadlabID, Productivity, delta.hc, prod.gradient) %>% grou
 
 | Productivity  | mean\_gradient | sd\_gradient | mean\_delta.hc | sd\_delta.hc |
 | :------------ | -------------: | -----------: | -------------: | -----------: |
-| Nonproductive |       0.065951 |    0.0874923 |       5.372093 |     7.240834 |
-| Productive    |       0.943282 |    0.1824027 |      29.721519 |    27.775167 |
+| Nonproductive |      0.0767301 |    0.1122015 |       6.318182 |     9.518092 |
+| Productive    |      0.9484493 |    0.1776683 |      29.500000 |    27.884618 |
 
 Plotting distribution of IHC, as a function of productivity (\~ junyi’s
 graph)
@@ -456,7 +456,7 @@ full.data %>% filter(TaskItem == "times") %>% filter(Productivity == "Productive
     ##   HCReceivedSupport   mean     sd   min   max count
     ##   <fct>              <dbl>  <dbl> <dbl> <dbl> <int>
     ## 1 0                   2     NA        2     2    37
-    ## 2 1                   3.32   1.73     1     7    37
+    ## 2 1                   3.39   1.71     1     7    36
     ## 3 <NA>              NaN    NaN      Inf  -Inf     5
 
 ``` r
@@ -479,7 +479,7 @@ full.data %>% filter(TaskItem == "times") %>% filter(Productivity == "Nonproduct
     ##   HCReceivedSupport  mean    sd   min   max count
     ##   <fct>             <dbl> <dbl> <dbl> <dbl> <int>
     ## 1 0                  1.33 0.577     1     2    29
-    ## 2 1                  1.29 0.469     1     2    14
+    ## 2 1                  1.27 0.458     1     2    15
 
 ``` r
 # assume 0 = NA error in supported.times coding, should only count to 90 but one
@@ -642,8 +642,8 @@ wcn.data %>% dplyr::filter(TaskType == "immediate") %>% dplyr::group_by(LadlabID
     ## # A tibble: 2 x 3
     ##   Productivity    avg    sd
     ##   <fct>         <dbl> <dbl>
-    ## 1 Nonproductive 0.265 0.216
-    ## 2 Productive    0.687 0.215
+    ## 1 Nonproductive 0.273 0.216
+    ## 2 Productive    0.688 0.215
 
 Plotting %corr on WCN as function of
 productivity
@@ -773,8 +773,8 @@ fig3.model.df %>%
     ## # A tibble: 2 x 4
     ##   prod.group             mean    sd     n
     ##   <fct>                 <dbl> <dbl> <int>
-    ## 1 Nonproductive         0.265 0.266    43
-    ## 2 Productive (IHC < 99) 0.543 0.254    48
+    ## 1 Nonproductive         0.273 0.269    44
+    ## 2 Productive (IHC < 99) 0.541 0.256    47
 
 ### Analyses of Figure 3 data
 
@@ -810,15 +810,15 @@ anova(fig3.model.full, fig3.model.noint, fig3.model.prod, fig3.model.ihc, fig3.m
     ##                  Df    AIC    BIC  logLik deviance   Chisq Chi Df
     ## fig3.model.base   4 799.43 817.79 -395.71   791.43               
     ## fig3.model.ihc    5 776.93 799.87 -383.46   766.93 24.5044      1
-    ## fig3.model.prod   6 771.56 799.10 -379.78   759.56  7.3613      1
-    ## fig3.model.noint  7 760.60 792.72 -373.30   746.60 12.9645      1
-    ## fig3.model.full  10 762.93 808.82 -371.46   742.93  3.6702      3
+    ## fig3.model.prod   6 773.65 801.18 -380.82   761.65  5.2798      1
+    ## fig3.model.noint  7 762.67 794.79 -374.34   748.67 12.9753      1
+    ## fig3.model.full  10 765.93 811.82 -372.97   745.93  2.7385      3
     ##                  Pr(>Chisq)    
     ## fig3.model.base                
     ## fig3.model.ihc    7.414e-07 ***
-    ## fig3.model.prod   0.0066643 ** 
-    ## fig3.model.noint  0.0003174 ***
-    ## fig3.model.full   0.2993461    
+    ## fig3.model.prod   0.0215744 *  
+    ## fig3.model.noint  0.0003156 ***
+    ## fig3.model.full   0.4337286    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -833,10 +833,10 @@ drop1(fig3.model.full, test = "Chisq")
     ## Accuracy ~ prod.group + TaskItem_type + prod.group:TaskItem_type + 
     ##     IHC.c + age.c + (TaskItem_type | TaskItem) + (1 | LadlabID)
     ##                          Df    AIC     LRT   Pr(Chi)    
-    ## <none>                      762.93                      
-    ## IHC.c                     1 779.42 18.4884 1.709e-05 ***
-    ## age.c                     1 760.93  0.0010   0.97457    
-    ## prod.group:TaskItem_type  1 764.32  3.3914   0.06554 .  
+    ## <none>                      765.93                      
+    ## IHC.c                     1 782.09 18.1589 2.032e-05 ***
+    ## age.c                     1 763.96  0.0268    0.8700    
+    ## prod.group:TaskItem_type  1 766.39  2.4601    0.1168    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -850,11 +850,11 @@ drop1(fig3.model.noint, test = "Chisq")
     ## Accuracy ~ prod.group + TaskItem_type + IHC.c + age.c + (1 | 
     ##     TaskItem) + (1 | LadlabID)
     ##               Df    AIC     LRT   Pr(Chi)    
-    ## <none>           760.60                      
-    ## prod.group     1 765.93  7.3257 0.0067975 ** 
-    ## TaskItem_type  1 771.56 12.9645 0.0003174 ***
-    ## IHC.c          1 777.41 18.8053 1.448e-05 ***
-    ## age.c          1 758.60  0.0002 0.9901682    
+    ## <none>           762.67                      
+    ## prod.group     1 765.93  5.2550 0.0218832 *  
+    ## TaskItem_type  1 773.65 12.9753 0.0003156 ***
+    ## IHC.c          1 779.07 18.3973 1.793e-05 ***
+    ## age.c          1 760.69  0.0218 0.8825141    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -871,34 +871,34 @@ summary(fig3.model.noint)
     ##    Data: fig3.model.df
     ## 
     ##      AIC      BIC   logLik deviance df.resid 
-    ##    760.6    792.7   -373.3    746.6      720 
+    ##    762.7    794.8   -374.3    748.7      720 
     ## 
     ## Scaled residuals: 
     ##     Min      1Q  Median      3Q     Max 
-    ## -2.8512 -0.5267 -0.2408  0.5449  7.6393 
+    ## -2.8364 -0.5300 -0.2371  0.5395  7.5575 
     ## 
     ## Random effects:
     ##  Groups   Name        Variance Std.Dev.
-    ##  LadlabID (Intercept) 1.3781   1.1739  
-    ##  TaskItem (Intercept) 0.1773   0.4211  
+    ##  LadlabID (Intercept) 1.4274   1.195   
+    ##  TaskItem (Intercept) 0.1772   0.421   
     ## Number of obs: 727, groups:  LadlabID, 91; TaskItem, 8
     ## 
     ## Fixed effects:
-    ##                                  Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)                     -2.952356   0.474644  -6.220 4.97e-10 ***
-    ## prod.groupProductive (IHC < 99)  1.033090   0.382533   2.701  0.00692 ** 
-    ## TaskItem_typeMid-decade          2.342395   0.443591   5.281 1.29e-07 ***
-    ## IHC.c                            0.865284   0.197067   4.391 1.13e-05 ***
-    ## age.c                            0.002434   0.197907   0.012  0.99019    
+    ##                                 Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)                      -2.8693     0.4738  -6.056 1.39e-09 ***
+    ## prod.groupProductive (IHC < 99)   0.8941     0.3912   2.285   0.0223 *  
+    ## TaskItem_typeMid-decade           2.3445     0.4437   5.284 1.27e-07 ***
+    ## IHC.c                             0.8719     0.2007   4.345 1.39e-05 ***
+    ## age.c                             0.0296     0.2003   0.148   0.8825    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Correlation of Fixed Effects:
     ##             (Intr) p.P(<9 TsI_M- IHC.c 
-    ## p.P(IHC<99) -0.487                     
-    ## TskItm_tyM- -0.763  0.051              
-    ## IHC.c       -0.006 -0.194  0.092       
-    ## age.c        0.149 -0.349  0.000 -0.377
+    ## p.P(IHC<99) -0.481                     
+    ## TskItm_tyM- -0.762  0.044              
+    ## IHC.c        0.011 -0.230  0.091       
+    ## age.c        0.148 -0.352  0.003 -0.360
 
 ``` r
 # random effects
@@ -907,108 +907,108 @@ ranef(fig3.model.prod)
 
     ## $LadlabID
     ##             (Intercept)
-    ## 010516-K4  -0.820446990
-    ## 011216-KD1 -0.679980834
-    ## 011216-WB  -0.162329270
-    ## 011316-SC  -0.274750674
-    ## 012016-AD  -1.696435841
-    ## 012316-AK   1.840642240
-    ## 012517-AD   1.815404737
-    ## 020116-E   -0.242600415
-    ## 022016-J1  -0.821275863
-    ## 022316-AB   0.879652441
-    ## 022316-KH   0.569618747
-    ## 022516-DH   0.426926282
-    ## 022516-R5   0.499669779
-    ## 022516-SM   0.689209508
-    ## 022516-WL   0.318025794
-    ## 022616-AG   1.426570538
-    ## 022616-EC  -0.863714679
-    ## 022616-FC  -0.839523712
-    ## 022616-OM  -0.766838932
-    ## 022616-RA   0.474010935
-    ## 030116-AS   0.857657427
-    ## 030116-BK   1.114909656
-    ## 030116-MS   1.322787735
-    ## 030116-PW   1.115320900
-    ## 030116-RB  -0.821102343
-    ## 030216-ED  -1.755133707
-    ## 030216-RL  -0.934926799
-    ## 030516-GS   2.443099819
-    ## 030516-MK  -0.089947139
-    ## 030516-ML  -0.043577325
-    ## 030817-SRM  0.305861537
-    ## 030817-ZI   1.254949475
-    ## 031616-RP   0.764530337
-    ## 032216-HR  -0.858802174
-    ## 032216-JH  -0.954533109
-    ## 032216-LC  -0.125077582
-    ## 032216-RSL  1.050630497
-    ## 032317-AS   0.599647454
-    ## 040317-AL  -0.162759451
-    ## 040317-E    0.426983432
-    ## 040317-HN   1.045813116
-    ## 040317-KK  -0.575903120
-    ## 040317-SL   0.378252855
-    ## 040317-TAM  0.147561563
-    ## 040616-K   -0.186253885
-    ## 040616-KH  -0.190711081
-    ## 040616-MP  -1.264463686
-    ## 041217-AD  -0.804226641
-    ## 041217-KA   0.602355333
-    ## 041218-JH   0.471137624
-    ## 041316-AP   0.471554433
-    ## 041316-CC  -0.019690234
-    ## 041316-RC  -0.839426228
-    ## 041416-BF  -0.139258584
-    ## 041416-LR   0.911819367
-    ## 041416-MT  -0.876505217
-    ## 041517-CP   0.190667178
-    ## 041517-DX  -0.977266857
-    ## 041517-G    0.080826863
-    ## 041917-IM  -1.274770551
-    ## 042517-AR  -0.514376278
-    ## 042517-KS  -1.142719981
-    ## 042917-AH   0.472174329
-    ## 042917-EX   0.599468966
-    ## 042917-NY   0.600661140
-    ## 050217-A1  -0.188444716
-    ## 050217-BR  -0.747396031
-    ## 050417-AM  -1.275491784
-    ## 050417-OK   1.526386640
-    ## 050417-RH   0.273340517
-    ## 050617-KS  -0.683054036
-    ## 050617-T1  -0.427759544
-    ## 050617-Z1  -0.034713133
-    ## 062316-HC  -0.063401205
-    ## 062316-PP  -0.114856826
-    ## 062416-MC   0.332232990
-    ## 062416-MS  -0.188144771
-    ## 062916-JD   0.122883194
-    ## 062916-LD   0.303457100
-    ## 062916-TG  -0.461409295
-    ## 071416-BH   0.237842839
-    ## 072016-JF   0.717507007
-    ## 072417-DB  -0.957171186
-    ## 080717-LE   0.669183611
-    ## 081616-C1   0.447904720
-    ## 081817-CL  -1.724121917
-    ## 081817-SB   0.005474275
-    ## 111117-C1   1.575449334
-    ## 111117-VK  -0.287612378
-    ## 111217-GL  -1.326010747
-    ## 111217-O1  -1.723546730
+    ## 010516-K4  -0.855630628
+    ## 011216-KD1 -0.707132772
+    ## 011216-WB  -0.197172498
+    ## 011316-SC  -0.310806095
+    ## 012016-AD  -1.676301319
+    ## 012316-AK   1.807624513
+    ## 012517-AD   1.857443698
+    ## 020116-E   -0.183906488
+    ## 022016-J1  -0.865970923
+    ## 022316-AB   0.834715396
+    ## 022316-KH   0.531927687
+    ## 022516-DH   0.401803976
+    ## 022516-R5   0.450550714
+    ## 022516-SM   0.630527088
+    ## 022516-WL   0.298743327
+    ## 022616-AG   1.401771934
+    ## 022616-EC  -0.852359155
+    ## 022616-FC  -0.881992072
+    ## 022616-OM  -0.807111905
+    ## 022616-RA   0.519277082
+    ## 030116-AS   0.914665128
+    ## 030116-BK   1.811523156
+    ## 030116-MS   1.283971612
+    ## 030116-PW   1.184389037
+    ## 030116-RB  -0.863801539
+    ## 030216-ED  -1.741213195
+    ## 030216-RL  -0.978777714
+    ## 030516-GS   2.444668700
+    ## 030516-MK  -0.116378082
+    ## 030516-ML  -0.078177232
+    ## 030817-SRM  0.331253247
+    ## 030817-ZI   1.312733118
+    ## 031616-RP   0.719382020
+    ## 032216-HR  -0.908501414
+    ## 032216-JH  -0.997828982
+    ## 032216-LC  -0.090108844
+    ## 032216-RSL  1.003480420
+    ## 032317-AS   0.559653740
+    ## 040317-AL  -0.202516261
+    ## 040317-E    0.402510210
+    ## 040317-HN   1.079259923
+    ## 040317-KK  -0.572536916
+    ## 040317-SL   0.424451040
+    ## 040317-TAM  0.191178058
+    ## 040616-K   -0.131129719
+    ## 040616-KH  -0.248737652
+    ## 040616-MP  -1.227756386
+    ## 041217-AD  -0.798917339
+    ## 041217-KA   0.641849446
+    ## 041218-JH   0.483911458
+    ## 041316-AP   0.438663989
+    ## 041316-CC  -0.047941619
+    ## 041316-RC  -0.880775502
+    ## 041416-BF  -0.184897096
+    ## 041416-LR   0.884798267
+    ## 041416-MT  -0.912982042
+    ## 041517-CP   0.193867354
+    ## 041517-DX  -0.962584058
+    ## 041517-G    0.089938100
+    ## 041917-IM  -1.259254789
+    ## 042517-AR  -0.584742291
+    ## 042517-KS  -1.218886906
+    ## 042917-AH   0.496664244
+    ## 042917-EX   0.606393019
+    ## 042917-NY   0.621035076
+    ## 050217-A1  -0.245829386
+    ## 050217-BR  -0.733551826
+    ## 050417-AM  -1.268102936
+    ## 050417-OK   1.565833497
+    ## 050417-RH   0.295636711
+    ## 050617-KS  -0.675044394
+    ## 050617-T1  -0.408474106
+    ## 050617-Z1  -0.001784514
+    ## 062316-HC  -0.013709010
+    ## 062316-PP  -0.154557803
+    ## 062416-MC   0.362459465
+    ## 062416-MS  -0.154311178
+    ## 062916-JD   0.092500816
+    ## 062916-LD   0.330894395
+    ## 062916-TG  -0.466296607
+    ## 071416-BH   0.311896455
+    ## 072016-JF   0.640211116
+    ## 072417-DB  -1.030863835
+    ## 080717-LE   0.675706840
+    ## 081616-C1   0.362638403
+    ## 081817-CL  -1.740174651
+    ## 081817-SB   0.004487077
+    ## 111117-C1   1.604775158
+    ## 111117-VK  -0.294226989
+    ## 111217-GL  -1.352973278
+    ## 111217-O1  -1.733121300
     ## 
     ## $TaskItem
     ##    (Intercept)
-    ## 23  1.17294176
-    ## 29 -1.12710549
-    ## 37  0.68298335
-    ## 40  0.01550464
-    ## 59 -1.82559034
-    ## 62  1.11076891
-    ## 70  0.13812160
-    ## 86  0.22345191
+    ## 23  1.17243432
+    ## 29 -1.12567446
+    ## 37  0.68379195
+    ## 40  0.01716959
+    ## 59 -1.82464758
+    ## 62  1.11045807
+    ## 70  0.13970602
+    ## 86  0.22473022
 
 ``` r
 # visualization
@@ -1087,8 +1087,8 @@ fig3.model2.df %>%
     ## # A tibble: 3 x 4
     ##   prod.group             mean    sd     n
     ##   <fct>                 <dbl> <dbl> <int>
-    ## 1 Nonproductive         0.265 0.266    43
-    ## 2 Productive (IHC < 99) 0.543 0.254    48
+    ## 1 Nonproductive         0.273 0.269    44
+    ## 2 Productive (IHC < 99) 0.541 0.256    47
     ## 3 Productive (IHC ≥ 99) 0.911 0.145    31
 
 ``` r
@@ -1109,11 +1109,11 @@ anova(fig3.model2.full, fig3.model2.noint, test = 'LRT')
     ## fig3.model2.full: Accuracy ~ prod.group + TaskItem_type + prod.group:TaskItem_type + 
     ## fig3.model2.full:     IHC.c + age.c + (1 | TaskItem) + (1 | LadlabID)
     ##                   Df    AIC    BIC  logLik deviance  Chisq Chi Df
-    ## fig3.model2.noint  8 897.01 936.07 -440.51   881.01              
-    ## fig3.model2.full  10 893.73 942.56 -436.87   873.73 7.2815      2
+    ## fig3.model2.noint  8 898.98 938.04 -441.49   882.98              
+    ## fig3.model2.full  10 896.66 945.49 -438.33   876.66 6.3132      2
     ##                   Pr(>Chisq)  
     ## fig3.model2.noint             
-    ## fig3.model2.full     0.02623 *
+    ## fig3.model2.full     0.04257 *
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -1128,10 +1128,10 @@ drop1(fig3.model2.full,test="Chisq")
     ## Accuracy ~ prod.group + TaskItem_type + prod.group:TaskItem_type + 
     ##     IHC.c + age.c + (1 | TaskItem) + (1 | LadlabID)
     ##                          Df    AIC     LRT   Pr(Chi)    
-    ## <none>                      893.73                      
-    ## IHC.c                     1 910.26 18.5313 1.671e-05 ***
-    ## age.c                     1 891.74  0.0092   0.92349    
-    ## prod.group:TaskItem_type  2 897.01  7.2815   0.02623 *  
+    ## <none>                      896.66                      
+    ## IHC.c                     1 912.94 18.2811 1.906e-05 ***
+    ## age.c                     1 894.71  0.0441   0.83369    
+    ## prod.group:TaskItem_type  2 898.98  6.3132   0.04257 *  
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -1145,11 +1145,11 @@ drop1(fig3.model2.noint,test="Chisq")
     ## Accuracy ~ prod.group + TaskItem_type + IHC.c + age.c + (1 | 
     ##     TaskItem) + (1 | LadlabID)
     ##               Df    AIC     LRT   Pr(Chi)    
-    ## <none>           897.01                      
-    ## prod.group     2 900.63  7.6134 0.0222214 *  
-    ## TaskItem_type  1 906.49 11.4766 0.0007048 ***
-    ## IHC.c          1 913.33 18.3154 1.872e-05 ***
-    ## age.c          1 895.02  0.0068 0.9341845    
+    ## <none>           898.98                      
+    ## prod.group     2 900.63  5.6506 0.0592923 .  
+    ## TaskItem_type  1 908.47 11.4889 0.0007001 ***
+    ## IHC.c          1 914.98 18.0012 2.208e-05 ***
+    ## age.c          1 897.02  0.0392 0.8430670    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -1166,34 +1166,34 @@ summary(fig3.model.noint)
     ##    Data: fig3.model.df
     ## 
     ##      AIC      BIC   logLik deviance df.resid 
-    ##    760.6    792.7   -373.3    746.6      720 
+    ##    762.7    794.8   -374.3    748.7      720 
     ## 
     ## Scaled residuals: 
     ##     Min      1Q  Median      3Q     Max 
-    ## -2.8512 -0.5267 -0.2408  0.5449  7.6393 
+    ## -2.8364 -0.5300 -0.2371  0.5395  7.5575 
     ## 
     ## Random effects:
     ##  Groups   Name        Variance Std.Dev.
-    ##  LadlabID (Intercept) 1.3781   1.1739  
-    ##  TaskItem (Intercept) 0.1773   0.4211  
+    ##  LadlabID (Intercept) 1.4274   1.195   
+    ##  TaskItem (Intercept) 0.1772   0.421   
     ## Number of obs: 727, groups:  LadlabID, 91; TaskItem, 8
     ## 
     ## Fixed effects:
-    ##                                  Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)                     -2.952356   0.474644  -6.220 4.97e-10 ***
-    ## prod.groupProductive (IHC < 99)  1.033090   0.382533   2.701  0.00692 ** 
-    ## TaskItem_typeMid-decade          2.342395   0.443591   5.281 1.29e-07 ***
-    ## IHC.c                            0.865284   0.197067   4.391 1.13e-05 ***
-    ## age.c                            0.002434   0.197907   0.012  0.99019    
+    ##                                 Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)                      -2.8693     0.4738  -6.056 1.39e-09 ***
+    ## prod.groupProductive (IHC < 99)   0.8941     0.3912   2.285   0.0223 *  
+    ## TaskItem_typeMid-decade           2.3445     0.4437   5.284 1.27e-07 ***
+    ## IHC.c                             0.8719     0.2007   4.345 1.39e-05 ***
+    ## age.c                             0.0296     0.2003   0.148   0.8825    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Correlation of Fixed Effects:
     ##             (Intr) p.P(<9 TsI_M- IHC.c 
-    ## p.P(IHC<99) -0.487                     
-    ## TskItm_tyM- -0.763  0.051              
-    ## IHC.c       -0.006 -0.194  0.092       
-    ## age.c        0.149 -0.349  0.000 -0.377
+    ## p.P(IHC<99) -0.481                     
+    ## TskItm_tyM- -0.762  0.044              
+    ## IHC.c        0.011 -0.230  0.091       
+    ## age.c        0.148 -0.352  0.003 -0.360
 
 ``` r
 # random effects
@@ -1202,108 +1202,108 @@ ranef(fig3.model.prod)
 
     ## $LadlabID
     ##             (Intercept)
-    ## 010516-K4  -0.820446990
-    ## 011216-KD1 -0.679980834
-    ## 011216-WB  -0.162329270
-    ## 011316-SC  -0.274750674
-    ## 012016-AD  -1.696435841
-    ## 012316-AK   1.840642240
-    ## 012517-AD   1.815404737
-    ## 020116-E   -0.242600415
-    ## 022016-J1  -0.821275863
-    ## 022316-AB   0.879652441
-    ## 022316-KH   0.569618747
-    ## 022516-DH   0.426926282
-    ## 022516-R5   0.499669779
-    ## 022516-SM   0.689209508
-    ## 022516-WL   0.318025794
-    ## 022616-AG   1.426570538
-    ## 022616-EC  -0.863714679
-    ## 022616-FC  -0.839523712
-    ## 022616-OM  -0.766838932
-    ## 022616-RA   0.474010935
-    ## 030116-AS   0.857657427
-    ## 030116-BK   1.114909656
-    ## 030116-MS   1.322787735
-    ## 030116-PW   1.115320900
-    ## 030116-RB  -0.821102343
-    ## 030216-ED  -1.755133707
-    ## 030216-RL  -0.934926799
-    ## 030516-GS   2.443099819
-    ## 030516-MK  -0.089947139
-    ## 030516-ML  -0.043577325
-    ## 030817-SRM  0.305861537
-    ## 030817-ZI   1.254949475
-    ## 031616-RP   0.764530337
-    ## 032216-HR  -0.858802174
-    ## 032216-JH  -0.954533109
-    ## 032216-LC  -0.125077582
-    ## 032216-RSL  1.050630497
-    ## 032317-AS   0.599647454
-    ## 040317-AL  -0.162759451
-    ## 040317-E    0.426983432
-    ## 040317-HN   1.045813116
-    ## 040317-KK  -0.575903120
-    ## 040317-SL   0.378252855
-    ## 040317-TAM  0.147561563
-    ## 040616-K   -0.186253885
-    ## 040616-KH  -0.190711081
-    ## 040616-MP  -1.264463686
-    ## 041217-AD  -0.804226641
-    ## 041217-KA   0.602355333
-    ## 041218-JH   0.471137624
-    ## 041316-AP   0.471554433
-    ## 041316-CC  -0.019690234
-    ## 041316-RC  -0.839426228
-    ## 041416-BF  -0.139258584
-    ## 041416-LR   0.911819367
-    ## 041416-MT  -0.876505217
-    ## 041517-CP   0.190667178
-    ## 041517-DX  -0.977266857
-    ## 041517-G    0.080826863
-    ## 041917-IM  -1.274770551
-    ## 042517-AR  -0.514376278
-    ## 042517-KS  -1.142719981
-    ## 042917-AH   0.472174329
-    ## 042917-EX   0.599468966
-    ## 042917-NY   0.600661140
-    ## 050217-A1  -0.188444716
-    ## 050217-BR  -0.747396031
-    ## 050417-AM  -1.275491784
-    ## 050417-OK   1.526386640
-    ## 050417-RH   0.273340517
-    ## 050617-KS  -0.683054036
-    ## 050617-T1  -0.427759544
-    ## 050617-Z1  -0.034713133
-    ## 062316-HC  -0.063401205
-    ## 062316-PP  -0.114856826
-    ## 062416-MC   0.332232990
-    ## 062416-MS  -0.188144771
-    ## 062916-JD   0.122883194
-    ## 062916-LD   0.303457100
-    ## 062916-TG  -0.461409295
-    ## 071416-BH   0.237842839
-    ## 072016-JF   0.717507007
-    ## 072417-DB  -0.957171186
-    ## 080717-LE   0.669183611
-    ## 081616-C1   0.447904720
-    ## 081817-CL  -1.724121917
-    ## 081817-SB   0.005474275
-    ## 111117-C1   1.575449334
-    ## 111117-VK  -0.287612378
-    ## 111217-GL  -1.326010747
-    ## 111217-O1  -1.723546730
+    ## 010516-K4  -0.855630628
+    ## 011216-KD1 -0.707132772
+    ## 011216-WB  -0.197172498
+    ## 011316-SC  -0.310806095
+    ## 012016-AD  -1.676301319
+    ## 012316-AK   1.807624513
+    ## 012517-AD   1.857443698
+    ## 020116-E   -0.183906488
+    ## 022016-J1  -0.865970923
+    ## 022316-AB   0.834715396
+    ## 022316-KH   0.531927687
+    ## 022516-DH   0.401803976
+    ## 022516-R5   0.450550714
+    ## 022516-SM   0.630527088
+    ## 022516-WL   0.298743327
+    ## 022616-AG   1.401771934
+    ## 022616-EC  -0.852359155
+    ## 022616-FC  -0.881992072
+    ## 022616-OM  -0.807111905
+    ## 022616-RA   0.519277082
+    ## 030116-AS   0.914665128
+    ## 030116-BK   1.811523156
+    ## 030116-MS   1.283971612
+    ## 030116-PW   1.184389037
+    ## 030116-RB  -0.863801539
+    ## 030216-ED  -1.741213195
+    ## 030216-RL  -0.978777714
+    ## 030516-GS   2.444668700
+    ## 030516-MK  -0.116378082
+    ## 030516-ML  -0.078177232
+    ## 030817-SRM  0.331253247
+    ## 030817-ZI   1.312733118
+    ## 031616-RP   0.719382020
+    ## 032216-HR  -0.908501414
+    ## 032216-JH  -0.997828982
+    ## 032216-LC  -0.090108844
+    ## 032216-RSL  1.003480420
+    ## 032317-AS   0.559653740
+    ## 040317-AL  -0.202516261
+    ## 040317-E    0.402510210
+    ## 040317-HN   1.079259923
+    ## 040317-KK  -0.572536916
+    ## 040317-SL   0.424451040
+    ## 040317-TAM  0.191178058
+    ## 040616-K   -0.131129719
+    ## 040616-KH  -0.248737652
+    ## 040616-MP  -1.227756386
+    ## 041217-AD  -0.798917339
+    ## 041217-KA   0.641849446
+    ## 041218-JH   0.483911458
+    ## 041316-AP   0.438663989
+    ## 041316-CC  -0.047941619
+    ## 041316-RC  -0.880775502
+    ## 041416-BF  -0.184897096
+    ## 041416-LR   0.884798267
+    ## 041416-MT  -0.912982042
+    ## 041517-CP   0.193867354
+    ## 041517-DX  -0.962584058
+    ## 041517-G    0.089938100
+    ## 041917-IM  -1.259254789
+    ## 042517-AR  -0.584742291
+    ## 042517-KS  -1.218886906
+    ## 042917-AH   0.496664244
+    ## 042917-EX   0.606393019
+    ## 042917-NY   0.621035076
+    ## 050217-A1  -0.245829386
+    ## 050217-BR  -0.733551826
+    ## 050417-AM  -1.268102936
+    ## 050417-OK   1.565833497
+    ## 050417-RH   0.295636711
+    ## 050617-KS  -0.675044394
+    ## 050617-T1  -0.408474106
+    ## 050617-Z1  -0.001784514
+    ## 062316-HC  -0.013709010
+    ## 062316-PP  -0.154557803
+    ## 062416-MC   0.362459465
+    ## 062416-MS  -0.154311178
+    ## 062916-JD   0.092500816
+    ## 062916-LD   0.330894395
+    ## 062916-TG  -0.466296607
+    ## 071416-BH   0.311896455
+    ## 072016-JF   0.640211116
+    ## 072417-DB  -1.030863835
+    ## 080717-LE   0.675706840
+    ## 081616-C1   0.362638403
+    ## 081817-CL  -1.740174651
+    ## 081817-SB   0.004487077
+    ## 111117-C1   1.604775158
+    ## 111117-VK  -0.294226989
+    ## 111217-GL  -1.352973278
+    ## 111217-O1  -1.733121300
     ## 
     ## $TaskItem
     ##    (Intercept)
-    ## 23  1.17294176
-    ## 29 -1.12710549
-    ## 37  0.68298335
-    ## 40  0.01550464
-    ## 59 -1.82559034
-    ## 62  1.11076891
-    ## 70  0.13812160
-    ## 86  0.22345191
+    ## 23  1.17243432
+    ## 29 -1.12567446
+    ## 37  0.68379195
+    ## 40  0.01716959
+    ## 59 -1.82464758
+    ## 62  1.11045807
+    ## 70  0.13970602
+    ## 86  0.22473022
 
 ``` r
 # visualization
@@ -1378,12 +1378,12 @@ wcn.data %>% dplyr::filter(TaskType == "immediate") %>% dplyr::group_by(LadlabID
 ```
 
     ## # A tibble: 4 x 4
-    ## # Groups:   Productivity [?]
+    ## # Groups:   Productivity [2]
     ##   Productivity  WithinOutsideIHC  mean    sd
     ##   <fct>         <chr>            <dbl> <dbl>
-    ## 1 Nonproductive outside          0.253 0.264
+    ## 1 Nonproductive outside          0.261 0.267
     ## 2 Nonproductive within           0.565 0.335
-    ## 3 Productive    outside          0.553 0.306
+    ## 3 Productive    outside          0.551 0.309
     ## 4 Productive    within           0.704 0.314
 
 Plotting WCN as within vs. beyond by productivity \#\#\# Fig
@@ -1504,13 +1504,13 @@ anova(wcn.model.int, wcn.model.noint, wcn.model.ihc, wcn.model.base, test = 'LRT
     ##                 Df    AIC     BIC  logLik deviance   Chisq Chi Df
     ## wcn.model.base   4 992.28 1011.81 -492.14   984.28               
     ## wcn.model.ihc    5 910.10  934.51 -450.05   900.10 84.1798      1
-    ## wcn.model.noint  7 906.54  940.71 -446.27   892.54  7.5610      2
-    ## wcn.model.int    8 903.49  942.55 -443.75   887.49  5.0455      1
+    ## wcn.model.noint  7 908.55  942.73 -447.28   894.55  5.5454      2
+    ## wcn.model.int    8 906.17  945.23 -445.08   890.17  4.3838      1
     ##                 Pr(>Chisq)    
     ## wcn.model.base                
     ## wcn.model.ihc      < 2e-16 ***
-    ## wcn.model.noint    0.02281 *  
-    ## wcn.model.int      0.02469 *  
+    ## wcn.model.noint    0.06249 .  
+    ## wcn.model.int      0.03628 *  
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -1528,43 +1528,45 @@ summary(wcn.model.int)
     ##    Data: wcn_model.df
     ## 
     ##      AIC      BIC   logLik deviance df.resid 
-    ##    903.5    942.6   -443.7    887.5      967 
+    ##    906.2    945.2   -445.1    890.2      967 
     ## 
     ## Scaled residuals: 
     ##     Min      1Q  Median      3Q     Max 
-    ## -4.4322 -0.4363  0.1059  0.4358  7.3483 
+    ## -4.3555 -0.4430  0.1039  0.4364  7.2424 
     ## 
     ## Random effects:
     ##  Groups   Name        Variance Std.Dev.
-    ##  LadlabID (Intercept) 1.407    1.186   
-    ##  TaskItem (Intercept) 1.044    1.022   
+    ##  LadlabID (Intercept) 1.474    1.214   
+    ##  TaskItem (Intercept) 1.047    1.023   
     ## Number of obs: 975, groups:  LadlabID, 122; TaskItem, 8
     ## 
     ## Fixed effects:
-    ##                                               Estimate Std. Error z value
-    ## (Intercept)                                   -0.27166    0.48763  -0.557
-    ## ProductivityProductive                         1.28022    0.39696   3.225
-    ## WithinOutsideIHCwithin                         0.54920    0.48548   1.131
-    ## IHC.c                                          1.83029    0.25014   7.317
-    ## age.c                                         -0.01936    0.18037  -0.107
-    ## ProductivityProductive:WithinOutsideIHCwithin -1.16809    0.52021  -2.245
+    ##                                                Estimate Std. Error z value
+    ## (Intercept)                                   -0.159781   0.490015  -0.326
+    ## ProductivityProductive                         1.120995   0.405924   2.762
+    ## WithinOutsideIHCwithin                         0.495196   0.486009   1.019
+    ## IHC.c                                          1.849239   0.254147   7.276
+    ## age.c                                          0.002469   0.183276   0.013
+    ## ProductivityProductive:WithinOutsideIHCwithin -1.089784   0.521042  -2.092
     ##                                               Pr(>|z|)    
-    ## (Intercept)                                    0.57746    
-    ## ProductivityProductive                         0.00126 ** 
-    ## WithinOutsideIHCwithin                         0.25795    
-    ## IHC.c                                         2.54e-13 ***
-    ## age.c                                          0.91451    
-    ## ProductivityProductive:WithinOutsideIHCwithin  0.02474 *  
+    ## (Intercept)                                    0.74437    
+    ## ProductivityProductive                         0.00575 ** 
+    ## WithinOutsideIHCwithin                         0.30825    
+    ## IHC.c                                         3.43e-13 ***
+    ## age.c                                          0.98925    
+    ## ProductivityProductive:WithinOutsideIHCwithin  0.03648 *  
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Correlation of Fixed Effects:
     ##             (Intr) PrdctP WtOIHC IHC.c  age.c 
-    ## PrdctvtyPrd -0.504                            
-    ## WthnOtsdIHC -0.253  0.201                     
-    ## IHC.c        0.305 -0.166 -0.255              
-    ## age.c        0.165 -0.318 -0.027 -0.245       
-    ## PrdcP:WOIHC  0.074 -0.299 -0.746 -0.125  0.018
+    ## PrdctvtyPrd -0.506                            
+    ## WthnOtsdIHC -0.251  0.198                     
+    ## IHC.c        0.318 -0.196 -0.253              
+    ## age.c        0.169 -0.325 -0.028 -0.232       
+    ## PrdcP:WOIHC  0.071 -0.295 -0.746 -0.121  0.020
+    ## convergence code: 0
+    ## Model failed to converge with max|grad| = 0.00124396 (tol = 0.001, component 1)
 
 #### analysis removing IHC=99
 
@@ -1597,13 +1599,13 @@ anova(wcn.model2.int, wcn.model2.noint, wcn.model2.ihc, wcn.model2.base, test = 
     ##                  Df    AIC    BIC  logLik deviance   Chisq Chi Df
     ## wcn.model2.base   4 799.43 817.79 -395.71   791.43               
     ## wcn.model2.ihc    5 776.94 799.88 -383.47   766.94 24.4941      1
-    ## wcn.model2.noint  7 773.44 805.57 -379.72   759.44  7.4932      2
-    ## wcn.model2.int    8 769.45 806.16 -376.72   753.45  5.9949      1
+    ## wcn.model2.noint  7 775.53 807.65 -380.76   761.53  5.4097      2
+    ## wcn.model2.int    8 772.27 808.98 -378.14   756.27  5.2538      1
     ##                  Pr(>Chisq)    
     ## wcn.model2.base                
     ## wcn.model2.ihc    7.454e-07 ***
-    ## wcn.model2.noint    0.02360 *  
-    ## wcn.model2.int      0.01435 *  
+    ## wcn.model2.noint    0.06688 .  
+    ## wcn.model2.int      0.02190 *  
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -1621,43 +1623,43 @@ summary(wcn.model2.int)
     ##    Data: wcn_model.df2
     ## 
     ##      AIC      BIC   logLik deviance df.resid 
-    ##    769.4    806.2   -376.7    753.4      719 
+    ##    772.3    809.0   -378.1    756.3      719 
     ## 
     ## Scaled residuals: 
     ##     Min      1Q  Median      3Q     Max 
-    ## -3.3148 -0.5078 -0.2355  0.5359  7.6055 
+    ## -3.2833 -0.5083 -0.2382  0.5381  7.4973 
     ## 
     ## Random effects:
     ##  Groups   Name        Variance Std.Dev.
-    ##  LadlabID (Intercept) 1.257    1.121   
-    ##  TaskItem (Intercept) 1.169    1.081   
+    ##  LadlabID (Intercept) 1.332    1.154   
+    ##  TaskItem (Intercept) 1.174    1.083   
     ## Number of obs: 727, groups:  LadlabID, 91; TaskItem, 8
     ## 
     ## Fixed effects:
-    ##                                                Estimate Std. Error z value
-    ## (Intercept)                                   -0.552288   0.534151  -1.034
-    ## ProductivityProductive                         1.334077   0.392356   3.400
-    ## WithinOutsideIHCwithin                         0.788061   0.502846   1.567
-    ## IHC.c                                          1.477481   0.360707   4.096
-    ## age.c                                          0.008956   0.203514   0.044
-    ## ProductivityProductive:WithinOutsideIHCwithin -1.286729   0.524509  -2.453
+    ##                                               Estimate Std. Error z value
+    ## (Intercept)                                   -0.45092    0.53993  -0.835
+    ## ProductivityProductive                         1.18364    0.40364   2.932
+    ## WithinOutsideIHCwithin                         0.73227    0.50382   1.453
+    ## IHC.c                                          1.48467    0.36806   4.034
+    ## age.c                                          0.03634    0.20739   0.175
+    ## ProductivityProductive:WithinOutsideIHCwithin -1.20689    0.52621  -2.294
     ##                                               Pr(>|z|)    
-    ## (Intercept)                                   0.301157    
-    ## ProductivityProductive                        0.000673 ***
-    ## WithinOutsideIHCwithin                        0.117067    
-    ## IHC.c                                          4.2e-05 ***
-    ## age.c                                         0.964897    
-    ## ProductivityProductive:WithinOutsideIHCwithin 0.014159 *  
+    ## (Intercept)                                    0.40363    
+    ## ProductivityProductive                         0.00336 ** 
+    ## WithinOutsideIHCwithin                         0.14610    
+    ## IHC.c                                         5.49e-05 ***
+    ## age.c                                          0.86089    
+    ## ProductivityProductive:WithinOutsideIHCwithin  0.02181 *  
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Correlation of Fixed Effects:
     ##             (Intr) PrdctP WtOIHC IHC.c  age.c 
-    ## PrdctvtyPrd -0.483                            
-    ## WthnOtsdIHC -0.301  0.213                     
-    ## IHC.c        0.432 -0.160 -0.317              
-    ## age.c        0.092 -0.326  0.006 -0.335       
-    ## PrdcP:WOIHC  0.119 -0.314 -0.736  0.027 -0.012
+    ## PrdctvtyPrd -0.493                            
+    ## WthnOtsdIHC -0.300  0.213                     
+    ## IHC.c        0.448 -0.197 -0.317              
+    ## age.c        0.096 -0.330  0.004 -0.321       
+    ## PrdcP:WOIHC  0.121 -0.313 -0.736  0.035 -0.010
 
 How many trials do kids have beyond their
 IHC?
@@ -1668,12 +1670,12 @@ wcn.data %>% dplyr::filter(TaskType == "immediate") %>% dplyr::group_by(Producti
 ```
 
     ## # A tibble: 4 x 3
-    ## # Groups:   Productivity [?]
+    ## # Groups:   Productivity [2]
     ##   Productivity  WithinOutsideIHC     n
     ##   <fct>         <chr>            <int>
-    ## 1 Nonproductive outside            295
+    ## 1 Nonproductive outside            303
     ## 2 Nonproductive within              49
-    ## 3 Productive    outside            227
+    ## 3 Productive    outside            219
     ## 4 Productive    within             405
 
 ## Highest contiguous NN
@@ -1827,8 +1829,8 @@ wcn.data.bysubject %>% dplyr::group_by(Productivity) %>% dplyr::summarise(n = n(
 
 | Productivity  |  n | median\_NN | mean\_NN |
 | :------------ | -: | ---------: | -------: |
-| Nonproductive | 43 |          5 | 13.53488 |
-| Productive    | 79 |         23 | 41.54430 |
+| Nonproductive | 44 |          5 | 13.75000 |
+| Productive    | 78 |         26 | 41.78205 |
 
 ``` r
 # independent 2-group Mann-Whitney U Test wilcox.test(continuous variable ~
@@ -1841,7 +1843,7 @@ wilcox.test(wcn.data.bysubject$Highest_Contig_NN ~ wcn.data.bysubject$Productivi
     ##  Wilcoxon rank sum test with continuity correction
     ## 
     ## data:  wcn.data.bysubject$Highest_Contig_NN by wcn.data.bysubject$Productivity
-    ## W = 673, p-value = 1.12e-08
+    ## W = 687, p-value = 1.186e-08
     ## alternative hypothesis: true location shift is not equal to 0
 
 Median highest contiguous next number by productivity - minus kids who
@@ -1856,8 +1858,8 @@ wcn.data.bysubject %>% filter(IHC < 99) %>% dplyr::group_by(Productivity) %>% dp
 
 | Productivity  |  n | median\_NN | mean\_NN |
 | :------------ | -: | ---------: | -------: |
-| Nonproductive | 43 |          5 | 13.53488 |
-| Productive    | 47 |         23 | 24.36170 |
+| Nonproductive | 44 |          5 |  13.7500 |
+| Productive    | 46 |         23 |  24.3913 |
 
 ``` r
 # independent 2-group Mann-Whitney U Test wilcox.test(continuous variable ~
@@ -1870,7 +1872,7 @@ wilcox.test(wcn.data.bysubject[wcn.data.bysubject$IHC < 99, ]$Highest_Contig_NN 
     ##  Wilcoxon rank sum test with continuity correction
     ## 
     ## data:  wcn.data.bysubject[wcn.data.bysubject$IHC < 99, ]$Highest_Contig_NN by wcn.data.bysubject[wcn.data.bysubject$IHC < 99, ]$Productivity
-    ## W = 613.5, p-value = 0.0005546
+    ## W = 625, p-value = 0.0007702
     ## alternative hypothesis: true location shift is not equal to 0
 
 #### Histogram
@@ -1926,21 +1928,21 @@ corrdf <- full.data %>% dplyr::right_join(highest_contiguous_nn) %>% dplyr::dist
 rcorr(as.matrix(corrdf), type = "pearson")
 ```
 
-    ##                    Age  IHC  FHC Highest_Contig_NN
-    ## Age               1.00 0.51 0.61              0.37
-    ## IHC               0.51 1.00 0.72              0.75
-    ## FHC               0.61 0.72 1.00              0.54
-    ## Highest_Contig_NN 0.37 0.75 0.54              1.00
+    ##                   Highest_Contig_NN  Age  IHC  FHC
+    ## Highest_Contig_NN              1.00 0.37 0.75 0.54
+    ## Age                            0.37 1.00 0.51 0.61
+    ## IHC                            0.75 0.51 1.00 0.72
+    ## FHC                            0.54 0.61 0.72 1.00
     ## 
     ## n= 122 
     ## 
     ## 
     ## P
-    ##                   Age IHC FHC Highest_Contig_NN
-    ## Age                    0   0   0               
-    ## IHC                0       0   0               
-    ## FHC                0   0       0               
-    ## Highest_Contig_NN  0   0   0
+    ##                   Highest_Contig_NN Age IHC FHC
+    ## Highest_Contig_NN                    0   0   0 
+    ## Age                0                     0   0 
+    ## IHC                0                 0       0 
+    ## FHC                0                 0   0
 
 # Infinity Descriptives
 
@@ -1958,14 +1960,14 @@ full.data %>% dplyr::distinct(LadlabID, Category, Productivity) %>% dplyr::group
 ```
 
     ## # A tibble: 8 x 3
-    ## # Groups:   Productivity [?]
+    ## # Groups:   Productivity [2]
     ##   Productivity  Category             n
     ##   <fct>         <chr>            <int>
-    ## 1 Nonproductive A Non-knower        30
+    ## 1 Nonproductive A Non-knower        31
     ## 2 Nonproductive B Endless-only       1
     ## 3 Nonproductive C Successor-only     9
     ## 4 Nonproductive D Full-knower        3
-    ## 5 Productive    A Non-knower        29
+    ## 5 Productive    A Non-knower        28
     ## 6 Productive    B Endless-only      10
     ## 7 Productive    C Successor-only    20
     ## 8 Productive    D Full-knower       20
@@ -1980,7 +1982,7 @@ table(classification.data$SuccessorKnower, classification.data$Productivity)
 
     ##    
     ##     Nonproductive Productive
-    ##   0            31         39
+    ##   0            32         38
     ##   1            12         40
 
 ``` r
@@ -1991,7 +1993,7 @@ chisq.test(table(classification.data$SuccessorKnower, classification.data$Produc
     ##  Pearson's Chi-squared test with Yates' continuity correction
     ## 
     ## data:  table(classification.data$SuccessorKnower, classification.data$Productivity)
-    ## X-squared = 4.9877, df = 1, p-value = 0.02553
+    ## X-squared = 5.6854, df = 1, p-value = 0.01711
 
 ``` r
 # Endless contingency table
@@ -2000,7 +2002,7 @@ table(classification.data$EndlessKnower, classification.data$Productivity)
 
     ##    
     ##     Nonproductive Productive
-    ##   0            39         49
+    ##   0            40         48
     ##   1             4         30
 
 ``` r
@@ -2011,7 +2013,7 @@ chisq.test(table(classification.data$EndlessKnower, classification.data$Producti
     ##  Pearson's Chi-squared test with Yates' continuity correction
     ## 
     ## data:  table(classification.data$EndlessKnower, classification.data$Productivity)
-    ## X-squared = 10.006, df = 1, p-value = 0.001561
+    ## X-squared = 10.655, df = 1, p-value = 0.001098
 
 Average age of kids for Endless and Successor
 Knowers
@@ -2157,13 +2159,13 @@ cor.test(ms.cor$Productivity, ms.cor$prod.gradient)
     ##  Pearson's product-moment correlation
     ## 
     ## data:  ms.cor$Productivity and ms.cor$prod.gradient
-    ## t = 29.695, df = 120, p-value < 2.2e-16
+    ## t = 29.379, df = 120, p-value < 2.2e-16
     ## alternative hypothesis: true correlation is not equal to 0
     ## 95 percent confidence interval:
-    ##  0.9126420 0.9564469
+    ##  0.9109531 0.9555852
     ## sample estimates:
     ##       cor 
-    ## 0.9381972
+    ## 0.9369861
 
 -----
 
@@ -2305,22 +2307,22 @@ mtable.sf.knowers
     ## ================================================================================================================
     ##                                             Base      IHC     Highest Contig.  Productivity  Exp. - Prod. gain  
     ## ----------------------------------------------------------------------------------------------------------------
-    ##   (Intercept)                              -0.306    -0.306       -0.307          -0.847*         -0.622        
-    ##                                            (0.186)   (0.186)      (0.187)         (0.370)         (0.381)       
-    ##   Age.c                                     0.342     0.313        0.245           0.149           0.217        
-    ##                                            (0.188)   (0.218)      (0.202)         (0.218)         (0.228)       
+    ##   (Intercept)                              -0.306    -0.306       -0.307          -0.895*         -0.622        
+    ##                                            (0.186)   (0.186)      (0.187)         (0.369)         (0.381)       
+    ##   Age.c                                     0.342     0.313        0.245           0.125           0.217        
+    ##                                            (0.188)   (0.218)      (0.202)         (0.220)         (0.228)       
     ##   IHC.c                                               0.058                                                     
     ##                                                      (0.216)                                                    
     ##   Highest_Contig_NN.c                                              0.271                                        
     ##                                                                   (0.200)                                       
-    ##   Productivity: Productive/Nonproductive                                           0.816                        
-    ##                                                                                   (0.468)                       
+    ##   Productivity: Productive/Nonproductive                                           0.897                        
+    ##                                                                                   (0.470)                       
     ##   prod.gradient                                                                                    0.494        
     ##                                                                                                   (0.512)       
     ## ----------------------------------------------------------------------------------------------------------------
-    ##   Nagelkerke R-sq.                          0.037     0.038        0.056           0.070           0.047        
-    ##   Log-likelihood                          -81.539   -81.503      -80.610         -79.977         -81.072        
-    ##   AIC                                     167.077   169.006      167.221         165.954         168.143        
+    ##   Nagelkerke R-sq.                          0.037     0.038        0.056           0.076           0.047        
+    ##   Log-likelihood                          -81.539   -81.503      -80.610         -79.659         -81.072        
+    ##   AIC                                     167.077   169.006      167.221         165.318         168.143        
     ##   N                                       122       122          122             122             122            
     ## ================================================================================================================
 
@@ -2364,7 +2366,7 @@ anova(base.successor, model.prod.successor, test = 'LRT')#Productivity trending
     ## Model 2: SuccessorKnower ~ Productivity + Age.c
     ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)  
     ## 1       120     163.08                       
-    ## 2       119     159.95  1   3.1234  0.07718 .
+    ## 2       119     159.32  1   3.7587  0.05253 .
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -2425,22 +2427,22 @@ mtable.endless.knowers
     ## =================================================================================================================
     ##                                              Base        IHC      Highest Contig.  Productivity  Prod. gradient  
     ## -----------------------------------------------------------------------------------------------------------------
-    ##   (Intercept)                              -1.057***   -1.131***     -1.091***       -2.010***      -2.403***    
+    ##   (Intercept)                              -1.057***   -1.131***     -1.091***       -2.044***      -2.403***    
     ##                                            (0.221)     (0.235)       (0.228)         (0.542)        (0.608)      
-    ##   Age.c                                     0.707**     0.407         0.535*          0.446          0.313       
-    ##                                            (0.224)     (0.250)       (0.238)         (0.249)        (0.264)      
+    ##   Age.c                                     0.707**     0.407         0.535*          0.427          0.313       
+    ##                                            (0.224)     (0.250)       (0.238)         (0.251)        (0.264)      
     ##   IHC.c                                                 0.666**                                                  
     ##                                                        (0.242)                                                   
     ##   Highest_Contig_NN.c                                                 0.504*                                     
     ##                                                                      (0.215)                                     
-    ##   Productivity: Productive/Nonproductive                                              1.329*                     
-    ##                                                                                      (0.627)                     
+    ##   Productivity: Productive/Nonproductive                                              1.387*                     
+    ##                                                                                      (0.629)                     
     ##   prod.gradient                                                                                      1.893**     
     ##                                                                                                     (0.717)      
     ## -----------------------------------------------------------------------------------------------------------------
-    ##   Nagelkerke R-sq.                          0.125       0.205         0.183           0.179          0.212       
-    ##   Log-likelihood                          -66.655     -62.810       -63.884         -64.095        -62.485       
-    ##   AIC                                     137.311     131.619       133.767         134.190        130.971       
+    ##   Nagelkerke R-sq.                          0.125       0.205         0.183           0.184          0.212       
+    ##   Log-likelihood                          -66.655     -62.810       -63.884         -63.866        -62.485       
+    ##   AIC                                     137.311     131.619       133.767         133.731        130.971       
     ##   p                                         0.001       0.000         0.000           0.000          0.000       
     ##   N                                       122         122           122             122            122           
     ## =================================================================================================================
@@ -2487,8 +2489,8 @@ anova(model.prod.endless, base.endless, test = "LRT")  #Prod significant
     ## Model 1: EndlessKnower ~ Productivity + Age.c
     ## Model 2: EndlessKnower ~ Age.c
     ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)  
-    ## 1       119     128.19                       
-    ## 2       120     133.31 -1   -5.121  0.02364 *
+    ## 1       119     127.73                       
+    ## 2       120     133.31 -1  -5.5793  0.01817 *
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -2589,7 +2591,7 @@ anova(large.endless.base, large.endless.prod, test = "LRT")  ##Productivity NS
     ## Model 2: EndlessKnower ~ Productivity + IHC.c + Age.c
     ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)
     ## 1       119     125.62                     
-    ## 2       118     124.12  1   1.5013   0.2205
+    ## 2       118     123.93  1   1.6907   0.1935
 
 ``` r
 # IHC v. Prod. Gain
@@ -2645,22 +2647,22 @@ mtable.endless.large
     ## =============================================================================================
     ##                                           HCNN + IHC  Prod.Group + IHC  Prod.Gradient + IHC  
     ## ---------------------------------------------------------------------------------------------
-    ##   (Intercept)                              -1.129***      -1.710**            -2.055**       
-    ##                                            (0.235)        (0.563)             (0.637)        
+    ##   (Intercept)                              -1.129***      -1.744**            -2.055**       
+    ##                                            (0.235)        (0.564)             (0.637)        
     ##   Highest_Contig_NN.c                       0.173                                            
     ##                                            (0.299)                                           
-    ##   IHC.c                                     0.529          0.523*              0.421         
-    ##                                            (0.336)        (0.263)             (0.275)        
-    ##   Age.c                                     0.411          0.315               0.250         
+    ##   IHC.c                                     0.529          0.509               0.421         
+    ##                                            (0.336)        (0.265)             (0.275)        
+    ##   Age.c                                     0.411          0.307               0.250         
     ##                                            (0.250)        (0.260)             (0.267)        
-    ##   Productivity: Productive/Nonproductive                   0.823                             
-    ##                                                           (0.687)                            
+    ##   Productivity: Productive/Nonproductive                   0.878                             
+    ##                                                           (0.692)                            
     ##   prod.gradient                                                                1.328         
     ##                                                                               (0.797)        
     ## ---------------------------------------------------------------------------------------------
-    ##   Nagelkerke R-sq.                          0.209          0.221               0.236         
-    ##   Log-likelihood                          -62.642        -62.059             -61.296         
-    ##   AIC                                     133.284        132.118             130.592         
+    ##   Nagelkerke R-sq.                          0.209          0.222               0.236         
+    ##   Log-likelihood                          -62.642        -61.964             -61.296         
+    ##   AIC                                     133.284        131.929             130.592         
     ##   N                                       122            122                 122             
     ## =============================================================================================
 
@@ -2684,19 +2686,19 @@ summary(lm1)
     ## 
     ## Residuals:
     ##     Min      1Q  Median      3Q     Max 
-    ## -52.524 -17.340  -5.718  23.332  52.599 
+    ## -52.991 -17.132  -5.415  23.368  51.090 
     ## 
     ## Coefficients:
     ##                        Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)              30.524      4.475   6.821 4.01e-10 ***
-    ## ProductivityProductive   30.722      5.844   5.257 6.54e-07 ***
-    ## Age.c                     9.669      2.804   3.449  0.00078 ***
+    ## (Intercept)              29.885      4.392   6.804 4.36e-10 ***
+    ## ProductivityProductive   32.116      5.791   5.546 1.79e-07 ***
+    ## Age.c                     9.142      2.792   3.274  0.00139 ** 
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 26.38 on 119 degrees of freedom
-    ## Multiple R-squared:  0.4009, Adjusted R-squared:  0.3909 
-    ## F-statistic: 39.82 on 2 and 119 DF,  p-value: 5.742e-14
+    ## Residual standard error: 26.11 on 119 degrees of freedom
+    ## Multiple R-squared:  0.4135, Adjusted R-squared:  0.4036 
+    ## F-statistic: 41.94 on 2 and 119 DF,  p-value: 1.636e-14
 
 ``` r
 lm2 <- lm(IHC ~ Highest_Contig_NN + Age.c, data = distinct_model.df)
@@ -2781,22 +2783,22 @@ mtable.inf.knowers
     ## ============================================================================================================
     ##                                              Base        IHC      Highest Contig.  Prod. Group  Prod. Gain  
     ## ------------------------------------------------------------------------------------------------------------
-    ##   (Intercept)                              -1.629***   -1.664***     -1.662***      -2.270***    -2.475***  
+    ##   (Intercept)                              -1.629***   -1.664***     -1.662***      -2.300***    -2.475***  
     ##                                            (0.266)     (0.273)       (0.272)        (0.615)      (0.662)    
-    ##   Age.c                                     0.752**     0.567*        0.609*         0.572*       0.497     
-    ##                                            (0.260)     (0.289)       (0.275)        (0.291)      (0.304)    
+    ##   Age.c                                     0.752**     0.567*        0.609*         0.557        0.497     
+    ##                                            (0.260)     (0.289)       (0.275)        (0.292)      (0.304)    
     ##   IHC.c                                                 0.385                                               
     ##                                                        (0.273)                                              
     ##   Highest_Contig_NN.c                                                 0.383                                 
     ##                                                                      (0.234)                                
-    ##   Productivity: Productive/Nonproductive                                             0.904                  
-    ##                                                                                     (0.723)                 
+    ##   Productivity: Productive/Nonproductive                                             0.953                  
+    ##                                                                                     (0.725)                 
     ##   prod.gradient                                                                                   1.209     
     ##                                                                                                  (0.796)    
     ## ------------------------------------------------------------------------------------------------------------
-    ##   Nagelkerke R-sq.                          0.120       0.143         0.151          0.140        0.151     
-    ##   Log-likelihood                          -54.355     -53.375       -53.040        -53.497      -53.064     
-    ##   AIC                                     112.711     112.750       112.080        112.995      112.129     
+    ##   Nagelkerke R-sq.                          0.120       0.143         0.151          0.143        0.151     
+    ##   Log-likelihood                          -54.355     -53.375       -53.040        -53.403      -53.064     
+    ##   AIC                                     112.711     112.750       112.080        112.805      112.129     
     ##   N                                       122         122           122            122          122         
     ## ============================================================================================================
 
@@ -2844,7 +2846,7 @@ anova(base.infinity, model.prod.infinity, test = "LRT")  #n.s.
     ## Model 2: InfinityKnower ~ Productivity + Age.c
     ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)
     ## 1       120     108.71                     
-    ## 2       119     107.00  1   1.7158   0.1902
+    ## 2       119     106.81  1   1.9051   0.1675
 
 ``` r
 # base v. productivity gradient
@@ -2920,7 +2922,7 @@ formatting. Here we try a plot of betas.
 ``` r
 # visualization
 library(effects)
-plot(allEffects(model.gain.endless))
+plot(allEffects(large.endless.full))
 ```
 
 ![](recursionAnalysis_files/figure-gfm/regression-graphs-1.png)<!-- -->
