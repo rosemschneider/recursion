@@ -32,6 +32,9 @@ library(memisc)
 # Set seed for reproducible analyses
 set.seed(42)
 '%!in%' <- function(x,y)!('%in%'(x,y))
+
+# colors
+prod.pal <- c("#E41A1C", "#4DAF4A", "#377EB8")
 ```
 
 R Version for citation is: `r R.version.string`.
@@ -760,8 +763,6 @@ fig3.data <- wcn.data %>%
   filter(TaskType == "immediate")%>%
   mutate(TaskItem_type= ifelse(mod(TaskItem_num,10)==9, "Decade transition", "Mid-decade")) %>%
   mutate(TaskItem_type_ordered = ordered(TaskItem_type, levels=c("Mid-decade", "Decade transition")))
-
-prod.pal <- c("#E41A1C", "#4DAF4A", "#377EB8")
 
 fig3.data %>%
   group_by(TaskItem_type_ordered, TaskItem, Productivity.tertiary)%>%

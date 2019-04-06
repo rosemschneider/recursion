@@ -1,7 +1,7 @@
 RecursionAnalysis
 ================
 Junyi Chu, Rose M. Schneider, Pierina Cheung
-2019-03-21
+2019-04-06
 
 # Setup
 
@@ -90,7 +90,10 @@ full.data <- dplyr::left_join(full.data, hc.data, by = "LadlabID")
 full.data %<>% dplyr::rename(Productivity = prod_tomerge, IHC = ihc_tomerge, FHC = fhc_tomerge, 
     DCE = dce) %>% dplyr::mutate(Productivity = factor(Productivity, levels = c("nonprod", 
     "prod"), labels = c("Nonproductive", "Productive")), IHC = ifelse(IHC > 100, 
-    100, IHC), FHC = ifelse(FHC > 100, 100, FHC))
+    100, IHC), FHC = ifelse(FHC > 100, 100, FHC)) %>% mutate(Productivity.tertiary = ifelse(IHC >= 
+    99, "Productive (IHC ≥ 99)", ifelse(Productivity == "Productive", "Productive (IHC < 99)", 
+    "Nonproductive")))
+
 
 # do a quick check to make sure we have the same SIDs in each
 unique.full <- as.vector(unique(full.data$LadlabID))
@@ -151,6 +154,22 @@ full.data %>% dplyr::distinct(LadlabID, Productivity, Age) %>% dplyr::group_by(P
 | :------------ | -: | -------: | --------: | -----: | -----: |
 | Nonproductive | 48 | 4.615833 | 0.4153483 |   4.00 |   5.61 |
 | Productive    | 74 | 5.246081 | 0.5211179 |   4.05 |   5.99 |
+
+Number of kids for the 3-way productivity
+classification
+
+``` r
+full.data %>% dplyr::distinct(LadlabID, Productivity.tertiary, Age) %>% dplyr::group_by(Productivity.tertiary) %>% 
+    dplyr::summarise(n = n(), meanage = mean(Age, na.rm = TRUE), sdage = sd(Age, 
+        na.rm = TRUE), minage = min(Age, na.rm = TRUE), maxage = max(Age, na.rm = TRUE)) %>% 
+    kable()
+```
+
+| Productivity.tertiary  |  n |  meanage |     sdage | minage | maxage |
+| :--------------------- | -: | -------: | --------: | -----: | -----: |
+| Nonproductive          | 48 | 4.615833 | 0.4153483 |   4.00 |   5.61 |
+| Productive (IHC \< 99) | 42 | 5.193095 | 0.5092533 |   4.05 |   5.99 |
+| Productive (IHC ≥ 99)  | 32 | 5.315625 | 0.5363734 |   4.18 |   5.99 |
 
 Just for reference, this is the number of kids who switched
 classifications from PC, JC, RMS
@@ -281,12 +300,66 @@ full.data %>% distinct(LadlabID, Productivity, delta.hc, prod.gradient) %>% grou
 | Nonproductive |      0.1270944 |    0.2210244 |       10.68750 |     19.02200 |
 | Productive    |      0.9629005 |    0.1532229 |       27.91892 |     27.00419 |
 
+Again by 3-way decade
+productivity
+
+``` r
+full.data %>% dplyr::distinct(LadlabID, Productivity.tertiary, IHC) %>% dplyr::group_by(Productivity.tertiary) %>% 
+    dplyr::summarise(mean_IHC = mean(IHC), sd_IHC = sd(IHC), min_IHC = min(IHC), 
+        max_IHC = max(IHC), median_IHC = median(IHC)) %>% kable()
+```
+
+| Productivity.tertiary  | mean\_IHC |    sd\_IHC | min\_IHC | max\_IHC | median\_IHC |
+| :--------------------- | --------: | ---------: | -------: | -------: | ----------: |
+| Nonproductive          |  22.58333 | 14.7948141 |        5 |       77 |        15.5 |
+| Productive (IHC \< 99) |  44.47619 | 16.1943051 |       13 |       79 |        45.5 |
+| Productive (IHC ≥ 99)  |  99.96875 |  0.1767767 |       99 |      100 |       100.0 |
+
+``` r
+full.data %>% dplyr::distinct(LadlabID, Productivity.tertiary, DCE) %>% dplyr::group_by(Productivity.tertiary) %>% 
+    dplyr::summarise(mean_DCE = mean(DCE, na.rm = TRUE), sd_DCE = sd(DCE, na.rm = TRUE), 
+        min_DCE = min(DCE, na.rm = TRUE), max_DCE = max(DCE, na.rm = TRUE), median_DCE = median(DCE, 
+            na.rm = TRUE)) %>% kable()
+```
+
+| Productivity.tertiary  | mean\_DCE |   sd\_DCE | min\_DCE | max\_DCE | median\_DCE |
+| :--------------------- | --------: | --------: | -------: | -------: | ----------: |
+| Nonproductive          |  29.62500 |  8.539126 |       19 |       49 |          29 |
+| Productive (IHC \< 99) |  48.71429 | 14.849384 |       19 |       89 |          49 |
+| Productive (IHC ≥ 99)  |  99.00000 |        NA |       99 |       99 |          99 |
+
+``` r
+full.data %>% dplyr::distinct(LadlabID, Productivity.tertiary, FHC) %>% dplyr::group_by(Productivity.tertiary) %>% 
+    dplyr::summarise(mean_FHC = mean(FHC), sd_FHC = sd(FHC), min_FHC = min(FHC), 
+        max_FHC = max(FHC), median_FHC = median(FHC)) %>% kable()
+```
+
+| Productivity.tertiary  | mean\_FHC |    sd\_FHC | min\_FHC | max\_FHC | median\_FHC |
+| :--------------------- | --------: | ---------: | -------: | -------: | ----------: |
+| Nonproductive          |  33.27083 | 20.1565570 |        5 |      100 |          29 |
+| Productive (IHC \< 99) |  93.66667 | 15.1555619 |       39 |      100 |         100 |
+| Productive (IHC ≥ 99)  |  99.96875 |  0.1767767 |       99 |      100 |         100 |
+
+``` r
+# productivity gradient
+full.data %>% distinct(LadlabID, Productivity.tertiary, delta.hc, prod.gradient) %>% 
+    group_by(Productivity.tertiary) %>% summarise(mean_gradient = mean(prod.gradient), 
+    sd_gradient = sd(prod.gradient), mean_delta.hc = mean(delta.hc), sd_delta.hc = sd(delta.hc)) %>% 
+    kable()
+```
+
+| Productivity.tertiary  | mean\_gradient | sd\_gradient | mean\_delta.hc | sd\_delta.hc |
+| :--------------------- | -------------: | -----------: | -------------: | -----------: |
+| Nonproductive          |      0.1270944 |    0.2210244 |       10.68750 |      19.0220 |
+| Productive (IHC \< 99) |      0.9346343 |    0.1997706 |       49.19048 |      15.0499 |
+| Productive (IHC ≥ 99)  |      1.0000000 |    0.0000000 |        0.00000 |       0.0000 |
+
 Plotting distribution of IHC, as a function of productivity (\~ junyi’s
 graph)
 
 ``` r
 unique.hc.data <- full.data %>% dplyr::distinct(LadlabID, Gender, Age, AgeGroup, 
-    HCReceivedSupport, IHC, DCE, FHC, Productivity)
+    HCReceivedSupport, IHC, DCE, FHC, Productivity, Productivity.tertiary)
 
 ggplot(unique.hc.data, aes(x = IHC, color = Productivity)) + geom_dotplot(aes(fill = Productivity), 
     binwidth = 1, stackgroups = TRUE, binpositions = "all", method = "dotdensity", 
@@ -297,10 +370,29 @@ ggplot(unique.hc.data, aes(x = IHC, color = Productivity)) + geom_dotplot(aes(fi
     panel.grid.minor = element_blank())
 ```
 
-![](recursionAnalysis_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 ``` r
 ggsave("graphs/ihc-by-prod.png")
+```
+
+    ## Saving 7 x 5 in image
+
+``` r
+## three-way productivity
+ggplot(unique.hc.data, aes(x = IHC, color = Productivity.tertiary)) + geom_dotplot(aes(fill = Productivity.tertiary), 
+    binwidth = 1, stackgroups = TRUE, binpositions = "all", method = "dotdensity", 
+    dotsize = 1) + scale_color_manual(values = prod.pal, name = "Productivity") + 
+    scale_fill_manual(values = prod.pal, name = "Productivity") + coord_fixed(ratio = 1) + 
+    scale_y_continuous(breaks = seq(0, 40, 10), lim = c(0, 35)) + scale_x_continuous(breaks = seq(0, 
+    100, by = 10)) + labs(x = "IHC", y = "Frequency") + theme_bw(base_size = 13) + 
+    theme(legend.position = "bottom", legend.title = element_blank(), panel.grid.minor = element_blank())
+```
+
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-16-2.png)<!-- -->
+
+``` r
+ggsave("graphs/ihc-by-prod2.png")
 ```
 
     ## Saving 7 x 5 in image
@@ -314,7 +406,7 @@ ggplot(unique.hc.data, aes(x = IHC)) + geom_dotplot(binwidth = 1, stackgroups = 
     theme(legend.position = "bottom", legend.title = element_blank(), panel.grid.minor = element_blank())
 ```
 
-![](recursionAnalysis_files/figure-gfm/unnamed-chunk-14-2.png)<!-- -->
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-16-3.png)<!-- -->
 
 ``` r
 ggsave("graphs/ihc.png")
@@ -334,7 +426,7 @@ ggplot(unique.hc.data, aes(x = AgeMonths, colour = Productivity)) + geom_dotplot
     labs(x = "Age in Months", y = "Frequency") + theme_bw(base_size = 13) + theme(legend.position = "bottom")
 ```
 
-![](recursionAnalysis_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 
 ``` r
 ggsave("graphs/prod-by-age.png")
@@ -395,7 +487,7 @@ ggplot(hc.dev.prod, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) +
         axis.ticks.x=element_blank())
 ```
 
-![](recursionAnalysis_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 
 ``` r
 ggsave('graphs/distance-prod-sorted.png', width=8, height=4)
@@ -421,7 +513,7 @@ ggplot(hc.dev.nonprod, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) +
         axis.ticks.x=element_blank()) 
 ```
 
-![](recursionAnalysis_files/figure-gfm/unnamed-chunk-18-2.png)<!-- -->
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-20-2.png)<!-- -->
 
 ``` r
 ggsave('graphs/distance-nonprod-sorted.png', width=8, height=4)
@@ -674,7 +766,7 @@ scale_fill_brewer(name = "Productivity", palette = "Set1", guide = "none") + sca
     theme(text = element_text(size = 12)) + ylim(0, 1)
 ```
 
-![](recursionAnalysis_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
 
 ``` r
 ggsave("graphs/wcn-percentcorr.png")
@@ -687,24 +779,20 @@ ggsave("graphs/wcn-percentcorr.png")
 Jess graph
 
 ``` r
-wcn.data <- wcn.data %>%
-  mutate(prod.group = ifelse(IHC > 99, "Productive (IHC \u2265 99)", 
-                             ifelse(Productivity == "Productive", "Productive (IHC < 99)", "Nonproductive")))
+wcn.data <- wcn.data
 
 fig3.data <- wcn.data %>%
   filter(TaskType == "immediate")%>%
   mutate(TaskItem_type= ifelse(mod(TaskItem_num,10)==9, "Decade transition", "Mid-decade")) %>%
   mutate(TaskItem_type_ordered = ordered(TaskItem_type, levels=c("Mid-decade", "Decade transition")))
 
-prod.pal <- c("#E41A1C", "#4DAF4A", "#377EB8")
-
 fig3.data %>%
-  group_by(TaskItem_type_ordered, TaskItem, prod.group)%>%
+  group_by(TaskItem_type_ordered, TaskItem, Productivity.tertiary)%>%
    summarise(mean = mean(Accuracy, na.rm = TRUE), 
             n = n(), 
             sd = sd(Accuracy, na.rm = TRUE), 
             se = sd/sqrt(n)) %>%
-  ggplot(aes(x = factor(TaskItem), y = mean, colour = prod.group, group= prod.group)) +
+  ggplot(aes(x = factor(TaskItem), y = mean, colour = Productivity.tertiary, group= Productivity.tertiary)) +
   geom_point(size = 2.5) + 
   geom_line(size = .7) +
   geom_errorbar(aes(ymin = mean - se, ymax = mean + se), 
@@ -731,12 +819,12 @@ Productive (IHC\<99) vs. Nonproductive on NN accuracy
 ``` r
 # Only for productive IHC < 99 and nonproductive
 fig3.model.df <- fig3.data %>%
-  filter(prod.group != "Productive (IHC \u2265 99)") %>%
-  dplyr::select(c(LadlabID, IHC, FHC, Age, prod.group,
+  filter(Productivity.tertiary != "Productive (IHC \u2265 99)") %>%
+  dplyr::select(c(LadlabID, IHC, FHC, Age, Productivity.tertiary,
                   TaskItem_num, TaskItem_type, Accuracy)) %>%
   mutate(IHC = as.integer(IHC),
          LadlabID=as.factor(LadlabID),
-         prod.group=as.factor(prod.group),
+         Productivity.tertiary=as.factor(Productivity.tertiary),
          TaskItem_type=as.factor(TaskItem_type))%>%
   mutate(IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)), #scale and center for model fit
          FHC.c = as.vector(scale(FHC, center = TRUE, scale=TRUE)), 
@@ -744,18 +832,18 @@ fig3.model.df <- fig3.data %>%
 str(fig3.model.df)
 ```
 
-    ## 'data.frame':    728 obs. of  11 variables:
-    ##  $ LadlabID     : Factor w/ 91 levels "010516-K4","011216-KD1",..: 1 1 1 1 1 1 1 1 2 2 ...
-    ##  $ IHC          : int  13 13 13 13 13 13 13 13 5 5 ...
-    ##  $ FHC          : num  29 29 29 29 29 29 29 29 5 5 ...
-    ##  $ Age          : num  4.17 4.17 4.17 4.17 4.17 4.17 4.17 4.17 4 4 ...
-    ##  $ prod.group   : Factor w/ 2 levels "Nonproductive",..: 1 1 1 1 1 1 1 1 1 1 ...
-    ##  $ TaskItem_num : num  23 40 62 70 37 29 86 59 23 40 ...
-    ##  $ TaskItem_type: Factor w/ 2 levels "Decade transition",..: 2 2 2 2 2 1 2 1 2 2 ...
-    ##  $ Accuracy     : int  0 0 0 0 0 0 0 0 0 0 ...
-    ##  $ IHC.c        : num  -1.03 -1.03 -1.03 -1.03 -1.03 ...
-    ##  $ FHC.c        : num  -0.938 -0.938 -0.938 -0.938 -0.938 ...
-    ##  $ age.c        : num  -1.33 -1.33 -1.33 -1.33 -1.33 ...
+    ## 'data.frame':    720 obs. of  11 variables:
+    ##  $ LadlabID             : Factor w/ 90 levels "010516-K4","011216-KD1",..: 1 1 1 1 1 1 1 1 2 2 ...
+    ##  $ IHC                  : int  13 13 13 13 13 13 13 13 5 5 ...
+    ##  $ FHC                  : num  29 29 29 29 29 29 29 29 5 5 ...
+    ##  $ Age                  : num  4.17 4.17 4.17 4.17 4.17 4.17 4.17 4.17 4 4 ...
+    ##  $ Productivity.tertiary: Factor w/ 2 levels "Nonproductive",..: 1 1 1 1 1 1 1 1 1 1 ...
+    ##  $ TaskItem_num         : num  23 40 62 70 37 29 86 59 23 40 ...
+    ##  $ TaskItem_type        : Factor w/ 2 levels "Decade transition",..: 2 2 2 2 2 1 2 1 2 2 ...
+    ##  $ Accuracy             : int  0 0 0 0 0 0 0 0 0 0 ...
+    ##  $ IHC.c                : num  -1.05 -1.05 -1.05 -1.05 -1.05 ...
+    ##  $ FHC.c                : num  -0.927 -0.927 -0.927 -0.927 -0.927 ...
+    ##  $ age.c                : num  -1.32 -1.32 -1.32 -1.32 -1.32 ...
 
 ``` r
 # means by item type
@@ -770,24 +858,24 @@ fig3.model.df %>%
     ## # A tibble: 2 x 4
     ##   TaskItem_type      mean    sd     n
     ##   <fct>             <dbl> <dbl> <int>
-    ## 1 Decade transition 0.165 0.299    91
-    ## 2 Mid-decade        0.494 0.347    91
+    ## 1 Decade transition 0.167 0.300    90
+    ## 2 Mid-decade        0.488 0.345    90
 
 ``` r
 # means by productivity
 fig3.model.df %>%
-  group_by(LadlabID, prod.group) %>%
+  group_by(LadlabID, Productivity.tertiary) %>%
   summarise(score=mean(Accuracy, na.rm=T)) %>%
   ungroup() %>%
-  group_by(prod.group) %>%
+  group_by(Productivity.tertiary) %>%
   summarise(mean=mean(score, na.rm=T), sd=sd(score, na.rm=T), n=n())
 ```
 
     ## # A tibble: 2 x 4
-    ##   prod.group             mean    sd     n
+    ##   Productivity.tertiary  mean    sd     n
     ##   <fct>                 <dbl> <dbl> <int>
     ## 1 Nonproductive         0.276 0.263    48
-    ## 2 Productive (IHC < 99) 0.562 0.251    43
+    ## 2 Productive (IHC < 99) 0.558 0.253    42
 
 ### Analyses of Figure 3 data
 
@@ -798,11 +886,11 @@ fig3.model.base <- glmer(Accuracy ~ age.c + (1 | TaskItem_num) + (1 | LadlabID),
     family = "binomial", data = fig3.model.df)
 fig3.model.ihc <- glmer(Accuracy ~ IHC.c + age.c + (1 | TaskItem_num) + (1 | LadlabID), 
     family = "binomial", data = fig3.model.df)
-fig3.model.prod <- glmer(Accuracy ~ prod.group + IHC.c + age.c + (1 | TaskItem_num) + 
-    (1 | LadlabID), family = "binomial", data = fig3.model.df)
-fig3.model.itemtype <- glmer(Accuracy ~ prod.group + TaskItem_type + IHC.c + age.c + 
-    (1 | TaskItem_num) + (1 | LadlabID), family = "binomial", data = fig3.model.df)
-fig3.model.full <- glmer(Accuracy ~ prod.group + TaskItem_type + prod.group:TaskItem_type + 
+fig3.model.prod <- glmer(Accuracy ~ Productivity.tertiary + IHC.c + age.c + (1 | 
+    TaskItem_num) + (1 | LadlabID), family = "binomial", data = fig3.model.df)
+fig3.model.itemtype <- glmer(Accuracy ~ Productivity.tertiary + TaskItem_type + IHC.c + 
+    age.c + (1 | TaskItem_num) + (1 | LadlabID), family = "binomial", data = fig3.model.df)
+fig3.model.full <- glmer(Accuracy ~ Productivity.tertiary + TaskItem_type + Productivity.tertiary:TaskItem_type + 
     IHC.c + age.c + (1 | TaskItem_num) + (1 | LadlabID), family = "binomial", data = fig3.model.df)
 # LRT tests
 drop1(fig3.model.itemtype, test = "Chisq")
@@ -811,14 +899,14 @@ drop1(fig3.model.itemtype, test = "Chisq")
     ## Single term deletions
     ## 
     ## Model:
-    ## Accuracy ~ prod.group + TaskItem_type + IHC.c + age.c + (1 | 
-    ##     TaskItem_num) + (1 | LadlabID)
-    ##               Df    AIC     LRT   Pr(Chi)    
-    ## <none>           763.91                      
-    ## prod.group     1 765.93  4.0136 0.0451342 *  
-    ## TaskItem_type  1 774.90 12.9842 0.0003141 ***
-    ## IHC.c          1 777.12 15.2057 9.641e-05 ***
-    ## age.c          1 762.00  0.0887 0.7657757    
+    ## Accuracy ~ Productivity.tertiary + TaskItem_type + IHC.c + age.c + 
+    ##     (1 | TaskItem_num) + (1 | LadlabID)
+    ##                       Df    AIC     LRT   Pr(Chi)    
+    ## <none>                   758.48                      
+    ## Productivity.tertiary  1 760.39  3.9190 0.0477429 *  
+    ## TaskItem_type          1 769.03 12.5589 0.0003943 ***
+    ## IHC.c                  1 771.33 14.8538 0.0001162 ***
+    ## age.c                  1 756.49  0.0113 0.9153833    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -832,24 +920,24 @@ anova(fig3.model.full, fig3.model.itemtype, fig3.model.prod, fig3.model.ihc, fig
     ## Models:
     ## fig3.model.base: Accuracy ~ age.c + (1 | TaskItem_num) + (1 | LadlabID)
     ## fig3.model.ihc: Accuracy ~ IHC.c + age.c + (1 | TaskItem_num) + (1 | LadlabID)
-    ## fig3.model.prod: Accuracy ~ prod.group + IHC.c + age.c + (1 | TaskItem_num) + 
+    ## fig3.model.prod: Accuracy ~ Productivity.tertiary + IHC.c + age.c + (1 | TaskItem_num) + 
     ## fig3.model.prod:     (1 | LadlabID)
-    ## fig3.model.itemtype: Accuracy ~ prod.group + TaskItem_type + IHC.c + age.c + (1 | 
-    ## fig3.model.itemtype:     TaskItem_num) + (1 | LadlabID)
-    ## fig3.model.full: Accuracy ~ prod.group + TaskItem_type + prod.group:TaskItem_type + 
+    ## fig3.model.itemtype: Accuracy ~ Productivity.tertiary + TaskItem_type + IHC.c + age.c + 
+    ## fig3.model.itemtype:     (1 | TaskItem_num) + (1 | LadlabID)
+    ## fig3.model.full: Accuracy ~ Productivity.tertiary + TaskItem_type + Productivity.tertiary:TaskItem_type + 
     ## fig3.model.full:     IHC.c + age.c + (1 | TaskItem_num) + (1 | LadlabID)
     ##                     Df    AIC    BIC  logLik deviance   Chisq Chi Df
-    ## fig3.model.base      4 799.43 817.79 -395.71   791.43               
-    ## fig3.model.ihc       5 776.93 799.87 -383.46   766.93 24.5044      1
-    ## fig3.model.prod      6 774.90 802.43 -381.45   762.90  4.0295      1
-    ## fig3.model.itemtype  7 763.91 796.03 -374.96   749.91 12.9842      1
-    ## fig3.model.full      8 764.55 801.26 -374.28   748.55  1.3615      1
+    ## fig3.model.base      4 792.03 810.34 -392.01   784.03               
+    ## fig3.model.ihc       5 770.98 793.87 -380.49   760.98 23.0497      1
+    ## fig3.model.prod      6 769.03 796.50 -378.52   757.03  3.9439      1
+    ## fig3.model.itemtype  7 758.48 790.52 -372.24   744.48 12.5589      1
+    ## fig3.model.full      8 759.54 796.17 -371.77   743.54  0.9334      1
     ##                     Pr(>Chisq)    
     ## fig3.model.base                   
-    ## fig3.model.ihc       7.414e-07 ***
-    ## fig3.model.prod      0.0447111 *  
-    ## fig3.model.itemtype  0.0003141 ***
-    ## fig3.model.full      0.2432764    
+    ## fig3.model.ihc       1.579e-06 ***
+    ## fig3.model.prod      0.0470428 *  
+    ## fig3.model.itemtype  0.0003943 ***
+    ## fig3.model.full      0.3339921    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -861,39 +949,46 @@ summary(fig3.model.itemtype)
     ## Generalized linear mixed model fit by maximum likelihood (Laplace
     ##   Approximation) [glmerMod]
     ##  Family: binomial  ( logit )
-    ## Formula: Accuracy ~ prod.group + TaskItem_type + IHC.c + age.c + (1 |  
-    ##     TaskItem_num) + (1 | LadlabID)
+    ## Formula: 
+    ## Accuracy ~ Productivity.tertiary + TaskItem_type + IHC.c + age.c +  
+    ##     (1 | TaskItem_num) + (1 | LadlabID)
     ##    Data: fig3.model.df
     ## 
     ##      AIC      BIC   logLik deviance df.resid 
-    ##    763.9    796.0   -375.0    749.9      720 
+    ##    758.5    790.5   -372.2    744.5      712 
     ## 
     ## Scaled residuals: 
     ##     Min      1Q  Median      3Q     Max 
-    ## -2.8238 -0.5192 -0.2341  0.5401  7.4168 
+    ## -2.8383 -0.5193 -0.2439  0.5492  7.2509 
     ## 
     ## Random effects:
     ##  Groups       Name        Variance Std.Dev.
-    ##  LadlabID     (Intercept) 1.4440   1.2017  
-    ##  TaskItem_num (Intercept) 0.1769   0.4206  
-    ## Number of obs: 727, groups:  LadlabID, 91; TaskItem_num, 8
+    ##  LadlabID     (Intercept) 1.45     1.2042  
+    ##  TaskItem_num (Intercept) 0.18     0.4242  
+    ## Number of obs: 719, groups:  LadlabID, 90; TaskItem_num, 8
     ## 
     ## Fixed effects:
-    ##                                 Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)                     -2.79614    0.46886  -5.964 2.47e-09 ***
-    ## prod.groupProductive (IHC < 99)  0.82951    0.41412   2.003   0.0452 *  
-    ## TaskItem_typeMid-decade          2.34447    0.44353   5.286 1.25e-07 ***
-    ## IHC.c                            0.82934    0.21032   3.943 8.04e-05 ***
-    ## age.c                            0.05939    0.19931   0.298   0.7657    
+    ##                                            Estimate Std. Error z value
+    ## (Intercept)                                -2.76302    0.46958  -5.884
+    ## Productivity.tertiaryProductive (IHC < 99)  0.82095    0.41472   1.980
+    ## TaskItem_typeMid-decade                     2.28398    0.44528   5.129
+    ## IHC.c                                       0.84173    0.21629   3.892
+    ## age.c                                       0.02197    0.20665   0.106
+    ##                                            Pr(>|z|)    
+    ## (Intercept)                                4.00e-09 ***
+    ## Productivity.tertiaryProductive (IHC < 99)   0.0478 *  
+    ## TaskItem_typeMid-decade                    2.91e-07 ***
+    ## IHC.c                                      9.96e-05 ***
+    ## age.c                                        0.9153    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Correlation of Fixed Effects:
-    ##             (Intr) p.P(<9 TsI_M- IHC.c 
-    ## p.P(IHC<99) -0.463                     
-    ## TskItm_tyM- -0.766  0.039              
-    ## IHC.c        0.072 -0.365  0.082       
-    ## age.c        0.131 -0.330  0.006 -0.305
+    ##             (Intr) P.P(<9 TsI_M- IHC.c 
+    ## P.P(IHC<99) -0.457                     
+    ## TskItm_tyM- -0.767  0.037              
+    ## IHC.c        0.060 -0.340  0.078       
+    ## age.c        0.129 -0.318  0.003 -0.367
 
 ``` r
 # random effects ranef(fig3.model.prod)
@@ -910,11 +1005,11 @@ summary(fig3.model.itemtype)
 
 ``` r
 fig3.model2.df <- fig3.data %>%
-  dplyr::select(c(LadlabID, IHC, FHC, Age, prod.group,
+  dplyr::select(c(LadlabID, IHC, FHC, Age, Productivity.tertiary,
                   TaskItem_num, TaskItem_type, Accuracy)) %>%
   mutate(IHC = as.integer(IHC),
          LadlabID=as.factor(LadlabID),
-         prod.group=as.factor(prod.group),
+         Productivity.tertiary=as.factor(Productivity.tertiary),
          TaskItem_type=as.factor(TaskItem_type))%>%
   mutate(IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)), #scale and center for model fit
          FHC.c = as.vector(scale(FHC, center = TRUE, scale=TRUE)), 
@@ -923,17 +1018,17 @@ str(fig3.model2.df)
 ```
 
     ## 'data.frame':    976 obs. of  11 variables:
-    ##  $ LadlabID     : Factor w/ 122 levels "010516-K4","010916-D5",..: 1 1 1 1 1 1 1 1 2 2 ...
-    ##  $ IHC          : int  13 13 13 13 13 13 13 13 100 100 ...
-    ##  $ FHC          : num  29 29 29 29 29 29 29 29 100 100 ...
-    ##  $ Age          : num  4.17 4.17 4.17 4.17 4.17 4.17 4.17 4.17 4.78 4.78 ...
-    ##  $ prod.group   : Factor w/ 3 levels "Nonproductive",..: 1 1 1 1 1 1 1 1 3 3 ...
-    ##  $ TaskItem_num : num  23 40 62 70 37 29 86 59 23 40 ...
-    ##  $ TaskItem_type: Factor w/ 2 levels "Decade transition",..: 2 2 2 2 2 1 2 1 2 2 ...
-    ##  $ Accuracy     : int  0 0 0 0 0 0 0 0 1 1 ...
-    ##  $ IHC.c        : num  -1.11 -1.11 -1.11 -1.11 -1.11 ...
-    ##  $ FHC.c        : num  -1.23 -1.23 -1.23 -1.23 -1.23 ...
-    ##  $ age.c        : num  -1.45 -1.45 -1.45 -1.45 -1.45 ...
+    ##  $ LadlabID             : Factor w/ 122 levels "010516-K4","010916-D5",..: 1 1 1 1 1 1 1 1 2 2 ...
+    ##  $ IHC                  : int  13 13 13 13 13 13 13 13 100 100 ...
+    ##  $ FHC                  : num  29 29 29 29 29 29 29 29 100 100 ...
+    ##  $ Age                  : num  4.17 4.17 4.17 4.17 4.17 4.17 4.17 4.17 4.78 4.78 ...
+    ##  $ Productivity.tertiary: Factor w/ 3 levels "Nonproductive",..: 1 1 1 1 1 1 1 1 3 3 ...
+    ##  $ TaskItem_num         : num  23 40 62 70 37 29 86 59 23 40 ...
+    ##  $ TaskItem_type        : Factor w/ 2 levels "Decade transition",..: 2 2 2 2 2 1 2 1 2 2 ...
+    ##  $ Accuracy             : int  0 0 0 0 0 0 0 0 1 1 ...
+    ##  $ IHC.c                : num  -1.11 -1.11 -1.11 -1.11 -1.11 ...
+    ##  $ FHC.c                : num  -1.23 -1.23 -1.23 -1.23 -1.23 ...
+    ##  $ age.c                : num  -1.45 -1.45 -1.45 -1.45 -1.45 ...
 
 ``` r
 # means by item type
@@ -954,28 +1049,28 @@ fig3.model2.df %>%
 ``` r
 # means by productivity
 fig3.model2.df %>%
-  group_by(LadlabID, prod.group) %>%
+  group_by(LadlabID, Productivity.tertiary) %>%
   summarise(score=mean(Accuracy, na.rm=T)) %>%
   ungroup() %>%
-  group_by(prod.group) %>%
+  group_by(Productivity.tertiary) %>%
   summarise(mean=mean(score, na.rm=T), sd=sd(score, na.rm=T), n=n())
 ```
 
     ## # A tibble: 3 x 4
-    ##   prod.group             mean    sd     n
+    ##   Productivity.tertiary  mean    sd     n
     ##   <fct>                 <dbl> <dbl> <int>
     ## 1 Nonproductive         0.276 0.263    48
-    ## 2 Productive (IHC < 99) 0.562 0.251    43
-    ## 3 Productive (IHC ≥ 99) 0.911 0.145    31
+    ## 2 Productive (IHC < 99) 0.558 0.253    42
+    ## 3 Productive (IHC ≥ 99) 0.906 0.145    32
 
 ``` r
 ## regressions
-fig3.model2.noint <- glmer(Accuracy ~ prod.group + TaskItem_type+ 
+fig3.model2.noint <- glmer(Accuracy ~ Productivity.tertiary + TaskItem_type+ 
                              IHC.c + age.c + 
                              (1|TaskItem_num) + (1|LadlabID), 
                            family = "binomial", data = fig3.model2.df)
-fig3.model2.full <- glmer(Accuracy ~ prod.group + TaskItem_type +
-                            prod.group:TaskItem_type +
+fig3.model2.full <- glmer(Accuracy ~ Productivity.tertiary + TaskItem_type +
+                            Productivity.tertiary:TaskItem_type +
                          IHC.c + age.c + 
                              (1|TaskItem_num) + (1|LadlabID), 
                            family = "binomial", data = fig3.model2.df)
@@ -985,18 +1080,16 @@ anova(fig3.model2.full, fig3.model2.noint, test = 'LRT')
 
     ## Data: fig3.model2.df
     ## Models:
-    ## fig3.model2.noint: Accuracy ~ prod.group + TaskItem_type + IHC.c + age.c + (1 | 
-    ## fig3.model2.noint:     TaskItem_num) + (1 | LadlabID)
-    ## fig3.model2.full: Accuracy ~ prod.group + TaskItem_type + prod.group:TaskItem_type + 
+    ## fig3.model2.noint: Accuracy ~ Productivity.tertiary + TaskItem_type + IHC.c + age.c + 
+    ## fig3.model2.noint:     (1 | TaskItem_num) + (1 | LadlabID)
+    ## fig3.model2.full: Accuracy ~ Productivity.tertiary + TaskItem_type + Productivity.tertiary:TaskItem_type + 
     ## fig3.model2.full:     IHC.c + age.c + (1 | TaskItem_num) + (1 | LadlabID)
     ##                   Df    AIC    BIC  logLik deviance  Chisq Chi Df
-    ## fig3.model2.noint  8 900.18 939.24 -442.09   884.18              
-    ## fig3.model2.full  10 898.94 947.76 -439.47   878.94 5.2406      2
-    ##                   Pr(>Chisq)  
-    ## fig3.model2.noint             
-    ## fig3.model2.full     0.07278 .
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## fig3.model2.noint  8 900.87 939.93 -442.43   884.87              
+    ## fig3.model2.full  10 901.85 950.67 -440.93   881.85 3.0177      2
+    ##                   Pr(>Chisq)
+    ## fig3.model2.noint           
+    ## fig3.model2.full      0.2212
 
 ``` r
 # LRT tests
@@ -1006,14 +1099,14 @@ drop1(fig3.model2.noint,test="Chisq")
     ## Single term deletions
     ## 
     ## Model:
-    ## Accuracy ~ prod.group + TaskItem_type + IHC.c + age.c + (1 | 
-    ##     TaskItem_num) + (1 | LadlabID)
-    ##               Df    AIC     LRT   Pr(Chi)    
-    ## <none>           900.18                      
-    ## prod.group     2 900.63  4.4466 0.1082505    
-    ## TaskItem_type  1 909.68 11.4977 0.0006968 ***
-    ## IHC.c          1 913.00 14.8240 0.0001180 ***
-    ## age.c          1 898.29  0.1069 0.7436697    
+    ## Accuracy ~ Productivity.tertiary + TaskItem_type + IHC.c + age.c + 
+    ##     (1 | TaskItem_num) + (1 | LadlabID)
+    ##                       Df    AIC     LRT   Pr(Chi)    
+    ## <none>                   900.87                      
+    ## Productivity.tertiary  2 900.63  3.7589 0.1526766    
+    ## TaskItem_type          1 910.34 11.4703 0.0007072 ***
+    ## IHC.c                  1 913.28 14.4112 0.0001469 ***
+    ## age.c                  1 898.96  0.0934 0.7599589    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -1025,41 +1118,49 @@ summary(fig3.model2.noint)
     ## Generalized linear mixed model fit by maximum likelihood (Laplace
     ##   Approximation) [glmerMod]
     ##  Family: binomial  ( logit )
-    ## Formula: Accuracy ~ prod.group + TaskItem_type + IHC.c + age.c + (1 |  
-    ##     TaskItem_num) + (1 | LadlabID)
+    ## Formula: 
+    ## Accuracy ~ Productivity.tertiary + TaskItem_type + IHC.c + age.c +  
+    ##     (1 | TaskItem_num) + (1 | LadlabID)
     ##    Data: fig3.model2.df
     ## 
     ##      AIC      BIC   logLik deviance df.resid 
-    ##    900.2    939.2   -442.1    884.2      967 
+    ##    900.9    939.9   -442.4    884.9      967 
     ## 
     ## Scaled residuals: 
     ##     Min      1Q  Median      3Q     Max 
-    ## -4.6025 -0.4424  0.0997  0.4609  6.9182 
+    ## -4.4959 -0.4436  0.1024  0.4582  6.9359 
     ## 
     ## Random effects:
     ##  Groups       Name        Variance Std.Dev.
-    ##  LadlabID     (Intercept) 1.5493   1.2447  
-    ##  TaskItem_num (Intercept) 0.1981   0.4451  
+    ##  LadlabID     (Intercept) 1.5511   1.2454  
+    ##  TaskItem_num (Intercept) 0.1984   0.4455  
     ## Number of obs: 975, groups:  LadlabID, 122; TaskItem_num, 8
     ## 
     ## Fixed effects:
-    ##                                 Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)                     -1.91543    0.51710  -3.704 0.000212 ***
-    ## prod.groupProductive (IHC < 99)  0.83146    0.41725   1.993 0.046293 *  
-    ## prod.groupProductive (IHC ≥ 99)  1.56654    0.88596   1.768 0.077029 .  
-    ## TaskItem_typeMid-decade          2.12660    0.43655   4.871 1.11e-06 ***
-    ## IHC.c                            1.38901    0.35707   3.890 0.000100 ***
-    ## age.c                            0.06165    0.18846   0.327 0.743565    
+    ##                                            Estimate Std. Error z value
+    ## (Intercept)                                -1.84069    0.52403  -3.513
+    ## Productivity.tertiaryProductive (IHC < 99)  0.80104    0.41736   1.919
+    ## Productivity.tertiaryProductive (IHC ≥ 99)  1.27497    0.92409   1.380
+    ## TaskItem_typeMid-decade                     2.12291    0.43652   4.863
+    ## IHC.c                                       1.48220    0.38672   3.833
+    ## age.c                                       0.05842    0.19110   0.306
+    ##                                            Pr(>|z|)    
+    ## (Intercept)                                0.000444 ***
+    ## Productivity.tertiaryProductive (IHC < 99) 0.054949 .  
+    ## Productivity.tertiaryProductive (IHC ≥ 99) 0.167678    
+    ## TaskItem_typeMid-decade                    1.15e-06 ***
+    ## IHC.c                                      0.000127 ***
+    ## age.c                                      0.759850    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Correlation of Fixed Effects:
-    ##             (Intr) p.P(<9 pP(I≥9 TsI_M- IHC.c 
-    ## p.P(IHC<99) -0.578                            
-    ## prP(IHC≥99) -0.605  0.620                     
-    ## TskItm_tyM- -0.649  0.030  0.042              
-    ## IHC.c        0.424 -0.404 -0.802  0.061       
-    ## age.c        0.086 -0.293 -0.013  0.006 -0.269
+    ##             (Intr) P.P(<9 PP(I≥9 TsI_M- IHC.c 
+    ## P.P(IHC<99) -0.575                            
+    ## PrP(IHC≥99) -0.620  0.602                     
+    ## TskItm_tyM- -0.638  0.028  0.036              
+    ## IHC.c        0.451 -0.390 -0.830  0.059       
+    ## age.c        0.046 -0.275  0.062  0.007 -0.319
 
 ``` r
 # random effects
@@ -1079,11 +1180,11 @@ library(effects)
 ``` r
 fig3.model.full.df <- as.data.frame(allEffects(fig3.model.full)[[3]])
 ggplot(fig3.model.full.df,
-       aes(x=TaskItem_type,y=fit,color=prod.group, ymin=lower,ymax=upper)) + 
+       aes(x=TaskItem_type,y=fit,color=Productivity.tertiary, ymin=lower,ymax=upper)) + 
     geom_pointrange(position=position_dodge(width=.1)) 
 ```
 
-![](recursionAnalysis_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-33-1.png)<!-- -->
 
 ## Within / Outside IHC
 
@@ -1155,6 +1256,24 @@ wcn.data %>% dplyr::filter(TaskType == "immediate") %>% dplyr::group_by(LadlabID
     ## 3 Productive    outside          0.574 0.309
     ## 4 Productive    within           0.704 0.314
 
+``` r
+# three-way
+wcn.data %>% dplyr::filter(TaskType == "immediate") %>% dplyr::group_by(LadlabID, 
+    Productivity.tertiary, WithinOutsideIHC) %>% dplyr::summarize(score = mean(Accuracy, 
+    na.rm = T)) %>% ungroup() %>% group_by(Productivity.tertiary, WithinOutsideIHC) %>% 
+    dplyr::summarize(mean = mean(score, na.rm = TRUE), sd = sd(score, na.rm = TRUE))
+```
+
+    ## # A tibble: 5 x 4
+    ## # Groups:   Productivity.tertiary [3]
+    ##   Productivity.tertiary WithinOutsideIHC  mean    sd
+    ##   <chr>                 <chr>            <dbl> <dbl>
+    ## 1 Nonproductive         outside          0.266 0.262
+    ## 2 Nonproductive         within           0.565 0.335
+    ## 3 Productive (IHC < 99) outside          0.574 0.309
+    ## 4 Productive (IHC < 99) within           0.538 0.319
+    ## 5 Productive (IHC ≥ 99) within           0.906 0.145
+
 Plotting WCN as within vs. beyond by productivity \#\#\# Fig
 4
 
@@ -1178,10 +1297,72 @@ wcn.data %>% mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels = c("with
     panel.grid.minor = element_blank())
 ```
 
-![](recursionAnalysis_files/figure-gfm/unnamed-chunk-35-1.png)<!-- -->
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-37-1.png)<!-- -->
 
 ``` r
 ggsave("graphs/wcn-within-beyond-final.png", width = 6, height = 4)
+```
+
+Same graph but three-way productvity grouping
+
+``` r
+# alternative 2, use fewer colors.
+wcn.data %>% mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels = c("within", 
+    "outside"), labels = c("Within IHC", "Beyond IHC"))) %>% dplyr::filter(TaskType == 
+    "immediate") %>% dplyr::group_by(Productivity.tertiary, WithinOutsideIHC, LadlabID, 
+    prod.gradient) %>% dplyr::summarize(meansubj = mean(Accuracy, na.rm = TRUE)) %>% 
+    ggplot(aes(x = WithinOutsideIHC, y = meansubj)) + geom_violin(aes(color = Productivity.tertiary), 
+    alpha = 0.7, scale = "count", position = position_dodge(width = 0.8)) + geom_point(aes(fill = WithinOutsideIHC), 
+    position = position_jitterdodge(jitter.width = 0.25, dodge.width = 0.9), alpha = 0.5) + 
+    stat_summary(aes(color = Productivity.tertiary), fun.data = mean_cl_boot, geom = "errorbar", 
+        position = position_dodge(width = 0.8), width = 0.2) + stat_summary(aes(color = Productivity.tertiary), 
+    fill = "white", fun.y = mean, position = position_dodge(width = 0.8), geom = "point", 
+    shape = 23, size = 3) + facet_grid(. ~ Productivity.tertiary, scales = "free") + 
+    scale_colour_brewer(guide = FALSE, palette = "Set1") + scale_fill_brewer(guide = FALSE) + 
+    scale_y_continuous(limits = c(0, 1)) + labs(y = "Average Proportion Correct", 
+    x = "Trial Type") + theme_bw(base_size = 13) + theme(panel.grid.major = element_blank(), 
+    panel.grid.minor = element_blank())
+```
+
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-38-1.png)<!-- -->
+
+``` r
+ggsave("graphs/wcn-within-beyond-finalb.png", width = 8, height = 4)
+```
+
+Try without violins
+
+``` r
+## HM? 
+wcn.data %>%
+  mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels = c("within", "outside"), 
+                                   labels = c("Within IHC", "Beyond IHC")))%>%
+  dplyr::filter(TaskType == "immediate") %>%
+  dplyr::group_by(Productivity.tertiary, WithinOutsideIHC, LadlabID, prod.gradient) %>%
+  dplyr::summarize(meansubj = mean(Accuracy, na.rm = TRUE)) %>%
+  ggplot(aes(x=WithinOutsideIHC, y=meansubj)) +
+  stat_summary(aes(color=Productivity.tertiary),
+               fun.data = mean_cl_boot, geom="errorbar",
+               width = 0.2)+
+  stat_summary(aes(color=Productivity.tertiary), fill="white",
+               fun.y = mean,
+#               position = position_dodge(width=0.8), 
+               geom="point", shape=23, size=3) +
+  stat_summary(fun.y="mean", geom="line", aes(color=Productivity.tertiary,
+                                              group=factor(Productivity.tertiary))) +
+      scale_colour_manual(values=prod.pal, name="Productivity") + 
+  scale_fill_brewer(guide=FALSE) +
+  scale_y_continuous(limits=c(0,1)) +
+  labs(y="Average Proportion Correct", x="Trial Type") +
+  theme_bw(base_size = 13) +
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank())
+```
+
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-39-1.png)<!-- -->
+
+``` r
+ggsave('graphs/wcn-within-beyond-finalc.png', width=6, height=4)
 ```
 
 ``` r
@@ -1203,7 +1384,7 @@ wcn.data %>% mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels = c("with
         axis.ticks = element_blank(), axis.text.x = element_blank())
 ```
 
-![](recursionAnalysis_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-40-1.png)<!-- -->
 
 ``` r
 ggsave("graphs/wcn-within-beyond4.png", width = 6, height = 4)
@@ -1358,7 +1539,7 @@ summary(wcn.model.int)
 #### analysis removing IHC=99
 
 ``` r
-wcn_model.df2 <- wcn_model.df %>% filter(prod.group != "Productive (IHC ≥ 99)")
+wcn_model.df2 <- wcn_model.df %>% filter(Productivity.tertiary != "Productive (IHC ≥ 99)")
 
 ## WCN model looking at interaction between productivity and trial type in WCN
 ## task
@@ -1384,15 +1565,15 @@ anova(wcn.model2.int, wcn.model2.noint, wcn.model2.ihc, wcn.model2.base, test = 
     ## wcn.model2.int: Accuracy ~ Productivity + WithinOutsideIHC + Productivity:WithinOutsideIHC + 
     ## wcn.model2.int:     IHC.c + age.c + (1 | TaskItem) + (1 | LadlabID)
     ##                  Df    AIC    BIC  logLik deviance   Chisq Chi Df
-    ## wcn.model2.base   4 799.43 817.79 -395.71   791.43               
-    ## wcn.model2.ihc    5 776.94 799.88 -383.47   766.94 24.4941      1
-    ## wcn.model2.noint  7 776.79 808.92 -381.40   762.79  4.1414      2
-    ## wcn.model2.int    8 773.81 810.52 -378.91   757.81  4.9824      1
+    ## wcn.model2.base   4 792.03 810.34 -392.01   784.03               
+    ## wcn.model2.ihc    5 770.98 793.87 -380.49   760.98 23.0497      1
+    ## wcn.model2.noint  7 770.86 802.90 -378.43   756.86  4.1207      2
+    ## wcn.model2.int    8 768.17 804.79 -376.08   752.17  4.6907      1
     ##                  Pr(>Chisq)    
     ## wcn.model2.base                
-    ## wcn.model2.ihc    7.454e-07 ***
-    ## wcn.model2.noint    0.12610    
-    ## wcn.model2.int      0.02561 *  
+    ## wcn.model2.ihc    1.579e-06 ***
+    ## wcn.model2.noint    0.12741    
+    ## wcn.model2.int      0.03033 *  
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -1410,43 +1591,43 @@ summary(wcn.model2.int)
     ##    Data: wcn_model.df2
     ## 
     ##      AIC      BIC   logLik deviance df.resid 
-    ##    773.8    810.5   -378.9    757.8      719 
+    ##    768.2    804.8   -376.1    752.2      711 
     ## 
     ## Scaled residuals: 
     ##     Min      1Q  Median      3Q     Max 
-    ## -3.2662 -0.5023 -0.2438  0.5353  7.3126 
+    ## -3.2827 -0.5064 -0.2451  0.5412  7.1593 
     ## 
     ## Random effects:
     ##  Groups   Name        Variance Std.Dev.
-    ##  LadlabID (Intercept) 1.354    1.164   
-    ##  TaskItem (Intercept) 1.175    1.084   
-    ## Number of obs: 727, groups:  LadlabID, 91; TaskItem, 8
+    ##  LadlabID (Intercept) 1.369    1.170   
+    ##  TaskItem (Intercept) 1.129    1.063   
+    ## Number of obs: 719, groups:  LadlabID, 90; TaskItem, 8
     ## 
     ## Fixed effects:
     ##                                               Estimate Std. Error z value
-    ## (Intercept)                                    -0.4248     0.5493  -0.773
-    ## ProductivityProductive                          1.1429     0.4297   2.660
-    ## WithinOutsideIHCwithin                          0.7132     0.5049   1.413
-    ## IHC.c                                           1.3736     0.3835   3.582
-    ## age.c                                           0.0687     0.2067   0.332
-    ## ProductivityProductive:WithinOutsideIHCwithin  -1.1795     0.5288  -2.230
+    ## (Intercept)                                   -0.35654    0.55352  -0.644
+    ## ProductivityProductive                         1.12889    0.43141   2.617
+    ## WithinOutsideIHCwithin                         0.65967    0.50676   1.302
+    ## IHC.c                                          1.46794    0.41774   3.514
+    ## age.c                                          0.03898    0.21395   0.182
+    ## ProductivityProductive:WithinOutsideIHCwithin -1.14683    0.53009  -2.163
     ##                                               Pr(>|z|)    
-    ## (Intercept)                                   0.439266    
-    ## ProductivityProductive                        0.007817 ** 
-    ## WithinOutsideIHCwithin                        0.157783    
-    ## IHC.c                                         0.000341 ***
-    ## age.c                                         0.739675    
-    ## ProductivityProductive:WithinOutsideIHCwithin 0.025725 *  
+    ## (Intercept)                                   0.519492    
+    ## ProductivityProductive                        0.008878 ** 
+    ## WithinOutsideIHCwithin                        0.193002    
+    ## IHC.c                                         0.000441 ***
+    ## age.c                                         0.855444    
+    ## ProductivityProductive:WithinOutsideIHCwithin 0.030505 *  
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Correlation of Fixed Effects:
     ##             (Intr) PrdctP WtOIHC IHC.c  age.c 
-    ## PrdctvtyPrd -0.517                            
-    ## WthnOtsdIHC -0.307  0.224                     
-    ## IHC.c        0.503 -0.330 -0.336              
-    ## age.c        0.093 -0.307  0.005 -0.274       
-    ## PrdcP:WOIHC  0.136 -0.326 -0.738  0.081 -0.013
+    ## PrdctvtyPrd -0.522                            
+    ## WthnOtsdIHC -0.321  0.226                     
+    ## IHC.c        0.530 -0.321 -0.347              
+    ## age.c        0.047 -0.287  0.030 -0.340       
+    ## PrdcP:WOIHC  0.151 -0.328 -0.739  0.111 -0.036
 
 How many trials do kids have beyond their
 IHC?
@@ -1693,7 +1874,7 @@ scale_x_continuous(breaks = c(0, 1, 5, 23, 29, 37, 40, 62, 70, 86), labels = c("
 
     ## Joining, by = "LadlabID"
 
-![](recursionAnalysis_files/figure-gfm/unnamed-chunk-45-1.png)<!-- -->
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-49-1.png)<!-- -->
 
 ``` r
 ggsave("graphs/highestcontig-by-prod-2.png")
@@ -1907,7 +2088,7 @@ ggplot(full.data, aes(x = IHC, y = prod.gradient, colour = Productivity)) + geom
     labs(y = "Productivity Gradient", x = "IHC")
 ```
 
-![](recursionAnalysis_files/figure-gfm/unnamed-chunk-51-1.png)<!-- -->
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-55-1.png)<!-- -->
 
 ## Correlation between productivity gradient and IHC/FHC
 
@@ -1989,7 +2170,8 @@ information
 ``` r
 # model base
 model.df <- full.data %>% dplyr::select(LadlabID, Age, AgeGroup, Gender, Task, Response, 
-    SuccessorKnower, EndlessKnower, IHC, FHC, DCE, Productivity, prod.gradient)
+    SuccessorKnower, EndlessKnower, IHC, FHC, DCE, Productivity, Productivity.tertiary, 
+    prod.gradient)
 ```
 
 Add highest contiguous next number and wcn accuracy to model.df
@@ -2006,7 +2188,7 @@ model.df <- right_join(model.df, wcn.accuracy, by = "LadlabID")
 #each participant only needs one row here, because we only need to know whether they are a Successor Knower or Endless Knower
 distinct_model.df <- model.df %>%
   distinct(LadlabID, Age, AgeGroup, Gender, SuccessorKnower, EndlessKnower, 
-           IHC, Highest_Contig_NN, FHC, DCE, Productivity, prod.gradient, wcnscore)%>%
+           IHC, Highest_Contig_NN, FHC, DCE, Productivity, Productivity.tertiary, prod.gradient, wcnscore)%>%
   mutate(SuccessorKnower = factor(SuccessorKnower, levels = c(0,1)), 
          EndlessKnower = factor(EndlessKnower, levels = c(0,1)),
          IHC = as.integer(IHC), 
@@ -2739,11 +2921,6 @@ plot(allEffects(large.inf.full.grad), axes = list(y = list(type = "rescale", lab
 
 ``` r
 library(sjPlot)
-```
-
-    ## Learn more about sjPlot with 'browseVignettes("sjPlot")'.
-
-``` r
 library(sjlabelled)
 ```
 
@@ -2757,8 +2934,6 @@ library(sjlabelled)
 ``` r
 library(sjmisc)
 ```
-
-    ## Learn more about sjmisc with 'browseVignettes("sjmisc")'.
 
     ## 
     ## Attaching package: 'sjmisc'
@@ -2847,7 +3022,7 @@ plot_model(large.inf.full.grad, type = "std", transform = "plogis", title = "Ful
 ggsave("graphs/regression-fullinfinity.png", width = 6, height = 3.5)
 ```
 
-# Regressions
+# Regressions no hcnn
 
 Use NN accuracy instead of hcnn.
 
@@ -3425,7 +3600,7 @@ plot_model(large.endless.full.grad2, type = "std", transform = "plogis", title =
 
     ## Package `snakecase` needs to be installed for case-conversion.
 
-![](recursionAnalysis_files/figure-gfm/unnamed-chunk-72-1.png)<!-- -->
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-76-1.png)<!-- -->
 
 ``` r
 ggsave("graphs/regression-endless2.png", width = 6, height = 3.5)
@@ -3440,7 +3615,7 @@ plot_model(large.successor.full.grad2, type = "std", transform = "plogis", title
 
     ## Package `snakecase` needs to be installed for case-conversion.
 
-![](recursionAnalysis_files/figure-gfm/unnamed-chunk-72-2.png)<!-- -->
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-76-2.png)<!-- -->
 
 ``` r
 ggsave("graphs/regression-successor2.png", width = 6, height = 3.5)
@@ -3455,8 +3630,461 @@ plot_model(large.inf.full.grad2, type = "std", transform = "plogis", title = "Fu
 
     ## Package `snakecase` needs to be installed for case-conversion.
 
-![](recursionAnalysis_files/figure-gfm/unnamed-chunk-72-3.png)<!-- -->
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-76-3.png)<!-- -->
 
 ``` r
 ggsave("graphs/regression-fullinfinity2.png", width = 6, height = 3.5)
+```
+
+# Regressions no ihc=99
+
+## prep
+
+``` r
+distinct_model.df2 <- model.df %>%
+  distinct(LadlabID, Age, AgeGroup, Gender, SuccessorKnower, EndlessKnower, 
+           IHC, Highest_Contig_NN, FHC, DCE, Productivity, Productivity.tertiary, prod.gradient, wcnscore)%>%
+  filter(IHC<99) %>%
+  mutate(SuccessorKnower = factor(SuccessorKnower, levels = c(0,1)), 
+         EndlessKnower = factor(EndlessKnower, levels = c(0,1)),
+         IHC = as.integer(IHC), 
+         Highest_Contig_NN = as.integer(Highest_Contig_NN), 
+         LadlabID = factor(LadlabID), 
+         IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)), #scale and center for model fit
+         FHC.c = as.vector(scale(FHC, center = TRUE, scale=TRUE)),
+         Highest_Contig_NN.c = as.vector(scale(Highest_Contig_NN, center = TRUE, scale=TRUE)), 
+         Age.c = as.vector(scale(Age, center = TRUE, scale=TRUE)),
+         prod.gradient.c = as.vector(scale(prod.gradient, center=TRUE, scale=TRUE)),
+          wcnscore.c = as.vector(scale(wcnscore, center = TRUE, scale=TRUE))) %>%
+  mutate(InfinityKnower = factor(
+    case_when(SuccessorKnower==0 | EndlessKnower==0 ~ 0,
+              SuccessorKnower==1 & EndlessKnower==1 ~ 1),
+    levels=c(0,1))
+  )
+```
+
+## Successor models
+
+``` r
+###MODEL BUILDING AND COMPARISONS###
+#base model for successor knower
+base.successor3 <- glm(SuccessorKnower ~ Age.c, family = "binomial", 
+                        data = distinct_model.df2)
+
+##IHC model##
+model.ihc.successor3 <- glm(SuccessorKnower ~ IHC.c + Age.c, family = "binomial", 
+                             data = distinct_model.df2)
+##Highest NN Model##
+model.nn.successor3 <- glm(SuccessorKnower ~ wcnscore.c + Age.c, family = "binomial", 
+                            data = distinct_model.df2)
+##Productivity model##
+model.prod.successor3 <- glm(SuccessorKnower ~ Productivity + Age.c, family = "binomial",
+                              data = distinct_model.df2)
+
+##EXPLORATORY## - GAIN SCORE
+model.gain.successor3 <- glm(SuccessorKnower ~ prod.gradient.c + Age.c, family = "binomial",
+                              data = distinct_model.df2)
+
+##Regression table for Successor Knower Models (Table 2)
+mtable.sf.knowers3 <- mtable('Base' = base.successor3,
+            'IHC' = model.ihc.successor3,
+            'NN' = model.nn.successor3,
+            'Productivity' = model.prod.successor3,
+            'Exp. - Prod. gain' = model.gain.successor3,
+            #summary.stats = c('R-squared','F','p','N'))
+            summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'))
+mtable.sf.knowers3
+```
+
+    ## 
+    ## Calls:
+    ## Base: glm(formula = SuccessorKnower ~ Age.c, family = "binomial", data = distinct_model.df2)
+    ## IHC: glm(formula = SuccessorKnower ~ IHC.c + Age.c, family = "binomial", 
+    ##     data = distinct_model.df2)
+    ## NN: glm(formula = SuccessorKnower ~ wcnscore.c + Age.c, family = "binomial", 
+    ##     data = distinct_model.df2)
+    ## Productivity: glm(formula = SuccessorKnower ~ Productivity + Age.c, family = "binomial", 
+    ##     data = distinct_model.df2)
+    ## Exp. - Prod. gain: glm(formula = SuccessorKnower ~ prod.gradient.c + Age.c, family = "binomial", 
+    ##     data = distinct_model.df2)
+    ## 
+    ## =========================================================================================================
+    ##                                             Base      IHC        NN     Productivity  Exp. - Prod. gain  
+    ## ---------------------------------------------------------------------------------------------------------
+    ##   (Intercept)                              -0.509*   -0.538*   -0.511*     -0.697*         -0.510*       
+    ##                                            (0.220)   (0.227)   (0.221)     (0.334)         (0.220)       
+    ##   Age.c                                     0.296     0.637*    0.358       0.191           0.235        
+    ##                                            (0.221)   (0.287)   (0.242)     (0.260)         (0.271)       
+    ##   IHC.c                                              -0.590*                                             
+    ##                                                      (0.300)                                             
+    ##   wcnscore.c                                                   -0.155                                    
+    ##                                                                (0.242)                                   
+    ##   Productivity: Productive/Nonproductive                                    0.396                        
+    ##                                                                            (0.517)                       
+    ##   prod.gradient.c                                                                           0.106        
+    ##                                                                                            (0.270)       
+    ## ---------------------------------------------------------------------------------------------------------
+    ##   Nagelkerke R-sq.                          0.027     0.090     0.033       0.036           0.030        
+    ##   Log-likelihood                          -58.755   -56.605   -58.547     -58.462         -58.677        
+    ##   AIC                                     121.509   119.210   123.095     122.924         123.354        
+    ##   N                                        90        90        90          90              90            
+    ## =========================================================================================================
+
+``` r
+write.mtable(mtable.sf.knowers3, file="graphs/table2-v3.txt")
+
+###MODEL COMPARISONS##
+#base v. IHC
+anova(base.successor3, model.ihc.successor3, test = 'LRT') #IHC significant
+```
+
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: SuccessorKnower ~ Age.c
+    ## Model 2: SuccessorKnower ~ IHC.c + Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)  
+    ## 1        88     117.51                       
+    ## 2        87     113.21  1   4.2996  0.03812 *
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+``` r
+#Highest contiguous NN v. base
+anova(base.successor3, model.nn.successor3, test = 'LRT')#NN not significant
+```
+
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: SuccessorKnower ~ Age.c
+    ## Model 2: SuccessorKnower ~ wcnscore.c + Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)
+    ## 1        88     117.51                     
+    ## 2        87     117.09  1  0.41472   0.5196
+
+``` r
+#Productivity v. base
+anova(base.successor3, model.prod.successor3, test = 'LRT')# n.s.
+```
+
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: SuccessorKnower ~ Age.c
+    ## Model 2: SuccessorKnower ~ Productivity + Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)
+    ## 1        88     117.51                     
+    ## 2        87     116.92  1  0.58576   0.4441
+
+``` r
+##Exploratory vs. base
+anova(base.successor3, model.gain.successor3, test = 'LRT')# n.s.
+```
+
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: SuccessorKnower ~ Age.c
+    ## Model 2: SuccessorKnower ~ prod.gradient.c + Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)
+    ## 1        88     117.51                     
+    ## 2        87     117.35  1  0.15506   0.6937
+
+## Endless Models
+
+``` r
+# Base model
+base.endless3 <- glm(EndlessKnower ~ Age.c, family = "binomial", data = distinct_model.df2)
+
+### IHC MODEL###
+model.ihc.endless3 <- glm(EndlessKnower ~ IHC.c + Age.c, family = "binomial", data = distinct_model.df2)
+
+### HIGHEST CONTIG NN MODEL###
+model.nn.endless3 <- glm(EndlessKnower ~ wcnscore.c + Age.c, family = "binomial", 
+    data = distinct_model.df2)
+
+### PRODUCTIVITY MODEL###
+model.prod.endless3 <- glm(EndlessKnower ~ Productivity + Age.c, family = "binomial", 
+    data = distinct_model.df2)
+
+## EXPLORATORY## - GAIN SCORE
+model.gain.endless3 <- glm(EndlessKnower ~ prod.gradient.c + Age.c, family = "binomial", 
+    data = distinct_model.df2)
+
+## Regression table for Endless Models
+mtable.endless.knowers3 <- mtable(Base = base.endless3, IHC = model.ihc.endless3, 
+    NN = model.nn.endless3, Productivity = model.prod.endless3, `Prod. gradient` = model.gain.endless3, 
+    summary.stats = c("Nagelkerke R-sq.", "Log-likelihood", "AIC", "F", "p", "N"))
+
+mtable.endless.knowers3
+```
+
+    ## 
+    ## Calls:
+    ## Base: glm(formula = EndlessKnower ~ Age.c, family = "binomial", data = distinct_model.df2)
+    ## IHC: glm(formula = EndlessKnower ~ IHC.c + Age.c, family = "binomial", 
+    ##     data = distinct_model.df2)
+    ## NN: glm(formula = EndlessKnower ~ wcnscore.c + Age.c, family = "binomial", 
+    ##     data = distinct_model.df2)
+    ## Productivity: glm(formula = EndlessKnower ~ Productivity + Age.c, family = "binomial", 
+    ##     data = distinct_model.df2)
+    ## Prod. gradient: glm(formula = EndlessKnower ~ prod.gradient.c + Age.c, family = "binomial", 
+    ##     data = distinct_model.df2)
+    ## 
+    ## ============================================================================================================
+    ##                                              Base        IHC          NN      Productivity  Prod. gradient  
+    ## ------------------------------------------------------------------------------------------------------------
+    ##   (Intercept)                              -1.519***   -1.543***   -1.578***    -2.359***      -1.673***    
+    ##                                            (0.284)     (0.289)     (0.298)      (0.542)        (0.324)      
+    ##   Age.c                                     0.451       0.271       0.287        0.082         -0.016       
+    ##                                            (0.274)     (0.324)     (0.296)      (0.319)        (0.350)      
+    ##   IHC.c                                                 0.330                                               
+    ##                                                        (0.315)                                              
+    ##   wcnscore.c                                                        0.466                                   
+    ##                                                                    (0.308)                                  
+    ##   Productivity: Productive/Nonproductive                                         1.509*                     
+    ##                                                                                 (0.705)                     
+    ##   prod.gradient.c                                                                               0.852*      
+    ##                                                                                                (0.384)      
+    ## ------------------------------------------------------------------------------------------------------------
+    ##   Nagelkerke R-sq.                          0.049       0.068       0.090        0.134          0.144       
+    ##   Log-likelihood                          -42.222     -41.683     -41.036      -39.721        -39.414       
+    ##   AIC                                      88.445      89.367      88.072       85.443         84.829       
+    ##   p                                         0.095       0.145       0.076        0.020          0.015       
+    ##   N                                        90          90          90           90             90           
+    ## ============================================================================================================
+
+``` r
+write.mtable(mtable.endless.knowers3, file = "graphs/table3-v3.txt")
+
+## SIMPLE MODEL COMPARISONS## base v. IHC
+anova(base.endless3, model.ihc.endless3, test = "LRT")  #IHC not significant
+```
+
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: EndlessKnower ~ Age.c
+    ## Model 2: EndlessKnower ~ IHC.c + Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)
+    ## 1        88     84.445                     
+    ## 2        87     83.367  1   1.0777   0.2992
+
+``` r
+# base v. highest contiguous
+anova(model.nn.endless3, base.endless3, test = "LRT")  #not significant
+```
+
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: EndlessKnower ~ wcnscore.c + Age.c
+    ## Model 2: EndlessKnower ~ Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)
+    ## 1        87     82.072                     
+    ## 2        88     84.445 -1   -2.373   0.1234
+
+``` r
+# base v. productivity
+anova(model.prod.endless3, base.endless3, test = "LRT")  #Prod significant
+```
+
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: EndlessKnower ~ Productivity + Age.c
+    ## Model 2: EndlessKnower ~ Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)  
+    ## 1        87     79.443                       
+    ## 2        88     84.445 -1  -5.0018  0.02532 *
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+``` r
+## Exploratory base v. productivity gradient
+anova(base.endless3, model.gain.endless3, test = "LRT")  # prod. gradient significant
+```
+
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: EndlessKnower ~ Age.c
+    ## Model 2: EndlessKnower ~ prod.gradient.c + Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)  
+    ## 1        88     84.445                       
+    ## 2        87     78.829  1   5.6157   0.0178 *
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+## Full Infinity Knowledge models
+
+``` r
+###MODEL BUILDING AND COMPARISONS###
+#base model for successor knower
+base.infinity3 <- glm(InfinityKnower ~ Age.c, family = "binomial", 
+                        data = distinct_model.df2)
+
+##IHC model
+model.ihc.infinity3 <- glm(InfinityKnower ~ IHC.c + Age.c, family = "binomial", 
+                             data = distinct_model.df2)
+##Highest NN Model
+model.nn.infinity3 <- glm(InfinityKnower ~ wcnscore.c + Age.c, family = "binomial", 
+                            data = distinct_model.df2)
+##Productivity model
+model.prod.infinity3 <- glm(InfinityKnower ~ Productivity + Age.c, family = "binomial",
+                              data = distinct_model.df2)
+
+##Gain Score model
+model.gain.infinity3 <- glm(InfinityKnower ~ prod.gradient.c + Age.c, family = "binomial",
+                              data = distinct_model.df2)
+
+##Regression table for Infinity Knower Models (Table 4)
+mtable.inf.knowers3 <- mtable('Base' = base.infinity3,
+            'IHC' = model.ihc.infinity3,
+            'NN' = model.nn.infinity3,
+            'Prod. Group' = model.prod.infinity3,
+            'Prod. Gain' = model.gain.infinity3,
+            #summary.stats = c('R-squared','F','p','N'))
+            summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'))
+mtable.inf.knowers3
+```
+
+    ## 
+    ## Calls:
+    ## Base: glm(formula = InfinityKnower ~ Age.c, family = "binomial", data = distinct_model.df2)
+    ## IHC: glm(formula = InfinityKnower ~ IHC.c + Age.c, family = "binomial", 
+    ##     data = distinct_model.df2)
+    ## NN: glm(formula = InfinityKnower ~ wcnscore.c + Age.c, family = "binomial", 
+    ##     data = distinct_model.df2)
+    ## Prod. Group: glm(formula = InfinityKnower ~ Productivity + Age.c, family = "binomial", 
+    ##     data = distinct_model.df2)
+    ## Prod. Gain: glm(formula = InfinityKnower ~ prod.gradient.c + Age.c, family = "binomial", 
+    ##     data = distinct_model.df2)
+    ## 
+    ## =======================================================================================================
+    ##                                              Base        IHC          NN      Prod. Group  Prod. Gain  
+    ## -------------------------------------------------------------------------------------------------------
+    ##   (Intercept)                              -1.972***   -1.973***   -2.003***   -2.603***    -2.052***  
+    ##                                            (0.337)     (0.337)     (0.346)     (0.612)      (0.362)    
+    ##   Age.c                                     0.527       0.503       0.417       0.244        0.225     
+    ##                                            (0.317)     (0.377)     (0.341)     (0.366)      (0.391)    
+    ##   IHC.c                                                 0.043                                          
+    ##                                                        (0.372)                                         
+    ##   wcnscore.c                                                        0.307                              
+    ##                                                                    (0.349)                             
+    ##   Productivity: Productive/Nonproductive                                        1.150                  
+    ##                                                                                (0.805)                 
+    ##   prod.gradient.c                                                                            0.553     
+    ##                                                                                             (0.420)    
+    ## -------------------------------------------------------------------------------------------------------
+    ##   Nagelkerke R-sq.                          0.058       0.058       0.073       0.100        0.094     
+    ##   Log-likelihood                          -33.907     -33.900     -33.514     -32.820      -32.969     
+    ##   AIC                                      71.814      73.801      73.028      71.640       71.938     
+    ##   N                                        90          90          90          90           90         
+    ## =======================================================================================================
+
+``` r
+# save as txt
+write.mtable(mtable.inf.knowers3, file="graphs/table4-v3.txt")
+
+
+## comparisons
+#base v. IHC
+anova(base.infinity3, model.ihc.infinity3, test = 'LRT') #n.s.
+```
+
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: InfinityKnower ~ Age.c
+    ## Model 2: InfinityKnower ~ IHC.c + Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)
+    ## 1        88     67.814                     
+    ## 2        87     67.801  1 0.013362    0.908
+
+``` r
+#base v. highest contiguous
+anova(base.infinity3, model.nn.infinity3, test = 'LRT')# n.s.
+```
+
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: InfinityKnower ~ Age.c
+    ## Model 2: InfinityKnower ~ wcnscore.c + Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)
+    ## 1        88     67.814                     
+    ## 2        87     67.028  1  0.78552   0.3755
+
+``` r
+#base v. productivity
+anova(base.infinity3, model.prod.infinity3, test = 'LRT')#n.s. 
+```
+
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: InfinityKnower ~ Age.c
+    ## Model 2: InfinityKnower ~ Productivity + Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)
+    ## 1        88     67.814                     
+    ## 2        87     65.640  1    2.174   0.1404
+
+``` r
+#base v. productivity gradient
+anova(base.infinity3, model.gain.infinity3, test = 'LRT')#n.s.
+```
+
+    ## Analysis of Deviance Table
+    ## 
+    ## Model 1: InfinityKnower ~ Age.c
+    ## Model 2: InfinityKnower ~ prod.gradient.c + Age.c
+    ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)
+    ## 1        88     67.814                     
+    ## 2        87     65.938  1    1.876   0.1708
+
+## Visualizations
+
+``` r
+large.endless.full.grad3 <- glm(EndlessKnower ~ prod.gradient.c + wcnscore.c + IHC.c + 
+    Age.c, family = "binomial", data = distinct_model.df2)
+large.successor.full.grad3 <- glm(SuccessorKnower ~ prod.gradient.c + wcnscore.c + 
+    IHC.c + Age.c, family = "binomial", data = distinct_model.df2)
+large.inf.full.grad3 <- glm(InfinityKnower ~ prod.gradient.c + wcnscore.c + IHC.c + 
+    Age.c, family = "binomial", data = distinct_model.df2)
+
+# maximal endless model
+plot_model(large.endless.full.grad3, type = "std", transform = "plogis", title = "'Numbers do not end', exclude errorless kids", 
+    show.values = TRUE, colors = "blue", value.offset = 0.2, axis.labels = c(Age.c = "Age", 
+        wcnscore.c = "Next Number accuracy", IHC.c = "Initial Highest Count", prod.gradient.c = "Productivity Gradient", 
+        Probabilities = "Endorsement Probability")) + ggplot2::geom_hline(yintercept = 0.5, 
+    linetype = "dashed")
+```
+
+    ## Package `snakecase` needs to be installed for case-conversion.
+
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-81-1.png)<!-- -->
+
+``` r
+ggsave("graphs/regression-endless3.png", width = 6, height = 3.5)
+
+# maximal successor model
+plot_model(large.successor.full.grad3, type = "std", transform = "plogis", title = "'Can always add one', exclude errorless kids", 
+    show.values = TRUE, colors = "blue", value.offset = 0.2, axis.labels = c(Age.c = "Age", 
+        wcnscore.c = "Next Number accuracy", IHC.c = "Initial Highest Count", prod.gradient.c = "Productivity Gradient", 
+        Probabilities = "Endorsement Probability")) + ggplot2::geom_hline(yintercept = 0.5, 
+    linetype = "dashed")
+```
+
+    ## Package `snakecase` needs to be installed for case-conversion.
+
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-81-2.png)<!-- -->
+
+``` r
+ggsave("graphs/regression-successor3.png", width = 6, height = 3.5)
+
+# maximal infinity model
+plot_model(large.inf.full.grad3, type = "std", transform = "plogis", title = "Full infinity knowledge, exclude errorless kids", 
+    show.values = TRUE, colors = "blue", value.offset = 0.2, axis.labels = c(Age.c = "Age", 
+        wcnscore.c = "Next Number accuracy", IHC.c = "Initial Highest Count", prod.gradient.c = "Productivity Gradient", 
+        Probabilities = "Endorsement Probability")) + ggplot2::geom_hline(yintercept = 0.5, 
+    linetype = "dashed")
+```
+
+    ## Package `snakecase` needs to be installed for case-conversion.
+
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-81-3.png)<!-- -->
+
+``` r
+ggsave("graphs/regression-fullinfinity3.png", width = 6, height = 3.5)
 ```
