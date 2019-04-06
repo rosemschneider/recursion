@@ -2,7 +2,10 @@
 title: "RecursionAnalysis"
 author: "Junyi Chu, Rose M. Schneider, Pierina Cheung"
 date: "`r Sys.Date()`"
-output: github_document
+output: 
+  github_document:
+    toc: true
+    toc_depth: 4
 ---
 
 # Setup
