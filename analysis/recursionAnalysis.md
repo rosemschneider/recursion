@@ -1,7 +1,7 @@
 RecursionAnalysis
 ================
 Junyi Chu, Rose M. Schneider, Pierina Cheung
-2019-04-06
+2019-04-15
 
 # Setup
 
@@ -354,6 +354,8 @@ full.data %>% distinct(LadlabID, Productivity.tertiary, delta.hc, prod.gradient)
 | Productive (IHC \< 99) |      0.9346343 |    0.1997706 |       49.19048 |      15.0499 |
 | Productive (IHC ≥ 99)  |      1.0000000 |    0.0000000 |        0.00000 |       0.0000 |
 
+## Fig 1
+
 Plotting distribution of IHC, as a function of productivity (\~ junyi’s
 graph)
 
@@ -363,11 +365,11 @@ unique.hc.data <- full.data %>% dplyr::distinct(LadlabID, Gender, Age, AgeGroup,
 
 ggplot(unique.hc.data, aes(x = IHC, color = Productivity)) + geom_dotplot(aes(fill = Productivity), 
     binwidth = 1, stackgroups = TRUE, binpositions = "all", method = "dotdensity", 
-    dotsize = 1) + scale_color_brewer(palette = "Set1") + scale_fill_brewer(palette = "Set1") + 
-    coord_fixed(ratio = 1) + scale_y_continuous(breaks = seq(0, 40, 10), lim = c(0, 
-    35)) + scale_x_continuous(breaks = seq(0, 100, by = 10)) + labs(x = "IHC", y = "Frequency") + 
-    theme_bw(base_size = 13) + theme(legend.position = "bottom", legend.title = element_blank(), 
-    panel.grid.minor = element_blank())
+    dotsize = 1) + scale_color_manual(values = c("#D55E00", "#0072B2", "#009E73")) + 
+    scale_fill_manual(values = c("#D55E00", "#0072B2", "#009E73")) + coord_fixed(ratio = 1) + 
+    scale_y_continuous(breaks = seq(0, 40, 10), lim = c(0, 35)) + scale_x_continuous(breaks = seq(0, 
+    100, by = 10)) + labs(x = "IHC", y = "Frequency") + theme_bw(base_size = 13) + 
+    theme(legend.position = "bottom", legend.title = element_blank(), panel.grid.minor = element_blank())
 ```
 
 ![](recursionAnalysis_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
@@ -422,8 +424,9 @@ unique.hc.data$AgeMonths = floor(unique.hc.data$Age * 12)
 ggplot(unique.hc.data, aes(x = AgeMonths, colour = Productivity)) + geom_dotplot(aes(fill = Productivity), 
     binwidth = 1, stackgroups = TRUE, binpositions = "all") + coord_fixed(ratio = 1) + 
     scale_y_continuous(breaks = seq(0, 10, 5), lim = c(0, 12)) + scale_x_continuous(breaks = seq(48, 
-    72, by = 6)) + scale_color_brewer(palette = "Set1") + scale_fill_brewer(palette = "Set1") + 
-    labs(x = "Age in Months", y = "Frequency") + theme_bw(base_size = 13) + theme(legend.position = "bottom")
+    72, by = 6)) + scale_color_manual(values = c("#D55E00", "#0072B2", "#009E73")) + 
+    scale_fill_manual(values = c("#D55E00", "#0072B2", "#009E73")) + labs(x = "Age in Months", 
+    y = "Frequency") + theme_bw(base_size = 13) + theme(legend.position = "bottom")
 ```
 
 ![](recursionAnalysis_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
@@ -472,7 +475,7 @@ ggplot(hc.dev.prod, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) +
   geom_line(data=hc.dev.prod[!is.na(hc.dev.prod$hc),]) + 
   geom_point(aes(shape = `Highest Count Coding`, colour = `Highest Count Coding`), 
              size = 2, stroke = 1.5) +
-  scale_color_brewer(palette="Dark2", labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
+  scale_color_manual(values=mypalette2, labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
   scale_shape_manual(values = c(4,5,20), labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
   ylim(0, 100) +
   labs(title="a. Distance, Productive Decade Counters",
@@ -498,7 +501,7 @@ ggplot(hc.dev.nonprod, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) +
   geom_line(data=hc.dev.nonprod[!is.na(hc.dev.nonprod$hc),]) + 
   geom_point(aes(shape = `Highest Count Coding`, colour = `Highest Count Coding`), 
              size = 2, stroke = 1.5) +
-  scale_color_brewer(palette="Dark2", labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
+  scale_color_manual(values=mypalette2, labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
   scale_shape_manual(values = c(4,5,20), labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
   ylim(0, 100) +
   labs(title="b. Distance, Non-productive Decade Counters",
@@ -750,6 +753,25 @@ wcn.data %>% dplyr::filter(TaskType == "immediate") %>% dplyr::group_by(LadlabID
     ## 1 Nonproductive 0.276 0.211
     ## 2 Productive    0.708 0.219
 
+T-test
+
+``` r
+wcn.wide %>% group_by(Productivity, LadlabID) %>% summarise(wcn.score = sum(immediate)) %>% 
+    t.test(wcn.score ~ Productivity, data = ., var.equal = T)
+```
+
+    ## 
+    ##  Two Sample t-test
+    ## 
+    ## data:  wcn.score by Productivity
+    ## t = -8.7106, df = 119, p-value = 2.076e-14
+    ## alternative hypothesis: true difference in means is not equal to 0
+    ## 95 percent confidence interval:
+    ##  -4.283710 -2.696884
+    ## sample estimates:
+    ## mean in group Nonproductive    mean in group Productive 
+    ##                    2.208333                    5.698630
+
 Plotting %corr on WCN as function of
 productivity
 
@@ -760,13 +782,14 @@ wcn.data %>% dplyr::filter(TaskType == "immediate") %>% dplyr::group_by(LadlabID
     fill = factor(Productivity))) + stat_summary(fun.y = mean, position = position_dodge(width = 0.95), 
     geom = "bar", alpha = 0.8, colour = "black") + geom_violin(alpha = 0.3) + stat_summary(fun.data = mean_se, 
     geom = "errorbar", position = position_dodge(width = 0.9), width = 0.2) + # scale_fill_discrete(name = 'Productivity') +
-scale_fill_brewer(name = "Productivity", palette = "Set1", guide = "none") + scale_colour_brewer(palette = "Greys") + 
-    ylab("Proportion Correct") + xlab("Productivity") + theme_bw(base_size = 13) + 
-    theme(legend.position = "none", panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + 
-    theme(text = element_text(size = 12)) + ylim(0, 1)
+scale_fill_manual(name = "Productivity", values = c("#D55E00", "#0072B2", "#009E73"), 
+    guide = "none") + scale_colour_brewer(palette = "Greys") + ylab("Proportion Correct") + 
+    xlab("Productivity") + theme_bw(base_size = 13) + theme(legend.position = "none", 
+    panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + theme(text = element_text(size = 12)) + 
+    ylim(0, 1)
 ```
 
-![](recursionAnalysis_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
 
 ``` r
 ggsave("graphs/wcn-percentcorr.png")
@@ -1184,7 +1207,7 @@ ggplot(fig3.model.full.df,
     geom_pointrange(position=position_dodge(width=.1)) 
 ```
 
-![](recursionAnalysis_files/figure-gfm/unnamed-chunk-33-1.png)<!-- -->
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
 
 ## Within / Outside IHC
 
@@ -1291,13 +1314,13 @@ wcn.data %>% mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels = c("with
         position = position_dodge(width = 0.8), width = 0.2) + stat_summary(aes(color = Productivity), 
     fill = "white", fun.y = mean, position = position_dodge(width = 0.8), geom = "point", 
     shape = 23, size = 3) + facet_grid(. ~ Productivity, labeller = as_labeller(group_names)) + 
-    scale_colour_brewer(guide = FALSE, palette = "Set1") + scale_fill_brewer(guide = FALSE) + 
+    scale_colour_manual(guide = FALSE, values = c("#D55E00", "#009E73")) + scale_fill_brewer(guide = FALSE) + 
     scale_y_continuous(limits = c(0, 1)) + labs(y = "Average Proportion Correct", 
     x = "Trial Type") + theme_bw(base_size = 13) + theme(panel.grid.major = element_blank(), 
     panel.grid.minor = element_blank())
 ```
 
-![](recursionAnalysis_files/figure-gfm/unnamed-chunk-37-1.png)<!-- -->
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-38-1.png)<!-- -->
 
 ``` r
 ggsave("graphs/wcn-within-beyond-final.png", width = 6, height = 4)
@@ -1318,13 +1341,13 @@ wcn.data %>% mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels = c("with
         position = position_dodge(width = 0.8), width = 0.2) + stat_summary(aes(color = Productivity.tertiary), 
     fill = "white", fun.y = mean, position = position_dodge(width = 0.8), geom = "point", 
     shape = 23, size = 3) + facet_grid(. ~ Productivity.tertiary, scales = "free") + 
-    scale_colour_brewer(guide = FALSE, palette = "Set1") + scale_fill_brewer(guide = FALSE) + 
-    scale_y_continuous(limits = c(0, 1)) + labs(y = "Average Proportion Correct", 
+    scale_colour_manual(guide = FALSE, values = c("#D55E00", "#009E73", "#0072B2")) + 
+    scale_fill_brewer(guide = FALSE) + scale_y_continuous(limits = c(0, 1)) + labs(y = "Average Proportion Correct", 
     x = "Trial Type") + theme_bw(base_size = 13) + theme(panel.grid.major = element_blank(), 
     panel.grid.minor = element_blank())
 ```
 
-![](recursionAnalysis_files/figure-gfm/unnamed-chunk-38-1.png)<!-- -->
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-39-1.png)<!-- -->
 
 ``` r
 ggsave("graphs/wcn-within-beyond-finalb.png", width = 8, height = 4)
@@ -1359,35 +1382,10 @@ wcn.data %>%
         panel.grid.minor = element_blank())
 ```
 
-![](recursionAnalysis_files/figure-gfm/unnamed-chunk-39-1.png)<!-- -->
-
-``` r
-ggsave('graphs/wcn-within-beyond-finalc.png', width=6, height=4)
-```
-
-``` r
-# Alternative
-wcn.data %>% mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels = c("within", 
-    "outside"), labels = c("Within IHC", "Beyond IHC"))) %>% dplyr::filter(TaskType == 
-    "immediate") %>% dplyr::group_by(Productivity, WithinOutsideIHC, LadlabID, prod.gradient) %>% 
-    dplyr::summarize(meansubj = mean(Accuracy, na.rm = TRUE)) %>% ggplot(aes(x = Productivity, 
-    y = meansubj)) + geom_violin(aes(color = Productivity), alpha = 0.7, scale = "count", 
-    position = position_dodge(width = 0.8)) + geom_point(aes(fill = Productivity), 
-    position = position_jitterdodge(jitter.width = 0.25, dodge.width = 0.9), alpha = 0.4) + 
-    stat_summary(aes(color = Productivity), fun.data = mean_cl_boot, geom = "errorbar", 
-        position = position_dodge(width = 0.8), width = 0.2) + stat_summary(aes(color = Productivity), 
-    fill = "white", fun.y = mean, position = position_dodge(width = 0.8), geom = "point", 
-    shape = 23, size = 3) + facet_wrap(. ~ WithinOutsideIHC, strip.position = "bottom") + 
-    scale_colour_brewer(palette = "Set1", direction = -1) + scale_y_continuous(limits = c(0, 
-    1)) + labs(y = "Average Proportion Correct", x = "Trial Type") + theme_bw(base_size = 13) + 
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), 
-        axis.ticks = element_blank(), axis.text.x = element_blank())
-```
-
 ![](recursionAnalysis_files/figure-gfm/unnamed-chunk-40-1.png)<!-- -->
 
 ``` r
-ggsave("graphs/wcn-within-beyond4.png", width = 6, height = 4)
+ggsave('graphs/wcn-within-beyond-finalc.png', width=6, height=4)
 ```
 
 #### Analysis for fig 4
@@ -1851,9 +1849,10 @@ Plotting freq of highest contiguous as a function of productivity
 # dplyr::distinct(LadlabID, Highest_Contig_NN, Productivity) %>%
 # ggplot(aes(x=Highest_Contig_NN, color=Productivity)) + geom_dotplot(aes(fill =
 # Productivity), binwidth=1, stackgroups=TRUE,
-# binpositions='all',method='dotdensity') + scale_color_brewer(palette='Set1') +
-# scale_fill_brewer(palette='Set1') + coord_fixed(ratio=1) +
-# scale_y_continuous(breaks=seq(0,50,10), lim=c(0,50)) +
+# binpositions='all',method='dotdensity') +
+# scale_color_brewer(palette=c('#D55E00', '#0072B2', '#009E73')) +
+# scale_fill_brewer(palette=c('#D55E00', '#0072B2', '#009E73')) +
+# coord_fixed(ratio=1) + scale_y_continuous(breaks=seq(0,50,10), lim=c(0,50)) +
 # #scale_x_continuous(breaks=seq(0,100,by=10)) + scale_x_continuous(breaks = c(0,
 # 1, 5, 23, 29, 37, 40, 62, 70, 86), labels=c('0', '1', '5', '23', '29', '37',
 # '40', '62', '70', '86')) + labs(x='Highest Contiguous Next Number',
@@ -1864,9 +1863,10 @@ Plotting freq of highest contiguous as a function of productivity
 full.data %>% dplyr::right_join(highest_contiguous_nn) %>% dplyr::distinct(LadlabID, 
     Highest_Contig_NN, Productivity) %>% ggplot(aes(x = Highest_Contig_NN, color = Productivity)) + 
     geom_dotplot(aes(fill = Productivity), binwidth = 1, stackdir = "up", position = position_dodge(width = 2), 
-        stackgroups = FALSE, binpositions = "all", method = "dotdensity") + scale_color_brewer(palette = "Set1") + 
-    scale_fill_brewer(palette = "Set1") + coord_fixed(ratio = 1) + scale_y_continuous(breaks = seq(0, 
-    30, 10), lim = c(0, 30)) + # scale_x_continuous(breaks=seq(0,100,by=10)) +
+        stackgroups = FALSE, binpositions = "all", method = "dotdensity") + scale_color_manual(values = c("#D55E00", 
+    "#0072B2", "#009E73")) + scale_fill_manual(values = c("#D55E00", "#0072B2", "#009E73")) + 
+    coord_fixed(ratio = 1) + scale_y_continuous(breaks = seq(0, 30, 10), lim = c(0, 
+    30)) + # scale_x_continuous(breaks=seq(0,100,by=10)) +
 scale_x_continuous(breaks = c(0, 1, 5, 23, 29, 37, 40, 62, 70, 86), labels = c("0", 
     "1", "5", "23", "29", "37", "40", "62", "70", "86")) + labs(x = "Highest Contiguous Next Number", 
     y = "Frequency") + theme_bw() + theme(legend.position = "bottom")
@@ -2084,8 +2084,8 @@ full.data %>% dplyr::right_join(highest_contiguous_nn) %>% dplyr::distinct(Ladla
 ``` r
 ggplot(full.data, aes(x = IHC, y = prod.gradient, colour = Productivity)) + geom_point(size = 3, 
     alpha = 0.1) + geom_jitter() + theme_bw(base_size = 13) + theme(legend.position = "bottom") + 
-    scale_x_continuous(breaks = seq(0, 100, 10)) + scale_colour_brewer(palette = "Set1") + 
-    labs(y = "Productivity Gradient", x = "IHC")
+    scale_x_continuous(breaks = seq(0, 100, 10)) + scale_colour_manual(values = c("#D55E00", 
+    "#0072B2", "#009E73")) + labs(y = "Productivity Gradient", x = "IHC")
 ```
 
 ![](recursionAnalysis_files/figure-gfm/unnamed-chunk-55-1.png)<!-- -->
@@ -2841,9 +2841,9 @@ lt99.end.nn <- glm(EndlessKnower ~ Highest_Contig_NN + Age.c, family = "binomial
 # pg.ms <- full.data %>% distinct(LadlabID, IHC, FHC, prod.gradient,
 # Productivity) ggplot(pg.ms, aes(x=IHC, y = prod.gradient, colour =
 # Productivity)) + geom_point(size = 2) + scale_x_continuous(breaks = seq(0, 100,
-# 10)) + scale_colour_brewer(palette = 'Set1') + theme_bw(base_size = 13) +
-# theme(panel.grid.minor = element_blank(), legend.position = 'bottom',
-# legend.title = element_blank())
+# 10)) + scale_colour_brewer(palette = c('#D55E00', '#0072B2', '#009E73')) +
+# theme_bw(base_size = 13) + theme(panel.grid.minor = element_blank(),
+# legend.position = 'bottom', legend.title = element_blank())
 
 ms <- hc.dev.data %>% filter(Productivity == "Productive")
 
@@ -2861,8 +2861,6 @@ labs(shape = "Highest Count Type", colour = "Productivity Gradient")
 ```
 
 ![](recursionAnalysis_files/figure-gfm/fig2-1.png)<!-- -->
-
-# WIP- How often do children recover from reminder prompts?
 
 # TODO: Visualizing the regressions
 
@@ -3170,9 +3168,9 @@ model.gain.endless2 <- glm(EndlessKnower ~ prod.gradient.c + Age.c, family = "bi
     data = distinct_model.df)
 
 ## Regression table for Endless Models
-mtable.endless.knowers2 <- mtable(Base = base.endless, IHC = model.ihc.endless, NN = model.nn.endless, 
-    Productivity = model.prod.endless, `Prod. gradient` = model.gain.endless, summary.stats = c("Nagelkerke R-sq.", 
-        "Log-likelihood", "AIC", "F", "p", "N"))
+mtable.endless.knowers2 <- mtable(Base = base.endless2, IHC = model.ihc.endless2, 
+    NN = model.nn.endless2, Productivity = model.prod.endless2, `Prod. gradient` = model.gain.endless2, 
+    summary.stats = c("Nagelkerke R-sq.", "Log-likelihood", "AIC", "F", "p", "N"))
 
 mtable.endless.knowers2
 ```
@@ -3182,7 +3180,7 @@ mtable.endless.knowers2
     ## Base: glm(formula = EndlessKnower ~ Age.c, family = "binomial", data = distinct_model.df)
     ## IHC: glm(formula = EndlessKnower ~ IHC.c + Age.c, family = "binomial", 
     ##     data = distinct_model.df)
-    ## NN: glm(formula = EndlessKnower ~ Highest_Contig_NN.c + Age.c, family = "binomial", 
+    ## NN: glm(formula = EndlessKnower ~ wcnscore.c + Age.c, family = "binomial", 
     ##     data = distinct_model.df)
     ## Productivity: glm(formula = EndlessKnower ~ Productivity + Age.c, family = "binomial", 
     ##     data = distinct_model.df)
@@ -3192,22 +3190,22 @@ mtable.endless.knowers2
     ## ============================================================================================================
     ##                                              Base        IHC          NN      Productivity  Prod. gradient  
     ## ------------------------------------------------------------------------------------------------------------
-    ##   (Intercept)                              -1.057***   -1.131***   -1.091***    -2.186***      -1.203***    
-    ##                                            (0.221)     (0.235)     (0.228)      (0.539)        (0.256)      
-    ##   Age.c                                     0.707**     0.407       0.535*       0.360          0.313       
-    ##                                            (0.224)     (0.250)     (0.238)      (0.253)        (0.264)      
+    ##   (Intercept)                              -1.057***   -1.131***   -1.152***    -2.186***      -1.203***    
+    ##                                            (0.221)     (0.235)     (0.240)      (0.539)        (0.256)      
+    ##   Age.c                                     0.707**     0.407       0.448        0.360          0.313       
+    ##                                            (0.224)     (0.250)     (0.244)      (0.253)        (0.264)      
     ##   IHC.c                                                 0.666**                                             
     ##                                                        (0.242)                                              
-    ##   Highest_Contig_NN.c                                               0.504*                                  
-    ##                                                                    (0.215)                                  
+    ##   wcnscore.c                                                        0.693**                                 
+    ##                                                                    (0.265)                                  
     ##   Productivity: Productive/Nonproductive                                         1.636**                    
     ##                                                                                 (0.629)                     
     ##   prod.gradient.c                                                                               0.849**     
     ##                                                                                                (0.322)      
     ## ------------------------------------------------------------------------------------------------------------
-    ##   Nagelkerke R-sq.                          0.125       0.205       0.183        0.208          0.212       
-    ##   Log-likelihood                          -66.655     -62.810     -63.884      -62.688        -62.485       
-    ##   AIC                                     137.311     131.619     133.767      131.377        130.971       
+    ##   Nagelkerke R-sq.                          0.125       0.205       0.204        0.208          0.212       
+    ##   Log-likelihood                          -66.655     -62.810     -62.893      -62.688        -62.485       
+    ##   AIC                                     137.311     131.619     131.786      131.377        130.971       
     ##   p                                         0.001       0.000       0.000        0.000          0.000       
     ##   N                                       122         122         122          122            122           
     ## ============================================================================================================
@@ -3274,12 +3272,6 @@ anova(base.endless2, model.gain.endless2, test = "LRT")  # prod. gradient signif
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
-``` r
-# #okay with about mean NN model2.endless <- glmer(EndlessKnower ~ mean.NN + Age
-# + (1|LadlabID), family = 'binomial', data = distinct_model.df)
-# anova(model2.endless, base.endless, test = 'LRT')#mean NN significant
-```
-
 ### Endless: Large model comparison
 
 Put all significant Endless predictors into large model, run model
@@ -3297,7 +3289,7 @@ large.endless.prod2 <- glm(EndlessKnower ~ Productivity + IHC.c + Age.c, family 
     data = distinct_model.df)
 
 ## Prod. Gain + IHC
-large.endless.gain.ihc2 <- glm(EndlessKnower ~ IHC.c + prod.gradient.c + Age.c, family = "binomial", 
+large.endless.gain.ihc2 <- glm(EndlessKnower ~ prod.gradient.c + IHC.c + Age.c, family = "binomial", 
     data = distinct_model.df)
 # summary(large.endless.gain.ihc) #with addition of IHC, prod.gradient is
 # marginal, AIC very slightly decreases
@@ -3346,7 +3338,7 @@ anova(large.endless.base2, large.endless.gain.ihc2, test = "LRT")  #n.s. additio
     ## Analysis of Deviance Table
     ## 
     ## Model 1: EndlessKnower ~ IHC.c + Age.c
-    ## Model 2: EndlessKnower ~ IHC.c + prod.gradient.c + Age.c
+    ## Model 2: EndlessKnower ~ prod.gradient.c + IHC.c + Age.c
     ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)  
     ## 1       119     125.62                       
     ## 2       118     122.59  1   3.0268   0.0819 .
@@ -3360,7 +3352,7 @@ anova(model.gain.endless2, large.endless.gain.ihc2, test = "LRT")  #n.s. additio
     ## Analysis of Deviance Table
     ## 
     ## Model 1: EndlessKnower ~ prod.gradient.c + Age.c
-    ## Model 2: EndlessKnower ~ IHC.c + prod.gradient.c + Age.c
+    ## Model 2: EndlessKnower ~ prod.gradient.c + IHC.c + Age.c
     ##   Resid. Df Resid. Dev Df Deviance Pr(>Chi)
     ## 1       119     124.97                     
     ## 2       118     122.59  1   2.3782    0.123
@@ -3369,11 +3361,11 @@ anova(model.gain.endless2, large.endless.gain.ihc2, test = "LRT")  #n.s. additio
 
 ``` r
 mtable.endless.large2 <- mtable(#'IHC alone' = large.endless.base,
-            'HCNN + IHC' = large.endless.nn,
-            'Prod.Group + IHC' = large.endless.prod,
+            'HCNN + IHC' = large.endless.nn2,
+            'Prod.Group + IHC' = large.endless.prod2,
 #            'Prod.Group + Highest contig. + IHC' = large.endless.full,
 #            'Prod.Gradient alone' = model.gain.endless,
-            'Prod.Gradient + IHC' = large.endless.gain.ihc,
+            'Prod.Gradient + IHC' = large.endless.gain.ihc2,
             #summary.stats = c('R-squared','F','p','N'))
             summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'))
 
@@ -3382,32 +3374,32 @@ mtable.endless.large2
 
     ## 
     ## Calls:
-    ## HCNN + IHC: glm(formula = EndlessKnower ~ Highest_Contig_NN.c + IHC.c + Age.c, 
-    ##     family = "binomial", data = distinct_model.df)
+    ## HCNN + IHC: glm(formula = EndlessKnower ~ wcnscore.c + IHC.c + Age.c, family = "binomial", 
+    ##     data = distinct_model.df)
     ## Prod.Group + IHC: glm(formula = EndlessKnower ~ Productivity + IHC.c + Age.c, family = "binomial", 
     ##     data = distinct_model.df)
-    ## Prod.Gradient + IHC: glm(formula = EndlessKnower ~ IHC.c + prod.gradient.c + Age.c, 
+    ## Prod.Gradient + IHC: glm(formula = EndlessKnower ~ prod.gradient.c + IHC.c + Age.c, 
     ##     family = "binomial", data = distinct_model.df)
     ## 
     ## =============================================================================================
     ##                                           HCNN + IHC  Prod.Group + IHC  Prod.Gradient + IHC  
     ## ---------------------------------------------------------------------------------------------
-    ##   (Intercept)                              -1.129***      -1.901***          -1.213***       
-    ##                                            (0.235)        (0.568)            (0.257)         
-    ##   Highest_Contig_NN.c                       0.173                                            
-    ##                                            (0.299)                                           
-    ##   IHC.c                                     0.529          0.431              0.421          
-    ##                                            (0.336)        (0.276)            (0.275)         
-    ##   Age.c                                     0.411          0.279              0.250          
-    ##                                            (0.250)        (0.260)            (0.267)         
+    ##   (Intercept)                              -1.156***      -1.901***          -1.213***       
+    ##                                            (0.241)        (0.568)            (0.257)         
+    ##   wcnscore.c                                0.397                                            
+    ##                                            (0.363)                                           
+    ##   IHC.c                                     0.396          0.431              0.421          
+    ##                                            (0.340)        (0.276)            (0.275)         
+    ##   Age.c                                     0.382          0.279              0.250          
+    ##                                            (0.251)        (0.260)            (0.267)         
     ##   Productivity: Productive/Nonproductive                   1.141                             
     ##                                                           (0.710)                            
     ##   prod.gradient.c                                                             0.596          
     ##                                                                              (0.357)         
     ## ---------------------------------------------------------------------------------------------
-    ##   Nagelkerke R-sq.                          0.209          0.233              0.236          
-    ##   Log-likelihood                          -62.642        -61.442            -61.296          
-    ##   AIC                                     133.284        130.883            130.592          
+    ##   Nagelkerke R-sq.                          0.218          0.233              0.236          
+    ##   Log-likelihood                          -62.204        -61.442            -61.296          
+    ##   AIC                                     132.407        130.883            130.592          
     ##   N                                       122            122                122              
     ## =============================================================================================
 
@@ -3600,7 +3592,7 @@ plot_model(large.endless.full.grad2, type = "std", transform = "plogis", title =
 
     ## Package `snakecase` needs to be installed for case-conversion.
 
-![](recursionAnalysis_files/figure-gfm/unnamed-chunk-76-1.png)<!-- -->
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-75-1.png)<!-- -->
 
 ``` r
 ggsave("graphs/regression-endless2.png", width = 6, height = 3.5)
@@ -3615,7 +3607,7 @@ plot_model(large.successor.full.grad2, type = "std", transform = "plogis", title
 
     ## Package `snakecase` needs to be installed for case-conversion.
 
-![](recursionAnalysis_files/figure-gfm/unnamed-chunk-76-2.png)<!-- -->
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-75-2.png)<!-- -->
 
 ``` r
 ggsave("graphs/regression-successor2.png", width = 6, height = 3.5)
@@ -3630,11 +3622,13 @@ plot_model(large.inf.full.grad2, type = "std", transform = "plogis", title = "Fu
 
     ## Package `snakecase` needs to be installed for case-conversion.
 
-![](recursionAnalysis_files/figure-gfm/unnamed-chunk-76-3.png)<!-- -->
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-75-3.png)<!-- -->
 
 ``` r
 ggsave("graphs/regression-fullinfinity2.png", width = 6, height = 3.5)
 ```
+
+<detail>
 
 # Regressions no ihc=99
 
@@ -3690,7 +3684,7 @@ mtable.sf.knowers3 <- mtable('Base' = base.successor3,
             'IHC' = model.ihc.successor3,
             'NN' = model.nn.successor3,
             'Productivity' = model.prod.successor3,
-            'Exp. - Prod. gain' = model.gain.successor3,
+            'Prod. gain' = model.gain.successor3,
             #summary.stats = c('R-squared','F','p','N'))
             summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'))
 mtable.sf.knowers3
@@ -3705,30 +3699,30 @@ mtable.sf.knowers3
     ##     data = distinct_model.df2)
     ## Productivity: glm(formula = SuccessorKnower ~ Productivity + Age.c, family = "binomial", 
     ##     data = distinct_model.df2)
-    ## Exp. - Prod. gain: glm(formula = SuccessorKnower ~ prod.gradient.c + Age.c, family = "binomial", 
+    ## Prod. gain: glm(formula = SuccessorKnower ~ prod.gradient.c + Age.c, family = "binomial", 
     ##     data = distinct_model.df2)
     ## 
-    ## =========================================================================================================
-    ##                                             Base      IHC        NN     Productivity  Exp. - Prod. gain  
-    ## ---------------------------------------------------------------------------------------------------------
-    ##   (Intercept)                              -0.509*   -0.538*   -0.511*     -0.697*         -0.510*       
-    ##                                            (0.220)   (0.227)   (0.221)     (0.334)         (0.220)       
-    ##   Age.c                                     0.296     0.637*    0.358       0.191           0.235        
-    ##                                            (0.221)   (0.287)   (0.242)     (0.260)         (0.271)       
-    ##   IHC.c                                              -0.590*                                             
-    ##                                                      (0.300)                                             
-    ##   wcnscore.c                                                   -0.155                                    
-    ##                                                                (0.242)                                   
-    ##   Productivity: Productive/Nonproductive                                    0.396                        
-    ##                                                                            (0.517)                       
-    ##   prod.gradient.c                                                                           0.106        
-    ##                                                                                            (0.270)       
-    ## ---------------------------------------------------------------------------------------------------------
-    ##   Nagelkerke R-sq.                          0.027     0.090     0.033       0.036           0.030        
-    ##   Log-likelihood                          -58.755   -56.605   -58.547     -58.462         -58.677        
-    ##   AIC                                     121.509   119.210   123.095     122.924         123.354        
-    ##   N                                        90        90        90          90              90            
-    ## =========================================================================================================
+    ## ==================================================================================================
+    ##                                             Base      IHC        NN     Productivity  Prod. gain  
+    ## --------------------------------------------------------------------------------------------------
+    ##   (Intercept)                              -0.509*   -0.538*   -0.511*     -0.697*      -0.510*   
+    ##                                            (0.220)   (0.227)   (0.221)     (0.334)      (0.220)   
+    ##   Age.c                                     0.296     0.637*    0.358       0.191        0.235    
+    ##                                            (0.221)   (0.287)   (0.242)     (0.260)      (0.271)   
+    ##   IHC.c                                              -0.590*                                      
+    ##                                                      (0.300)                                      
+    ##   wcnscore.c                                                   -0.155                             
+    ##                                                                (0.242)                            
+    ##   Productivity: Productive/Nonproductive                                    0.396                 
+    ##                                                                            (0.517)                
+    ##   prod.gradient.c                                                                        0.106    
+    ##                                                                                         (0.270)   
+    ## --------------------------------------------------------------------------------------------------
+    ##   Nagelkerke R-sq.                          0.027     0.090     0.033       0.036        0.030    
+    ##   Log-likelihood                          -58.755   -56.605   -58.547     -58.462      -58.677    
+    ##   AIC                                     121.509   119.210   123.095     122.924      123.354    
+    ##   N                                        90        90        90          90           90        
+    ## ==================================================================================================
 
 ``` r
 write.mtable(mtable.sf.knowers3, file="graphs/table2-v3.txt")
@@ -4053,7 +4047,7 @@ plot_model(large.endless.full.grad3, type = "std", transform = "plogis", title =
 
     ## Package `snakecase` needs to be installed for case-conversion.
 
-![](recursionAnalysis_files/figure-gfm/unnamed-chunk-81-1.png)<!-- -->
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-80-1.png)<!-- -->
 
 ``` r
 ggsave("graphs/regression-endless3.png", width = 6, height = 3.5)
@@ -4068,7 +4062,7 @@ plot_model(large.successor.full.grad3, type = "std", transform = "plogis", title
 
     ## Package `snakecase` needs to be installed for case-conversion.
 
-![](recursionAnalysis_files/figure-gfm/unnamed-chunk-81-2.png)<!-- -->
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-80-2.png)<!-- -->
 
 ``` r
 ggsave("graphs/regression-successor3.png", width = 6, height = 3.5)
@@ -4083,8 +4077,10 @@ plot_model(large.inf.full.grad3, type = "std", transform = "plogis", title = "Fu
 
     ## Package `snakecase` needs to be installed for case-conversion.
 
-![](recursionAnalysis_files/figure-gfm/unnamed-chunk-81-3.png)<!-- -->
+![](recursionAnalysis_files/figure-gfm/unnamed-chunk-80-3.png)<!-- -->
 
 ``` r
 ggsave("graphs/regression-fullinfinity3.png", width = 6, height = 3.5)
 ```
+
+</detail>

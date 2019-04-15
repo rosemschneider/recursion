@@ -31,13 +31,19 @@ library(stringr)
 library(RColorBrewer)
 library(ggthemes)
 library(memisc)
-
+library(broom)
 # Set seed for reproducible analyses
 set.seed(42)
 '%!in%' <- function(x,y)!('%in%'(x,y))
 
 # colors
 prod.pal <- c("#E41A1C", "#4DAF4A", "#377EB8")
+
+# cb friendly red blue green
+mypalette <- c("#D55E00", "#0072B2", "#009E73")
+
+# cb friendly green, orange, bright blue for fig2
+mypalette2 <- c("#009E73", "#E69F00", "#56B4E9")
 ```
 
 R Version for citation is: `r R.version.string`.
@@ -352,6 +358,8 @@ full.data %>%
   kable()
 ```
 
+## Fig 1
+
 Plotting distribution of IHC, as a function of productivity (~ junyi's graph)
 
 ```{r}
@@ -361,8 +369,8 @@ unique.hc.data <- full.data %>%
 ggplot(unique.hc.data, aes(x=IHC, color=Productivity)) + 
   geom_dotplot(aes(fill = Productivity),
                binwidth=1, stackgroups=TRUE, binpositions="all",method="dotdensity", dotsize = 1) +
-  scale_color_brewer(palette="Set1") + 
-  scale_fill_brewer(palette="Set1") +
+  scale_color_manual(values=c("#D55E00", "#0072B2", "#009E73")) + 
+  scale_fill_manual(values=c("#D55E00", "#0072B2", "#009E73")) +
   coord_fixed(ratio=1) +
   scale_y_continuous(breaks=seq(0,40,10), lim=c(0,35)) +
   scale_x_continuous(breaks=seq(0,100,by=10)) +
@@ -418,8 +426,8 @@ ggplot(unique.hc.data, aes(x=AgeMonths, colour = Productivity)) +
   coord_fixed(ratio=1) +
   scale_y_continuous(breaks=seq(0,10,5), lim=c(0,12)) +
   scale_x_continuous(breaks=seq(48,72,by=6)) +
-  scale_color_brewer(palette="Set1") + 
-  scale_fill_brewer(palette="Set1") +
+  scale_color_manual(values=c("#D55E00", "#0072B2", "#009E73")) + 
+  scale_fill_manual(values=c("#D55E00", "#0072B2", "#009E73")) +
   labs( x="Age in Months", 
        y="Frequency") +
   theme_bw(base_size = 13) + 
@@ -468,7 +476,7 @@ ggplot(hc.dev.prod, aes(x = LadlabID, y = hc)) +
   geom_line(data=hc.dev.prod[!is.na(hc.dev.prod$hc),]) + 
   geom_point(aes(shape = `Highest Count Coding`, colour = `Highest Count Coding`), 
              size = 2, stroke = 1.5) +
-  scale_color_brewer(palette="Dark2") +
+  scale_color_manual(values=mypalette2) +
   scale_shape_manual(values = c(4,5,20)) +
   ylim(0, 100) +
   labs(title="A. Distance, Productive Decade Counters",
@@ -487,7 +495,7 @@ ggplot(hc.dev.nonprod, aes(x = LadlabID, y = hc)) +
   geom_line(data=hc.dev.nonprod[!is.na(hc.dev.nonprod$hc),]) + 
   geom_point(aes(shape = `Highest Count Coding`, colour = `Highest Count Coding`), 
              size = 2, stroke = 1.5) +
-  scale_color_brewer(palette="Dark2") +
+  scale_color_manual(values=mypalette2) +
   scale_shape_manual(values = c(4,5,20)) +
   ylim(0, 100) +
   labs(title="B. Distance, Non-productive Decade Counters",
@@ -511,7 +519,7 @@ ggplot(hc.dev.prod, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) +
   geom_line(data=hc.dev.prod[!is.na(hc.dev.prod$hc),]) + 
   geom_point(aes(shape = `Highest Count Coding`, colour = `Highest Count Coding`), 
              size = 2, stroke = 1.5) +
-  scale_color_brewer(palette="Dark2", labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
+  scale_color_manual(values=mypalette2, labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
   scale_shape_manual(values = c(4,5,20), labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
   ylim(0, 100) +
   labs(title="a. Distance, Productive Decade Counters",
@@ -532,7 +540,7 @@ ggplot(hc.dev.nonprod, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) +
   geom_line(data=hc.dev.nonprod[!is.na(hc.dev.nonprod$hc),]) + 
   geom_point(aes(shape = `Highest Count Coding`, colour = `Highest Count Coding`), 
              size = 2, stroke = 1.5) +
-  scale_color_brewer(palette="Dark2", labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
+  scale_color_manual(values=mypalette2, labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
   scale_shape_manual(values = c(4,5,20), labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
   ylim(0, 100) +
   labs(title="b. Distance, Non-productive Decade Counters",
@@ -726,6 +734,14 @@ wcn.data %>%
                    sd = sd(sd.wcn))
 ```
 
+T-test
+```{r}
+wcn.wide %>% group_by(Productivity, LadlabID) %>%
+  summarise(wcn.score=sum(immediate)) %>%
+  t.test(wcn.score ~ Productivity, data=., var.equal=T)
+```
+
+
 Plotting %corr on WCN as function of productivity
 ```{r}
 wcn.data %>%
@@ -740,7 +756,7 @@ wcn.data %>%
   stat_summary(fun.data = mean_se, geom="errorbar", 
                position = position_dodge(width=0.90), width = 0.2)+
   #scale_fill_discrete(name = "Productivity") +
-  scale_fill_brewer(name = "Productivity", palette = "Set1", guide = "none") +
+  scale_fill_manual(name = "Productivity", values = c("#D55E00", "#0072B2", "#009E73"), guide = "none") +
   scale_colour_brewer(palette = "Greys") +
   ylab("Proportion Correct") + 
   xlab('Productivity') + 
@@ -1014,7 +1030,7 @@ wcn.data %>%
                fun.y = mean,position = position_dodge(width=0.8), 
                geom="point", shape=23, size=3)+
   facet_grid(.~Productivity, labeller = as_labeller(group_names)) +
-  scale_colour_brewer(guide=FALSE, palette="Set1") + 
+  scale_colour_manual(guide=FALSE, values=c("#D55E00", "#009E73")) + 
   scale_fill_brewer(guide=FALSE) +
   scale_y_continuous(limits=c(0,1)) +
   labs(y="Average Proportion Correct", x="Trial Type") +
@@ -1047,7 +1063,7 @@ wcn.data %>%
                fun.y = mean,position = position_dodge(width=0.8), 
                geom="point", shape=23, size=3)+
   facet_grid(.~Productivity.tertiary, scales="free") +
-  scale_colour_brewer(guide=FALSE, palette="Set1") + 
+  scale_colour_manual(guide=FALSE, values=c("#D55E00", "#009E73", "#0072B2")) + 
   scale_fill_brewer(guide=FALSE) +
   scale_y_continuous(limits=c(0,1)) +
   labs(y="Average Proportion Correct", x="Trial Type") +
@@ -1085,39 +1101,6 @@ wcn.data %>%
   theme(panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank())
 ggsave('graphs/wcn-within-beyond-finalc.png', width=6, height=4)
-```
-
-```{r}
-# Alternative
-wcn.data %>%
-  mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels = c("within", "outside"), 
-                                   labels = c("Within IHC", "Beyond IHC")))%>%
-  dplyr::filter(TaskType == "immediate") %>%
-  dplyr::group_by(Productivity, WithinOutsideIHC, LadlabID, prod.gradient) %>%
-  dplyr::summarize(meansubj = mean(Accuracy, na.rm = TRUE)) %>%
-  ggplot(aes(x=Productivity, y=meansubj))+
-  geom_violin(aes(color=Productivity), alpha=0.7, scale="count", position=position_dodge(width=0.8)) +
-  geom_point(aes(fill=Productivity),
-             position=position_jitterdodge(jitter.width=0.25,
-                                           dodge.width=.9),
-             alpha = .4) +
-  stat_summary(aes(color=Productivity),
-               fun.data = mean_cl_boot, geom="errorbar",
-               position = position_dodge(width=0.8), width = 0.2)+
-  stat_summary(aes(color=Productivity), fill="white",
-               fun.y = mean,position = position_dodge(width=0.8), 
-               geom="point", shape=23, size=3)+
-  facet_wrap(.~WithinOutsideIHC, strip.position="bottom") +
-  scale_colour_brewer(palette="Set1", direction=-1) + 
-  scale_y_continuous(limits=c(0,1)) +
-  labs(y="Average Proportion Correct", x="Trial Type") +
-  theme_bw(base_size = 13) +
-  theme(panel.grid.major = element_blank(), 
-        panel.grid.minor = element_blank(),
-        axis.ticks = element_blank(),
-        axis.text.x = element_blank())
-ggsave('graphs/wcn-within-beyond4.png', width=6, height=4)
-
 ```
 
 #### Analysis for fig 4
@@ -1361,8 +1344,8 @@ Plotting freq of highest contiguous as a function of productivity
 #   ggplot(aes(x=Highest_Contig_NN, color=Productivity)) + 
 #   geom_dotplot(aes(fill = Productivity),
 #                binwidth=1, stackgroups=TRUE, binpositions="all",method="dotdensity") +
-#   scale_color_brewer(palette="Set1") + 
-#   scale_fill_brewer(palette="Set1") +
+#   scale_color_brewer(palette=c("#D55E00", "#0072B2", "#009E73")) + 
+#   scale_fill_brewer(palette=c("#D55E00", "#0072B2", "#009E73")) +
 #   coord_fixed(ratio=1) +
 #   scale_y_continuous(breaks=seq(0,50,10), lim=c(0,50)) +
 #   #scale_x_continuous(breaks=seq(0,100,by=10)) +
@@ -1381,8 +1364,8 @@ full.data %>%
   ggplot(aes(x=Highest_Contig_NN, color=Productivity)) + 
   geom_dotplot(aes(fill = Productivity),
                binwidth=1, stackdir="up", position=position_dodge(width=2), stackgroups=FALSE, binpositions="all",method="dotdensity") +
-  scale_color_brewer(palette="Set1") + 
-  scale_fill_brewer(palette="Set1") +
+  scale_color_manual(values=c("#D55E00", "#0072B2", "#009E73")) + 
+  scale_fill_manual(values=c("#D55E00", "#0072B2", "#009E73")) +
   coord_fixed(ratio=1) +
   scale_y_continuous(breaks=seq(0,30,10), lim=c(0,30)) +
   #scale_x_continuous(breaks=seq(0,100,by=10)) +
@@ -1506,7 +1489,7 @@ ggplot(full.data, aes(x = IHC, y= prod.gradient, colour = Productivity)) +
   theme_bw(base_size = 13) +
   theme(legend.position = "bottom") +
   scale_x_continuous(breaks = seq(0, 100, 10)) +
-  scale_colour_brewer(palette = "Set1") + 
+  scale_colour_manual(values = c("#D55E00", "#0072B2", "#009E73")) + 
   labs(y = 'Productivity Gradient', x = 'IHC')
 ```
 
@@ -1840,7 +1823,7 @@ lt99.end.nn <- glm(EndlessKnower ~Highest_Contig_NN + Age.c, family = "binomial"
 # ggplot(pg.ms, aes(x=IHC, y = prod.gradient, colour = Productivity)) +
 #   geom_point(size = 2) +
 #   scale_x_continuous(breaks = seq(0, 100, 10)) +
-#   scale_colour_brewer(palette = "Set1") +
+#   scale_colour_brewer(palette = c("#D55E00", "#0072B2", "#009E73")) +
 #   theme_bw(base_size = 13) +
 #   theme(panel.grid.minor = element_blank(), 
 #         legend.position = "bottom", 
@@ -1875,10 +1858,6 @@ ggplot(aes(x = reorder(LadlabID, hc, FUN=min), y = hc, colour = prod.gradient)) 
 ```
 
 
-# WIP- How often do children recover from reminder prompts? 
-```{r}
-
-```
 
 # TODO: Visualizing the regressions
 ```{r regression-graphs}
@@ -2048,11 +2027,11 @@ model.gain.endless2 <- glm(EndlessKnower ~ prod.gradient.c + Age.c, family = "bi
                           data = distinct_model.df)
 
 ##Regression table for Endless Models
-mtable.endless.knowers2 <- mtable('Base' = base.endless,
-            'IHC' = model.ihc.endless,
-            'NN' = model.nn.endless,
-            'Productivity' = model.prod.endless,
-            'Prod. gradient' = model.gain.endless,
+mtable.endless.knowers2 <- mtable('Base' = base.endless2,
+            'IHC' = model.ihc.endless2,
+            'NN' = model.nn.endless2,
+            'Productivity' = model.prod.endless2,
+            'Prod. gradient' = model.gain.endless2,
             summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','F','p','N'))
 
 mtable.endless.knowers2
@@ -2071,10 +2050,6 @@ anova(model.prod.endless2, base.endless2, test = 'LRT')#Prod significant
 ##Exploratory base v. productivity gradient
 anova(base.endless2, model.gain.endless2, test = 'LRT')# prod. gradient significant (better than IHC)
 
-# #okay with about mean NN
-# model2.endless <- glmer(EndlessKnower ~ mean.NN + Age + (1|LadlabID), family = "binomial", 
-#                         data = distinct_model.df)
-# anova(model2.endless, base.endless, test = 'LRT')#mean NN significant
 ```
 
 ### Endless: Large model comparison
@@ -2093,7 +2068,7 @@ large.endless.prod2 <- glm(EndlessKnower ~ Productivity + IHC.c + Age.c,
                             family = "binomial", data = distinct_model.df)
 
 ##Prod. Gain + IHC
-large.endless.gain.ihc2 <- glm(EndlessKnower ~ IHC.c + prod.gradient.c + Age.c, 
+large.endless.gain.ihc2 <- glm(EndlessKnower ~ prod.gradient.c + IHC.c + Age.c, 
                               family = "binomial", data = distinct_model.df)
 #summary(large.endless.gain.ihc) #with addition of IHC, prod.gradient is marginal, AIC very slightly decreases
 
@@ -2123,11 +2098,11 @@ anova(model.gain.endless2, large.endless.gain.ihc2, test = 'LRT') #n.s. addition
 ### Endless: regression table
 ```{r}
 mtable.endless.large2 <- mtable(#'IHC alone' = large.endless.base,
-            'HCNN + IHC' = large.endless.nn,
-            'Prod.Group + IHC' = large.endless.prod,
+            'HCNN + IHC' = large.endless.nn2,
+            'Prod.Group + IHC' = large.endless.prod2,
 #            'Prod.Group + Highest contig. + IHC' = large.endless.full,
 #            'Prod.Gradient alone' = model.gain.endless,
-            'Prod.Gradient + IHC' = large.endless.gain.ihc,
+            'Prod.Gradient + IHC' = large.endless.gain.ihc2,
             #summary.stats = c('R-squared','F','p','N'))
             summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'))
 
@@ -2243,6 +2218,8 @@ plot_model(large.inf.full.grad2, type="std", transform="plogis",
 ggsave('graphs/regression-fullinfinity2.png', width=6, height=3.5)
 ```
 
+<detail>
+
 # Regressions no ihc=99
 
 ## prep
@@ -2295,7 +2272,7 @@ mtable.sf.knowers3 <- mtable('Base' = base.successor3,
             'IHC' = model.ihc.successor3,
             'NN' = model.nn.successor3,
             'Productivity' = model.prod.successor3,
-            'Exp. - Prod. gain' = model.gain.successor3,
+            'Prod. gain' = model.gain.successor3,
             #summary.stats = c('R-squared','F','p','N'))
             summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'))
 mtable.sf.knowers3
@@ -2457,3 +2434,5 @@ plot_model(large.inf.full.grad3, type="std", transform="plogis",
   ggplot2::geom_hline(yintercept = 0.5, linetype="dashed")
 ggsave('graphs/regression-fullinfinity3.png', width=6, height=3.5)
 ```
+
+</detail>
