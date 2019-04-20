@@ -125,7 +125,7 @@ Now, add in the Productivity classification, IHC, and FHC from PC, JC, and RMS c
 ```{r}
 #productivity, fhc, ihc coding from pc, jc, and rms
 hc.data <- read.csv('data/HC-datawide-forcoding - hc.datawide.csv') %>%
-  dplyr::select(LadlabID, prod_tomerge, ihc_tomerge, fhc_tomerge, dce)
+  dplyr::select(LadlabID, prod_tomerge, ihc_tomerge, fhc_tomerge, dce, why_productive, sup.times)
 
 full.data <- dplyr::left_join(full.data, hc.data, by = "LadlabID")
 
@@ -173,7 +173,7 @@ full.data %>%
                    maxAge = max(Age),
                    meanAge = mean(Age),
                    sdAge = sd(Age)) %>%
-  kable()
+  kable(digits=2)
 ```
 
 Number of kids who were classified as decade productive & nonproductive
@@ -186,7 +186,7 @@ full.data %>%
                    sdage = sd(Age, na.rm=TRUE),
                    minage = min(Age, na.rm=TRUE),
                    maxage = max(Age, na.rm=TRUE)) %>%
-  kable()
+  kable(digits=2)
 ```
 
 Number of kids for the 3-way productivity classification
@@ -199,8 +199,18 @@ full.data %>%
                    sdage = sd(Age, na.rm=TRUE),
                    minage = min(Age, na.rm=TRUE),
                    maxage = max(Age, na.rm=TRUE)) %>%
-  kable()
+  kable(digits=2)
 ```
+
+Reasons for productivity classification
+```{r}
+full.data %>%
+  dplyr::distinct(LadlabID, Productivity.tertiary, why_productive)%>%
+  dplyr::group_by(Productivity.tertiary, why_productive) %>%
+  tally() %>%
+  spread(Productivity.tertiary, n)
+```
+
 
 Just for reference, this is the number of kids who switched classifications from PC, JC, RMS recode
 ```{r}
@@ -222,7 +232,7 @@ full.data %>%
   dplyr::summarise(n =n())
 ```
 
-## Productivity gradient
+## Calculate Productivity gradient
 ```{r}
 full.data %<>%
   mutate(delta.hc = FHC-IHC, 
@@ -233,136 +243,74 @@ full.data %<>%
 
 ***
 # Highest Count Descriptives
+
+## Summary descriptives 
 Average of IHC, DCE, and FHC for all kids
 ```{r}
 full.data %>%
-  dplyr::distinct(LadlabID, IHC)%>%
-  dplyr::summarise(mean_IHC = mean(IHC),
-                   sd_IHC = sd(IHC),
-                   min_IHC = min(IHC),
-                   max_IHC = max(IHC),
-                   median_IHC = median(IHC)) %>%
-  kable()
-
-full.data %>%
-  dplyr::distinct(LadlabID, DCE)%>%
-  dplyr::summarise(mean_DCE = mean(DCE, na.rm=TRUE),
-                   sd_DCE = sd(DCE, na.rm=TRUE),
-                   min_DCE = min(DCE, na.rm=TRUE),
-                   max_DCE = max(DCE, na.rm=TRUE),
-                   median_DCE = median(DCE, na.rm=TRUE)) %>%
-  kable()
-
-full.data %>%
-  dplyr::distinct(LadlabID, FHC)%>%
-  dplyr::summarise(mean_FHC = mean(FHC),
-                   sd_FHC = sd(FHC),
-                   min_FHC = min(FHC),
-                   max_FHC = max(FHC),
-                   median_FHC = median(FHC)) %>%
-  kable()
-
-#productivity gradient
-full.data %>%
-  distinct(LadlabID, delta.hc, prod.gradient)%>%
-  summarise(mean_gradient = mean(prod.gradient), 
-            sd_gradient = sd(prod.gradient), 
-            mean_delta.hc = mean(delta.hc), 
-            sd_delta.hc = sd(delta.hc))%>%
-  kable()
+  dplyr::distinct(LadlabID, IHC, DCE, FHC, delta.hc, prod.gradient, sup.times)%>%
+  dplyr::summarise_at(c('IHC','DCE','FHC',
+                        'delta.hc', 'prod.gradient',
+                        'sup.times'),
+                      list(~mean(., na.rm=T), 
+                           ~sd(., na.rm=T),
+                           ~min(., na.rm=T),
+                           ~max(., na.rm=T),
+                           ~sum(!is.na(.)))) %>%
+  gather(stat, val) %>%
+  separate(stat, into = c("var", "stat"), sep = "_") %>%
+  spread(stat, val) %>%
+  dplyr::select(var, n=sum, mean, sd, min, max) %>%
+  kable(digits=2)
 ```
 
 Similar data by decade productivity
 ```{r}
 full.data %>%
-  dplyr::distinct(LadlabID, Productivity, IHC)%>%
-  dplyr::group_by(Productivity)%>%
-  dplyr::summarise(mean_IHC = mean(IHC),
-                   sd_IHC = sd(IHC),
-                   min_IHC = min(IHC),
-                   max_IHC = max(IHC),
-                   median_IHC = median(IHC)) %>%
-  kable()
-
-full.data %>%
-  dplyr::distinct(LadlabID, Productivity, DCE)%>%
-  dplyr::group_by(Productivity)%>%
-  dplyr::summarise(mean_DCE = mean(DCE, na.rm=TRUE),
-                   sd_DCE = sd(DCE, na.rm=TRUE),
-                   min_DCE = min(DCE, na.rm=TRUE),
-                   max_DCE = max(DCE, na.rm=TRUE),
-                   median_DCE = median(DCE, na.rm=TRUE)) %>%
-  kable()
-
-full.data %>%
-  dplyr::distinct(LadlabID, Productivity, FHC)%>%
-  dplyr::group_by(Productivity)%>%
-  dplyr::summarise(mean_FHC = mean(FHC),
-                   sd_FHC = sd(FHC),
-                   min_FHC = min(FHC),
-                   max_FHC = max(FHC),
-                   median_FHC = median(FHC)) %>%
-  kable()
-
-#productivity gradient
-full.data %>%
-  distinct(LadlabID, Productivity, delta.hc, prod.gradient)%>%
-  group_by(Productivity)%>%
-  summarise(mean_gradient = mean(prod.gradient), 
-            sd_gradient = sd(prod.gradient), 
-            mean_delta.hc = mean(delta.hc), 
-            sd_delta.hc = sd(delta.hc))%>%
-  kable()
+  dplyr::distinct(LadlabID, Productivity, IHC, DCE, FHC, delta.hc, prod.gradient, sup.times)%>%
+  group_by(Productivity) %>%
+  dplyr::summarise_at(c('IHC','DCE','FHC',
+                        'delta.hc', 'prod.gradient',
+                        'sup.times'),
+                      list(~mean(., na.rm=T), 
+                           ~sd(., na.rm=T),
+                           ~min(., na.rm=T),
+                           ~max(., na.rm=T),
+                           ~sum(!is.na(.)))) %>%
+  gather(stat, val, -Productivity) %>%
+  separate(stat, into = c("var", "stat"), sep = "_") %>%
+  spread(stat, val) %>%
+  dplyr::select(Productivity, var, n=sum, mean, sd, min, max) %>%
+  kable(digits=2)
 ```
 
 Again by 3-way decade productivity
 ```{r}
 full.data %>%
-  dplyr::distinct(LadlabID, Productivity.tertiary, IHC)%>%
-  dplyr::group_by(Productivity.tertiary)%>%
-  dplyr::summarise(mean_IHC = mean(IHC),
-                   sd_IHC = sd(IHC),
-                   min_IHC = min(IHC),
-                   max_IHC = max(IHC),
-                   median_IHC = median(IHC)) %>%
-  kable()
-
-full.data %>%
-  dplyr::distinct(LadlabID, Productivity.tertiary, DCE)%>%
-  dplyr::group_by(Productivity.tertiary)%>%
-  dplyr::summarise(mean_DCE = mean(DCE, na.rm=TRUE),
-                   sd_DCE = sd(DCE, na.rm=TRUE),
-                   min_DCE = min(DCE, na.rm=TRUE),
-                   max_DCE = max(DCE, na.rm=TRUE),
-                   median_DCE = median(DCE, na.rm=TRUE)) %>%
-  kable()
-
-full.data %>%
-  dplyr::distinct(LadlabID, Productivity.tertiary, FHC)%>%
-  dplyr::group_by(Productivity.tertiary)%>%
-  dplyr::summarise(mean_FHC = mean(FHC),
-                   sd_FHC = sd(FHC),
-                   min_FHC = min(FHC),
-                   max_FHC = max(FHC),
-                   median_FHC = median(FHC)) %>%
-  kable()
-
-#productivity gradient
-full.data %>%
-  distinct(LadlabID, Productivity.tertiary, delta.hc, prod.gradient)%>%
-  group_by(Productivity.tertiary)%>%
-  summarise(mean_gradient = mean(prod.gradient), 
-            sd_gradient = sd(prod.gradient), 
-            mean_delta.hc = mean(delta.hc), 
-            sd_delta.hc = sd(delta.hc))%>%
-  kable()
+  dplyr::distinct(LadlabID, Productivity.tertiary, IHC, DCE, FHC, delta.hc, prod.gradient, sup.times)%>%
+  group_by(Productivity.tertiary) %>%
+  dplyr::summarise_at(c('IHC','DCE','FHC',
+                        'delta.hc', 'prod.gradient',
+                        'sup.times'),
+                      list(~mean(., na.rm=T), 
+                           ~sd(., na.rm=T),
+                           ~min(., na.rm=T),
+                           ~max(., na.rm=T),
+                           ~sum(!is.na(.)))) %>%
+  gather(stat, val, -Productivity.tertiary) %>%
+  separate(stat, into = c("var", "stat"), sep = "_") %>%
+  spread(stat, val) %>%
+  dplyr::select(Productivity.tertiary, var, n=sum, mean, sd, min, max) %>%
+  kable(digits=2)
 ```
 
-## Fig 1
+## Histogram
+
+### Fig 1
 
 Plotting distribution of IHC, as a function of productivity (~ junyi's graph)
 
-```{r}
+```{r echo=FALSE}
 unique.hc.data <- full.data %>%
   dplyr::distinct(LadlabID, Gender, Age, AgeGroup, HCReceivedSupport, IHC, DCE, FHC, Productivity, Productivity.tertiary)
 
@@ -376,7 +324,7 @@ ggplot(unique.hc.data, aes(x=IHC, color=Productivity)) +
   scale_x_continuous(breaks=seq(0,100,by=10)) +
   labs(x="IHC", 
        y="Frequency") +
-  theme_bw(base_size = 13) + 
+  theme_bw(base_size = 11) + 
   theme(legend.position="bottom", 
         legend.title = element_blank(), 
         panel.grid.minor = element_blank())
@@ -386,14 +334,14 @@ ggsave('graphs/ihc-by-prod.png')
 ggplot(unique.hc.data, aes(x=IHC, color=Productivity.tertiary)) + 
   geom_dotplot(aes(fill = Productivity.tertiary),
                binwidth=1, stackgroups=TRUE, binpositions="all",method="dotdensity", dotsize = 1) +
-  scale_color_manual(values=prod.pal, name="Productivity") + 
-  scale_fill_manual(values=prod.pal, name="Productivity") +
+  scale_color_manual(values=mypalette, name="Productivity") + 
+  scale_fill_manual(values=mypalette, name="Productivity") +
   coord_fixed(ratio=1) +
   scale_y_continuous(breaks=seq(0,40,10), lim=c(0,35)) +
   scale_x_continuous(breaks=seq(0,100,by=10)) +
   labs(x="IHC", 
        y="Frequency") +
-  theme_bw(base_size = 13) + 
+  theme_bw(base_size = 11) + 
   theme(legend.position="bottom", 
         legend.title = element_blank(), 
         panel.grid.minor = element_blank())
@@ -407,16 +355,17 @@ ggplot(unique.hc.data, aes(x=IHC)) +
   scale_x_continuous(breaks=seq(0,100,by=10)) +
   labs(x="IHC", 
        y="Frequency") +
-  theme_bw(base_size = 13) + 
+  theme_bw(base_size = 11) + 
   theme(legend.position="bottom", 
         legend.title = element_blank(), 
         panel.grid.minor = element_blank())
 ggsave('graphs/ihc.png')
 ```
 
+### by age
 Plotting productivity as a function of age in months
 
-```{r}
+```{r echo=FALSE}
 unique.hc.data$AgeMonths = floor(unique.hc.data$Age*12)
 
 ggplot(unique.hc.data, aes(x=AgeMonths, colour = Productivity)) + 
@@ -430,10 +379,27 @@ ggplot(unique.hc.data, aes(x=AgeMonths, colour = Productivity)) +
   scale_fill_manual(values=c("#D55E00", "#0072B2", "#009E73")) +
   labs( x="Age in Months", 
        y="Frequency") +
-  theme_bw(base_size = 13) + 
-  theme(legend.position="bottom")
+  theme_bw(base_size = 11) + 
+  theme(legend.position="right",
+        legend.title = element_blank())
 ggsave('graphs/prod-by-age.png')
 
+ggplot(unique.hc.data, aes(x=AgeMonths, colour = Productivity.tertiary)) + 
+  geom_dotplot(aes(fill = Productivity.tertiary),
+               binwidth = 1,
+               stackgroups=TRUE, binpositions="all") +
+  coord_fixed(ratio=1) +
+  scale_y_continuous(breaks=seq(0,10,5), lim=c(0,12)) +
+  scale_x_continuous(breaks=seq(48,72,by=6)) +
+  scale_color_manual(values=mypalette) + 
+  scale_fill_manual(values=mypalette) +
+  labs( x="Age in Months", 
+       y="Frequency") +
+  theme_bw(base_size = 11) + 
+  theme(legend.position="right",
+        legend.title = element_blank())
+ggsave('graphs/prod-by-age-2.png',
+       width=6, height=3)
 ```
 
 ## Distance between IHC and FHC
@@ -446,83 +412,23 @@ hc.dev.data <- full.data %>%
   mutate(hcprogression = factor(hcprogression, levels = c("IHC", "DCE", "FHC"))) %>%
   dplyr::rename(`Highest Count Coding` = hcprogression)
 
-#all kids together
-# ggplot(hc.dev.data, aes(x = LadlabID, y = hc)) + 
-#   facet_grid(rows = vars(Productivity)) +
-#   geom_line(data=hc.dev.data[!is.na(hc.dev.data$hc),]) + 
-#   geom_point(aes(shape = `Highest Count Coding`, colour = `Highest Count Coding`), 
-#              size = 2, stroke = 1.5) +
-#   scale_color_brewer(palette="Dark2") +
-#   scale_shape_manual(values = c(4,5,20)) +
-#   labs(title="Highest Count Progression by Decade Productivity",
-#        x = "Each line = individual participant",
-#        y="Highest Count by Count Type") +
-#   theme_bw(base_size = 13) + 
-#   theme(legend.position="bottom", 
-#         axis.text.x = element_text(angle = 270, hjust = 1)) +
-#   theme(axis.text.x=element_blank(),
-#         axis.ticks.x=element_blank()) 
-
 hc.dev.prod <- subset(hc.dev.data, Productivity == "Productive")
 hc.dev.nonprod <- subset(hc.dev.data, Productivity == "Nonproductive")
 ```
 
-
-Separate graphs for productivity groups (for easier viewing)
-```{r eval=FALSE, include=FALSE}
-#productive
-ggplot(hc.dev.prod, aes(x = LadlabID, y = hc)) + 
-  facet_grid(rows = vars(Productivity)) +
-  geom_line(data=hc.dev.prod[!is.na(hc.dev.prod$hc),]) + 
-  geom_point(aes(shape = `Highest Count Coding`, colour = `Highest Count Coding`), 
-             size = 2, stroke = 1.5) +
-  scale_color_manual(values=mypalette2) +
-  scale_shape_manual(values = c(4,5,20)) +
-  ylim(0, 100) +
-  labs(title="A. Distance, Productive Decade Counters",
-       x = "Each line = individual participant",
-       y="Highest Count") +
-  theme_bw(base_size = 13) + 
-  theme(legend.position="bottom", 
-        axis.text.x = element_text(angle = 270, hjust = 1)) + 
-  theme(axis.text.x=element_blank(),
-        axis.ticks.x=element_blank())
-ggsave('graphs/distance-prod.png')
-
-#nonproductive
-ggplot(hc.dev.nonprod, aes(x = LadlabID, y = hc)) + 
-  facet_grid(rows = vars(Productivity)) +
-  geom_line(data=hc.dev.nonprod[!is.na(hc.dev.nonprod$hc),]) + 
-  geom_point(aes(shape = `Highest Count Coding`, colour = `Highest Count Coding`), 
-             size = 2, stroke = 1.5) +
-  scale_color_manual(values=mypalette2) +
-  scale_shape_manual(values = c(4,5,20)) +
-  ylim(0, 100) +
-  labs(title="B. Distance, Non-productive Decade Counters",
-       x = "Each line = individual participant",
-       y="Highest Count") +
-  theme_bw(base_size = 13) + 
-  theme(legend.position="bottom", 
-        axis.text.x = element_text(angle = 270, hjust = 1)) +
-  theme(axis.text.x=element_blank(),
-        axis.ticks.x=element_blank())
-ggsave('graphs/distance-nonprod.png')
-
-```
-
 ### Fig 2a/b
 Separate graphs for productivity groups, sorted by ascending IHC
-```{r}
+```{r echo=FALSE}
 #productive
 ggplot(hc.dev.prod, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) + 
   facet_grid(rows = vars(Productivity)) +
   geom_line(data=hc.dev.prod[!is.na(hc.dev.prod$hc),]) + 
   geom_point(aes(shape = `Highest Count Coding`, colour = `Highest Count Coding`), 
              size = 2, stroke = 1.5) +
-  scale_color_manual(values=mypalette2, labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
+  scale_color_brewer(palette = "Dark2", labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
   scale_shape_manual(values = c(4,5,20), labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
   ylim(0, 100) +
-  labs(title="a. Distance, Productive Decade Counters",
+  labs(title="a. Distance, Productive Counters",
        x = "Each line = individual participant",
        y="Highest Count",
        colour="Highest Count Coding",
@@ -540,10 +446,10 @@ ggplot(hc.dev.nonprod, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) +
   geom_line(data=hc.dev.nonprod[!is.na(hc.dev.nonprod$hc),]) + 
   geom_point(aes(shape = `Highest Count Coding`, colour = `Highest Count Coding`), 
              size = 2, stroke = 1.5) +
-  scale_color_manual(values=mypalette2, labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
+  scale_color_brewer(palette = "Dark2", labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
   scale_shape_manual(values = c(4,5,20), labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
   ylim(0, 100) +
-  labs(title="b. Distance, Non-productive Decade Counters",
+  labs(title="b. Distance, Non-productive Counters",
        x = "Each line = individual participant",
        y="Highest Count",
        colour="Highest Count Coding",
@@ -572,39 +478,35 @@ full.data %>%
 ```
 
 ## Decade prompts
-Average number of decade prompts provided. Productive counters first
+
+Check coding sheet against 'supported.times' coding. Print conflicts. Use "sup.times" instead.
+- 030116-PW & 041416-BF: Experimenter should not have provided prompts, multiple errors before first DCE
+- 062416-MC: Experimenter's prompts are 100 and 110, should not count.
 ```{r}
 full.data %>%
-  filter(TaskItem == "times") %>%
-  filter(Productivity == "Productive") %>%
-  distinct(LadlabID, HCReceivedSupport, TaskItem, Response) %>%
-  mutate(Response = as.numeric(levels(Response)[Response])) %>%
-  group_by(HCReceivedSupport) %>%
-  summarize(mean = mean(Response, na.rm=TRUE),
-            sd = sd(Response, na.rm=TRUE),
-            min = min(Response, na.rm=TRUE),
-            max = max(Response, na.rm=TRUE),
-            count=n())
-# assume 0 = NA
-# error in supported.times coding, should only count to 90
-# but one kid got prompted with 100 and 110 and times should be 0
-
+  filter(TaskItem=="times") %>%
+  distinct(LadlabID, HCReceivedSupport, TaskItem, Response, sup.times, Productivity) %>%
+  mutate(Response = as.integer(levels(Response)[Response])) %>%
+  filter(is.na(sup.times) & !is.na(Response) | 
+           is.na(Response) & !is.na(sup.times) |
+           sup.times > Response |
+           sup.times < Response) %>%
+  kable()
 ```
 
-
-Then nonproductive counters.
+Average number of decade prompts provided. Productive counters first. Analyze from raw data:
 ```{r}
 full.data %>%
-  filter(TaskItem == "times") %>%
-  filter(Productivity == "Nonproductive") %>%
-  distinct(LadlabID, HCReceivedSupport, TaskItem, Response) %>%
-  mutate(Response = as.numeric(levels(Response)[Response])) %>%
-  group_by(HCReceivedSupport) %>%
-  summarize(mean = mean(Response, na.rm=TRUE),
-            sd = sd(Response, na.rm=TRUE),
-            min = min(Response, na.rm=TRUE),
-            max = max(Response, na.rm=TRUE),
-            count=n())
+  distinct(LadlabID, sup.times, Productivity, Productivity.tertiary) %>%
+  group_by(Productivity.tertiary) %>% 
+  summarize(n=n(),
+            n.sup=sum(sup.times>0, na.rm=T),
+            mean = mean(sup.times, na.rm=TRUE),
+            sd = sd(sup.times, na.rm=TRUE),
+            min = min(sup.times, na.rm=TRUE),
+            max = max(sup.times, na.rm=TRUE)) %>%
+  kable(digits=2)
+
 # assume 0 = NA
 # error in supported.times coding, should only count to 90
 # but one kid got prompted with 100 and 110 and times should be 0
@@ -635,7 +537,8 @@ full.data %>%
             missed.min=min(missed),
             missed.max=max(missed),
             missed.mean=mean(missed),
-            missed.median=median(missed))
+            missed.median=median(missed)) %>%
+  kable(digits=2)
 # look at proportion of kids who failed to recover from reminders.
 full.data %>%
   dplyr::select(LadlabID, Productivity, reminders.total, reminders.recovered) %>%
@@ -643,13 +546,12 @@ full.data %>%
   na.omit() %>%
   mutate(missed = reminders.total-reminders.recovered) %>%
   group_by(reminders.total) %>%
-  summarise(Nkids=n(),N.kids.missed=sum(missed),Perc.kids.missed=sum(missed)/n())
+  summarise(Nkids=n(),N.kids.missed=sum(missed),Perc.kids.missed=sum(missed)/n()) %>%
+  kable(digits=2)
 ```
 
 
 # What Comes Next Descriptives
-
-<span style="color:red">Note minimum highest contig NN can be 5 (one of the practice trials). Practice trials are excluded from %corr and within vs. beyond computation.</span>
 
 First check if Accuracy column in full.data is coded correctly. Good to go.
 ```{r}
@@ -684,13 +586,13 @@ wcn.accuracy <- wcn.data %>%
   mutate(wcnscore=sum(Accuracy, na.rm = TRUE)) %>%
   dplyr::select(LadlabID, wcnscore) %>%
   unique()
+
+wcn.data <- left_join(wcn.data, wcn.accuracy, by="LadlabID")
 ```
 
 Immediate vs. Momentum trials: Children were provided with momentum trials if they got wrong on immediate trials. Check %trials where immediate = wrong, momentum = right
 ```{r}
-wcn.wide <- full.data %>%
-  filter(ExclusionGroup == "include") %>%
-  filter(Task == "WCN") %>%
+wcn.wide <- wcn.data %>%
   filter(TaskType != "practice") %>%
   filter(TaskItem != 3) %>% # a trial on 3 for momentum that doesn't exist for immediate
   droplevels()%>%
@@ -714,31 +616,37 @@ xtabs(~immediate + momentum, data = wcn.wide, na.action = na.pass, exclude = NUL
 # 191 / 1048 trials = ~ 18%. NOTE % not by kids but by trials.
 ```
 
-## Percent Correct on WCN
+## Percent Correct on WCN 
 ```{r}
 wcn.data %>%
-  dplyr::filter(TaskType == "immediate") %>%
-  dplyr::group_by(LadlabID) %>%
-  dplyr::summarize(avg.wcn = mean(Accuracy, na.rm=TRUE),
-                   sd.wcn = sd(Accuracy, na.rm=TRUE)) %>%
-  dplyr::summarize(avg = mean(avg.wcn),
-                   sd = sd(sd.wcn))
+  dplyr::distinct(LadlabID, wcnscore)%>%
+  dplyr::summarise(n=n(),
+                   avg.wcn = mean(wcnscore)/8,
+                   sd.wcn = sd(wcnscore)/8) %>%
+  kable(digits=2)
 
+# Productivity
 wcn.data %>%
-  dplyr::filter(TaskType == "immediate") %>%
-  dplyr::group_by(LadlabID, Productivity) %>%
-  dplyr::summarize(avg.wcn = mean(Accuracy, na.rm=TRUE),
-                   sd.wcn = sd(Accuracy, na.rm=TRUE)) %>%
-  dplyr::group_by(Productivity) %>%
-  dplyr::summarize(avg = mean(avg.wcn),
-                   sd = sd(sd.wcn))
+  dplyr::distinct(LadlabID, Productivity, wcnscore)%>%
+  group_by(Productivity) %>%
+  dplyr::summarise(n=n(),avg.wcn = mean(wcnscore)/8,
+                   sd.wcn = sd(wcnscore)/8) %>%
+  kable(digits=2)
+
+# Productivity 3-ways
+wcn.data %>%
+  dplyr::distinct(LadlabID, Productivity.tertiary, wcnscore)%>%
+  group_by(Productivity.tertiary) %>%
+  dplyr::summarise(n=n(),avg.wcn = mean(wcnscore)/8,
+                   sd.wcn = sd(wcnscore)/8) %>%
+  kable(digits=2)
 ```
 
 T-test
 ```{r}
-wcn.wide %>% group_by(Productivity, LadlabID) %>%
-  summarise(wcn.score=sum(immediate)) %>%
-  t.test(wcn.score ~ Productivity, data=., var.equal=T)
+wcn.data %>%
+  dplyr::distinct(LadlabID, Productivity, wcnscore)%>%
+  t.test(wcnscore ~ Productivity, data=.)
 ```
 
 
@@ -756,7 +664,7 @@ wcn.data %>%
   stat_summary(fun.data = mean_se, geom="errorbar", 
                position = position_dodge(width=0.90), width = 0.2)+
   #scale_fill_discrete(name = "Productivity") +
-  scale_fill_manual(name = "Productivity", values = c("#D55E00", "#0072B2", "#009E73"), guide = "none") +
+  scale_fill_manual(name = "Productivity", values = mypalette, guide = "none") +
   scale_colour_brewer(palette = "Greys") +
   ylab("Proportion Correct") + 
   xlab('Productivity') + 
@@ -767,7 +675,6 @@ wcn.data %>%
   theme(text = element_text(size = 12)) +
   ylim(0, 1.0) 
   
-  
 ggsave('graphs/wcn-percentcorr.png')
 
 
@@ -776,8 +683,6 @@ ggsave('graphs/wcn-percentcorr.png')
 ### Fig 3
 Jess graph
 ```{r fig3}
-wcn.data <- wcn.data
-
 fig3.data <- wcn.data %>%
   filter(TaskType == "immediate")%>%
   mutate(TaskItem_type= ifelse(mod(TaskItem_num,10)==9, "Decade transition", "Mid-decade")) %>%
@@ -796,12 +701,13 @@ fig3.data %>%
                 width = 0, size = .5) +
   facet_grid(~TaskItem_type_ordered, scales = "free_x") +#, space = "free_x") +
   theme_bw(base_size = 13) + 
-  scale_colour_manual(values = prod.pal) +
+  scale_colour_manual(values = mypalette) +
   theme(legend.position = "right", legend.title = element_blank()) +
   labs(x = "Task item", y = "Mean performance") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
         #, strip.text=element_text(margin=margin(t=5, b=5, l=20, r=20)))
-ggsave('graphs/wcn-trial-accuracy.png')
+ggsave('graphs/wcn-trial-accuracy.png',
+       width=7, height=4)
 ```
 
 Productive (IHC<99) vs. Nonproductive on NN accuracy
@@ -826,16 +732,22 @@ fig3.model.df %>%
   summarise(score=mean(Accuracy, na.rm=T)) %>%
   ungroup() %>%
   group_by(TaskItem_type) %>%
-  summarise(mean=mean(score, na.rm=T), sd=sd(score, na.rm=T), n=n())
+  summarise(mean=mean(score, na.rm=T), sd=sd(score, na.rm=T), n=n()) %>%
+  kable(digits=2)
 # means by productivity
 fig3.model.df %>%
   group_by(LadlabID, Productivity.tertiary) %>%
   summarise(score=mean(Accuracy, na.rm=T)) %>%
   ungroup() %>%
   group_by(Productivity.tertiary) %>%
-  summarise(mean=mean(score, na.rm=T), sd=sd(score, na.rm=T), n=n())
+  summarise(mean=mean(score, na.rm=T), sd=sd(score, na.rm=T), n=n())%>%
+  kable(digits=2)
 
 ```
+
+# CONTINUE CHECKING
+
+====
 
 
 ### Analyses of Figure 3 data
@@ -1794,7 +1706,7 @@ anova(base.infinity, model.gain.infinity, test = 'LRT')#n.s.
 ```
 ### 
 
-#Exploratory - Infinity regressions IHC<99
+# Exploratory - Infinity regressions IHC<99
 ```{r}
 explore.dat <- distinct_model.df %>%
   filter(IHC < 99)
@@ -1815,7 +1727,7 @@ lt99.end.nn <- glm(EndlessKnower ~Highest_Contig_NN + Age.c, family = "binomial"
 ```
 
 
-#Plot of prod. gain with IHC - WIP
+# Plot of prod. gain with IHC - WIP
 ```{r fig2}
 # pg.ms <- full.data %>%
 #   distinct(LadlabID, IHC, FHC, prod.gradient, Productivity)
@@ -1859,7 +1771,7 @@ ggplot(aes(x = reorder(LadlabID, hc, FUN=min), y = hc, colour = prod.gradient)) 
 
 
 
-# TODO: Visualizing the regressions
+# Visualizing the regressions
 ```{r regression-graphs}
 # visualization
 library(effects)
