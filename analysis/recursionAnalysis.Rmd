@@ -1096,7 +1096,7 @@ wcn.data %>%
   stat_summary(aes(color=Productivity.tertiary), fill="white",
                fun.y = mean,
 #               position = position_dodge(width=0.8), 
-               geom="point", shape=33, size=3) +
+               geom="point", shape=23, size=3) +
   stat_summary(fun.y="mean", geom="line", aes(color=Productivity.tertiary,
                                               group=factor(Productivity.tertiary))) +
       scale_colour_manual(values=prod.pal, name="Productivity") + 
