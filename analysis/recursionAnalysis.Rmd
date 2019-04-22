@@ -6,6 +6,7 @@ output:
   html_document:
     toc: true
     toc_depth: 4
+    toc_float: true
     keep_md: true
 ---
 
@@ -140,7 +141,7 @@ full.data %<>%
                                       labels = c("Nonproductive", "Productive")), 
                 IHC = ifelse(IHC > 100, 100, IHC),
                 FHC = ifelse(FHC > 100, 100, FHC)) %>%
-    mutate(Productivity.tertiary = ifelse(IHC >= 99, "Productive (IHC \u3365 99)", 
+    mutate(Productivity.tertiary = ifelse(IHC >= 99, "Productive (IHC \u2265 99)", 
                              ifelse(Productivity == "Productive", "Productive (IHC < 99)", "Nonproductive")))
 
 
@@ -238,9 +239,10 @@ full.data %>%
 ```{r}
 full.data %<>%
   mutate(delta.hc = FHC-IHC, 
-         prod.gradient = delta.hc/(99-IHC), 
-         prod.gradient = ifelse(IHC >= 99, 1, as.numeric(prod.gradient)), 
-         prod.gradient = ifelse(prod.gradient == 0 & IHC == 99, 1, as.numeric(prod.gradient)))
+         prod.gradient = case_when(
+           IHC>=99 ~1,
+           IHC <99 & FHC>=100 ~ 1,
+           IHC <99 & FHC<100 ~delta.hc/(99-IHC)))
 ```
 
 ***
@@ -256,13 +258,14 @@ full.data %>%
                         'sup.times'),
                       list(~mean(., na.rm=T), 
                            ~sd(., na.rm=T),
+                           ~median(., na.rm=T),
                            ~min(., na.rm=T),
                            ~max(., na.rm=T),
                            ~sum(!is.na(.)))) %>%
   gather(stat, val) %>%
   separate(stat, into = c("var", "stat"), sep = "_") %>%
   spread(stat, val) %>%
-  dplyr::select(var, n=sum, mean, sd, min, max) %>%
+  dplyr::select(var, n=sum, mean, sd,  median, min, max) %>%
   kable(digits=3)
 ```
 
@@ -276,13 +279,14 @@ full.data %>%
                         'sup.times'),
                       list(~mean(., na.rm=T), 
                            ~sd(., na.rm=T),
+                           ~median(., na.rm=T),
                            ~min(., na.rm=T),
                            ~max(., na.rm=T),
                            ~sum(!is.na(.)))) %>%
   gather(stat, val, -Productivity) %>%
   separate(stat, into = c("var", "stat"), sep = "_") %>%
   spread(stat, val) %>%
-  dplyr::select(Productivity, var, n=sum, mean, sd, min, max) %>%
+  dplyr::select(Productivity, var, n=sum, mean, sd, median, min, max) %>%
   kable(digits=3)
 ```
 
@@ -296,13 +300,14 @@ full.data %>%
                         'sup.times'),
                       list(~mean(., na.rm=T), 
                            ~sd(., na.rm=T),
+                           ~median(., na.rm=T),
                            ~min(., na.rm=T),
                            ~max(., na.rm=T),
                            ~sum(!is.na(.)))) %>%
   gather(stat, val, -Productivity.tertiary) %>%
   separate(stat, into = c("var", "stat"), sep = "_") %>%
   spread(stat, val) %>%
-  dplyr::select(Productivity.tertiary, var, n=sum, mean, sd, min, max) %>%
+  dplyr::select(Productivity.tertiary, var, n=sum, mean,  median, sd, min, max) %>%
   kable(digits=3)
 ```
 
@@ -319,14 +324,14 @@ unique.hc.data <- full.data %>%
 ggplot(unique.hc.data, aes(x=IHC, color=Productivity)) + 
   geom_dotplot(aes(fill = Productivity),
                binwidth=1, stackgroups=TRUE, binpositions="all",method="dotdensity", dotsize = 1) +
-  scale_color_manual(values=c("#D55E00", "#0073B3", "#009E73")) + 
-  scale_fill_manual(values=c("#D55E00", "#0073B3", "#009E73")) +
+  scale_color_manual(values=mypalette, labels=c('Non-Productive Counters', 'Productive Counters')) + 
+  scale_fill_manual(values=mypalette, labels=c('Non-Productive Counters', 'Productive Counters')) +
   coord_fixed(ratio=1) +
   scale_y_continuous(breaks=seq(0,40,10), lim=c(0,35)) +
   scale_x_continuous(breaks=seq(0,100,by=10)) +
-  labs(x="IHC", 
+  labs(x="Initial Highest Count", 
        y="Frequency") +
-  theme_bw(base_size = 11) + 
+  theme_bw(base_size = 10) + 
   theme(legend.position="bottom", 
         legend.title = element_blank(), 
         panel.grid.minor = element_blank())
@@ -341,7 +346,7 @@ ggplot(unique.hc.data, aes(x=IHC, color=Productivity.tertiary)) +
   coord_fixed(ratio=1) +
   scale_y_continuous(breaks=seq(0,40,10), lim=c(0,35)) +
   scale_x_continuous(breaks=seq(0,100,by=10)) +
-  labs(x="IHC", 
+  labs(x="Initial Highest Count", 
        y="Frequency") +
   theme_bw(base_size = 11) + 
   theme(legend.position="bottom", 
@@ -355,7 +360,7 @@ ggplot(unique.hc.data, aes(x=IHC)) +
   coord_fixed(ratio=1) +
   scale_y_continuous(breaks=seq(0,40,10), lim=c(0,35)) +
   scale_x_continuous(breaks=seq(0,100,by=10)) +
-  labs(x="IHC", 
+  labs(x="Initial Highest Count", 
        y="Frequency") +
   theme_bw(base_size = 11) + 
   theme(legend.position="bottom", 
@@ -419,23 +424,23 @@ hc.dev.nonprod <- subset(hc.dev.data, Productivity == "Nonproductive")
 ```
 
 ### Fig 3a/b
-Separate graphs for productivity groups, sorted by ascending IHC
+Separate graphs for productivity groups, sorted by ascending IHC. One participant was coded as non-productive despite having an FHC of 100 because they made more than 3 errors.
 ```{r echo=FALSE}
 #productive
 ggplot(hc.dev.prod, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) + 
   facet_grid(rows = vars(Productivity)) +
   geom_line(data=hc.dev.prod[!is.na(hc.dev.prod$hc),]) + 
   geom_point(aes(shape = `Highest Count Coding`, colour = `Highest Count Coding`), 
-             size = 3, stroke = 1.5) +
-  scale_color_brewer(palette = "Dark3", labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
-  scale_shape_manual(values = c(4,5,30), labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
+             size = 2, stroke = 1.5) +
+  scale_color_brewer(palette = "Dark2", labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
+  scale_shape_manual(values = c(4,5,20), labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
   ylim(0, 100) +
   labs(title="a. Distance, Productive Counters",
        x = "Each line = individual participant",
        y="Highest Count",
        colour="Highest Count Coding",
        shape="Highest Count Coding") +
-  theme_bw(base_size = 13) + 
+  theme_bw(base_size = 12) + 
   theme(legend.position="bottom", 
         #axis.text.x = element_text(angle = 370, hjust = 1),
         axis.text.x=element_blank(),
@@ -447,16 +452,16 @@ ggplot(hc.dev.nonprod, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) +
   facet_grid(rows = vars(Productivity)) +
   geom_line(data=hc.dev.nonprod[!is.na(hc.dev.nonprod$hc),]) + 
   geom_point(aes(shape = `Highest Count Coding`, colour = `Highest Count Coding`), 
-             size = 3, stroke = 1.5) +
-  scale_color_brewer(palette = "Dark3", labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
-  scale_shape_manual(values = c(4,5,30), labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
+             size = 2, stroke = 1.5) +
+  scale_color_brewer(palette = "Dark2", labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
+  scale_shape_manual(values = c(4,5,20), labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
   ylim(0, 100) +
   labs(title="b. Distance, Non-productive Counters",
        x = "Each line = individual participant",
        y="Highest Count",
        colour="Highest Count Coding",
        shape="Highest Count Coding") +
-  theme_bw(base_size = 13) + 
+  theme_bw(base_size = 12) + 
   theme(legend.position="bottom", 
         #axis.text.x = element_text(angle = 370, hjust = 1),
         axis.text.x=element_blank(),
@@ -499,10 +504,10 @@ full.data %>%
 Average number of decade prompts provided. Productive counters first. Analyze from raw data:
 ```{r}
 full.data %>%
-  distinct(LadlabID, sup.times, Productivity, Productivity.tertiary) %>%
+  distinct(LadlabID, sup.times, Productivity.tertiary) %>%
   group_by(Productivity.tertiary) %>% 
-  summarize(n=n(),
-            n.sup=sum(sup.times>0, na.rm=T),
+  summarise(n=n(),
+            n.sup=sum(sup.times>0, na.rm=TRUE),
             mean = mean(sup.times, na.rm=TRUE),
             sd = sd(sup.times, na.rm=TRUE),
             min = min(sup.times, na.rm=TRUE),
@@ -715,21 +720,13 @@ ggsave('graphs/wcn-trial-accuracy.png',
 Get summary statistics by productivity and item type
 ```{r, echo=FALSE}
 fig3.df <- fig3.data %>%
-#  filter(Productivity.tertiary != "Productive (IHC \u3365 99)") %>%
+#  filter(Productivity.tertiary != "Productive (IHC \u2265 99)") %>%
   dplyr::select(c(LadlabID, IHC, FHC, Age, Productivity.tertiary,
                   TaskItem_num, TaskItem_type, Accuracy)) %>%
   mutate(IHC = as.integer(IHC),
          LadlabID=as.factor(LadlabID),
          TaskItem_type=as.factor(TaskItem_type))
 
-# means by item type
-fig3.df %>%
-  group_by(LadlabID, TaskItem_type) %>%
-  summarise(score=mean(Accuracy, na.rm=T)) %>%
-  ungroup() %>%
-  group_by(TaskItem_type) %>%
-  summarise(mean=mean(score, na.rm=T), sd=sd(score, na.rm=T), n=n()) %>%
-  kable(digits=3)
 # means by productivity
 fig3.df %>%
   group_by(LadlabID, Productivity.tertiary) %>%
@@ -748,67 +745,125 @@ fig3.df %>%
   kable(digits=3)
 ```
 
-### Productive (IHC<99) vs. Nonproductive on NN accuracy
+## Item magnitude
+### Remove IHC=99
 
-Build dataframe and mean-center IHC, FHC and age.
-```{r, echo=FALSE}
+Build dataframe and mean-center IHC and age, and use weighted effect coding for Productivity.
+```{r}
 # Only for productive IHC < 99 and nonproductive
 fig3.modelA.df <- fig3.data %>%
-  filter(Productivity.tertiary != "Productive (IHC \u3365 99)") %>%
-  dplyr::select(c(LadlabID, IHC, FHC, Age, Productivity.tertiary,
+  filter(Productivity.tertiary != "Productive (IHC \u2265 99)") %>%
+  dplyr::select(c(LadlabID, IHC, Age, Productivity.tertiary,
                   TaskItem_num, TaskItem_type, Accuracy)) %>%
   mutate(Productivity.tertiary=as.factor(Productivity.tertiary),
          IHC = as.integer(IHC),
          LadlabID=as.factor(LadlabID),
          TaskItem_type=as.factor(TaskItem_type)) %>%
-  mutate(IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)), #scale and center for model fit
-         FHC.c = as.vector(scale(FHC, center = TRUE, scale=TRUE)), 
+  mutate(IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)),          
          age.c = as.vector(scale(Age, center = TRUE, scale=TRUE)))
+# weighted effect coding
+wec <- mean(as.numeric(fig3.modelA.df$Productivity.tertiary)-1)
+contrasts(fig3.modelA.df$Productivity.tertiary) <- c(-wec,1-wec)
+wec <- mean(as.numeric(fig3.modelA.df$TaskItem_type)-1)
+contrasts(fig3.modelA.df$TaskItem_type) <- c(-wec,1-wec)
+# structure
 str(fig3.modelA.df)
 ```
 
-Regression testing for interaction of productivity and decade/non-decade item type on WCN accuracy
+#### Productivity effect
 ```{r}
-##WCN model looking at interaction between productivity and decade/non-decade item accuracy
+fig3.modelA.ihc <- glmer(Accuracy ~ IHC.c + age.c + 
+                            (1|TaskItem_num) + (1|LadlabID), 
+                          family = "binomial", data = fig3.modelA.df)
 fig3.modelA.prod <- glmer(Accuracy ~ Productivity.tertiary + IHC.c + age.c + 
                             (1|TaskItem_num) + (1|LadlabID), 
                           family = "binomial", data = fig3.modelA.df)
-fig3.modelA.itemtype <- glmer(Accuracy ~ TaskItem_type +
-                                IHC.c + age.c +
-                                (1|TaskItem_num) + (1|LadlabID), 
-                              family = "binomial", data = fig3.modelA.df)
+# LRT tests for productivity effect vs. base
+anova(fig3.modelA.ihc, fig3.modelA.prod, test='LRT')
+```
+
+
+#### Item type (mid or cross decade)
+```{r}
 fig3.modelA.main <- glmer(Accuracy ~ Productivity.tertiary + TaskItem_type +
                                 IHC.c + age.c +
                                 (1|TaskItem_num) + (1|LadlabID), 
                               family = "binomial", data = fig3.modelA.df)
+# LRT test for itemtype main effect
+anova(fig3.modelA.main, fig3.modelA.prod, test = 'LRT')
+```
+
+Test of interaction (n.s.): Regression testing for interaction of productivity and decade/non-decade item type on WCN accuracy
+```{r}
 fig3.modelA.full <- glmer(Accuracy ~ Productivity.tertiary + TaskItem_type +
                             Productivity.tertiary:TaskItem_type + IHC.c + age.c + 
                             (1|TaskItem_num) + (1|LadlabID), 
                           family = "binomial", data = fig3.modelA.df)
-
-# LRT tests for productivity main effect
-anova(fig3.modelA.main, fig3.modelA.itemtype, test='LRT')
-# LRT test for itemtype main effect
-anova(fig3.modelA.main, fig3.modelA.prod, test = 'LRT')
 # LRT test for interaction effect
 anova(fig3.modelA.full, fig3.modelA.main, test = 'LRT')
+# summary(fig3.modelA.full)
 ```
 
-### Compare both productive groups
+Test of main effects:
+```{r}
+drop1(fig3.modelA.main, test="Chisq")
+```
+
+Final model
+```{r}
+summary(fig3.modelA.main)
+plot_model(fig3.modelA.full, type="est", transform = NULL,
+           show.intercept = T, show.p = T, show.values = T,
+           title='What Comes Next Accuracy')
+plot_model(fig3.modelA.full, type="est", 
+           show.intercept = T, show.p = T, show.values = T,
+           title='What Comes Next Accuracy')
+
+```
+
+Excluding IHC>=99, report averages by each factor
+```{r}
+# means by item type
+fig3.df %>%
+  filter(Productivity.tertiary != "Productive (IHC \u2265 99)") %>%
+  group_by(LadlabID, TaskItem_type) %>%
+  summarise(score=mean(Accuracy, na.rm=T)) %>%
+  ungroup() %>%
+  group_by(TaskItem_type) %>%
+  summarise(mean=mean(score, na.rm=T), sd=sd(score, na.rm=T), n=n()) %>%
+  kable(digits=3)
+# means by productivity
+fig3.df %>%
+  filter(Productivity.tertiary != "Productive (IHC \u2265 99)") %>%
+  group_by(LadlabID, Productivity.tertiary) %>%
+  summarise(score=mean(Accuracy, na.rm=T)) %>%
+  ungroup() %>%
+  group_by(Productivity.tertiary) %>%
+  summarise(mean=mean(score, na.rm=T), sd=sd(score, na.rm=T), n=n()) %>%
+  kable(digits=3)
+```
+
+
+### Remove nonproductive
+Compare both productive groups
 
 Build dataframe and mean-center IHC, FHC and age.
-```{r, echo=FALSE}
+```{r}
 fig3.modelB.df <- fig3.data %>%
   filter(Productivity.tertiary != "Nonproductive") %>%
-  dplyr::select(c(LadlabID, IHC, FHC, Age, Productivity.tertiary,
+  dplyr::select(c(LadlabID, IHC, Age, Productivity.tertiary,
                   TaskItem_num, TaskItem_type, Accuracy)) %>%
   mutate(Productivity.tertiary=as.factor(Productivity.tertiary),
          IHC = as.integer(IHC),
          LadlabID=as.factor(LadlabID),
          TaskItem_type=as.factor(TaskItem_type)) %>%
-  mutate(IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)), #scale and center for model fit
-         FHC.c = as.vector(scale(FHC, center = TRUE, scale=TRUE)), 
+  mutate(IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)),
          age.c = as.vector(scale(Age, center = TRUE, scale=TRUE)))
+# weighted effects coding
+wec <- mean(as.numeric(fig3.modelB.df$Productivity.tertiary)-1)
+contrasts(fig3.modelB.df$Productivity.tertiary) <- c(-wec,1-wec)
+wec <- mean(as.numeric(fig3.modelB.df$TaskItem_type)-1)
+contrasts(fig3.modelB.df$TaskItem_type) <- c(-wec,1-wec)
 str(fig3.modelB.df)
 ```
 
@@ -837,18 +892,21 @@ fig3.modelB.full <- glmer(Accuracy ~ Productivity.tertiary + TaskItem_type +
                             (1|TaskItem_num) + (1|LadlabID), 
                           family = "binomial", data = fig3.modelB.df)
 
-# LRT tests for productivity main effect
-anova(fig3.modelB.main, fig3.modelB.itemtype, test='LRT')
-# LRT test for itemtype main effect
-anova(fig3.modelB.main, fig3.modelB.prod, test = 'LRT')
 # LRT test for interaction effect
 anova(fig3.modelB.full, fig3.modelB.main, test = 'LRT')
+```
+
+Main effect model
+```{r}
+# LRT tests for main effects
+drop1(fig3.modelB.main, test="Chisq")
 
 # summary of final model
 summary(fig3.modelB.main)
 ```
 
-### Analyses including all participants
+### All kids
+Analyses including all participants
 ```{r}
 fig3.modelC.df <- fig3.data %>%
   dplyr::select(c(LadlabID, IHC, FHC, Age, Productivity,
@@ -857,9 +915,13 @@ fig3.modelC.df <- fig3.data %>%
          IHC = as.integer(IHC),
          LadlabID=as.factor(LadlabID),
          TaskItem_type=as.factor(TaskItem_type)) %>%
-  mutate(IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)), #scale and center for model fit
-         FHC.c = as.vector(scale(FHC, center = TRUE, scale=TRUE)), 
-         age.c = as.vector(scale(Age, center = TRUE, scale=TRUE)))
+  mutate(IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)),
+        age.c = as.vector(scale(Age, center = TRUE, scale=TRUE)))
+# weighted effects coding
+wec <- mean(as.numeric(fig3.modelC.df$Productivity)-1)
+contrasts(fig3.modelC.df$Productivity) <- c(-wec,1-wec)
+wec <- mean(as.numeric(fig3.modelC.df$TaskItem_type)-1)
+contrasts(fig3.modelC.df$TaskItem_type) <- c(-wec,1-wec)
 
 ## regressions
 fig3.modelC.noint <- glmer(Accuracy ~ Productivity + TaskItem_type+ 
@@ -911,7 +973,8 @@ determine_count_range <- function(df) {
 wcn.data <- determine_count_range(wcn.data)
 ```
 
-WCN accuracy, within and outside of IHC
+
+WCN accuracy, within and outside of IHC, by various contrasts
 ```{r}
 wcn.data %>%
   dplyr::filter(TaskType == "immediate") %>%
@@ -919,19 +982,20 @@ wcn.data %>%
   dplyr::summarize(score=mean(Accuracy, na.rm=T)) %>%
   ungroup() %>% group_by(WithinOutsideIHC) %>%
   dplyr::summarize(mean = mean(score, na.rm = TRUE), 
-                   sd = sd(score, na.rm = TRUE))
-```
+                   sd = sd(score, na.rm = TRUE),
+                   n = n()) %>%
+  kable(digits=2)
 
-
-Now WCN by within/outside count range and productivity
-```{r}
+# 2-way productivity, all kids
 wcn.data %>%
   dplyr::filter(TaskType == "immediate") %>%
   dplyr::group_by(LadlabID, Productivity, WithinOutsideIHC) %>%
   dplyr::summarize(score=mean(Accuracy, na.rm=T)) %>%
   ungroup() %>% group_by(Productivity, WithinOutsideIHC) %>%
   dplyr::summarize(mean = mean(score, na.rm = TRUE), 
-                   sd = sd(score, na.rm = TRUE))
+                   sd = sd(score, na.rm = TRUE),
+                   n = n()) %>%
+  kable(digits=2)
 
 # three-way
 wcn.data %>%
@@ -940,7 +1004,9 @@ wcn.data %>%
   dplyr::summarize(score=mean(Accuracy, na.rm=T)) %>%
   ungroup() %>% group_by(Productivity.tertiary, WithinOutsideIHC) %>%
   dplyr::summarize(mean = mean(score, na.rm = TRUE), 
-                   sd = sd(score, na.rm = TRUE))
+                   sd = sd(score, na.rm = TRUE),
+                   n = n()) %>%
+  kable(digits=2)
 ```
 
 
@@ -1043,29 +1109,78 @@ wcn.data %>%
 ggsave('graphs/wcn-within-beyond-final.png', width=6, height=4)
 ```
 
+### Remove IHC=99
+
+```{r, echo=FALSE}
+wcn_model.df2 <- wcn.data %>%
+  filter(TaskType == "immediate",
+         Productivity.tertiary != "Productive (IHC \u2265 99)") %>%
+  mutate(IHC = as.integer(IHC),
+         LadlabID = factor(LadlabID),
+         WithinOutsideIHC=factor(WithinOutsideIHC)) %>%
+  mutate(IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)), 
+         age.c = as.vector(scale(Age, center = TRUE, scale=TRUE))) %>%
+  dplyr::select(LadlabID, TaskItem_num, age.c, IHC.c, Productivity, WithinOutsideIHC, Accuracy)
+# weighted effect coding
+wec <- mean(as.numeric(wcn_model.df2$Productivity)-1)
+contrasts(wcn_model.df2$Productivity) <- c(-wec,1-wec)
+wec <- mean(as.numeric(wcn_model.df2$WithinOutsideIHC)-1)
+contrasts(wcn_model.df2$WithinOutsideIHC) <- c(-wec,1-wec)
+# structure
+str(wcn_model.df2)
+```
+
+Construct models and compare
+```{r}
+##WCN model looking at interaction between productivity and trial type in WCN task
+wcn.model2.base <- glmer(Accuracy ~ age.c + (1|TaskItem_num) + (1|LadlabID), 
+                        family = "binomial", data = wcn_model.df2)
+wcn.model2.ihc <- glmer(Accuracy ~ IHC.c + age.c + (1|TaskItem_num) + (1|LadlabID), 
+                       family = "binomial", data = wcn_model.df2)
+wcn.model2.noint <- glmer(Accuracy ~ Productivity + WithinOutsideIHC + 
+                            IHC.c + age.c + (1|TaskItem_num) +
+                     (1|LadlabID), family = "binomial", data = wcn_model.df2)
+wcn.model2.int <- glmer(Accuracy ~ Productivity+ WithinOutsideIHC + 
+                         Productivity:WithinOutsideIHC + IHC.c + age.c + (1|TaskItem_num) +
+                     (1|LadlabID), family = "binomial", data = wcn_model.df2)
+#comparison against base models
+anova(wcn.model2.int, wcn.model2.noint, wcn.model2.ihc, wcn.model2.base, test = 'LRT')
+```
+
+Interaction was significant, let's view the full model
+```{r}
+# summary of final model
+summary(wcn.model2.int)
+```
+
 ### Analysis full sample
 
-Analysis of WCN accuracy by productivity and trial type
+Analysis of WCN accuracy by productivity and trial type. First construct the dataframe, again centering all variables:
 ```{r}
 wcn_model.df <- wcn.data %>%
   filter(TaskType == "immediate")%>%
   mutate(IHC = as.integer(IHC),
-         LadlabID = factor(LadlabID))%>%
-  mutate(IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)), #scale and center for model fit
+         LadlabID = factor(LadlabID),
+         WithinOutsideIHC=factor(WithinOutsideIHC))%>%
+  mutate(IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)),
          age.c = as.vector(scale(Age, center = TRUE, scale=TRUE))) %>%
   dplyr::select(LadlabID, TaskItem_num, age.c, IHC.c, Productivity, WithinOutsideIHC, Accuracy)
+# weighted effect coding
+wec <- mean(as.numeric(wcn_model.df$Productivity)-1)
+contrasts(wcn_model.df$Productivity) <- c(-wec,1-wec)
+wec <- mean(as.numeric(wcn_model.df$WithinOutsideIHC)-1)
+contrasts(wcn_model.df$WithinOutsideIHC) <- c(-wec,1-wec)
+# structure
+str(wcn_model.df)
+```
 
+Construct models.
+```{r}
 ##WCN model looking at interaction between productivity and trial type in WCN task
 wcn.model.base <- glmer(Accuracy ~ age.c + (1|TaskItem_num) + (1|LadlabID), 
                         family = "binomial", data = wcn_model.df)
 wcn.model.ihc <- glmer(Accuracy ~ IHC.c + age.c + (1|TaskItem_num) + (1|LadlabID), 
                        family = "binomial", data = wcn_model.df)
-wcn.model.prod  <- glmer(Accuracy ~ Productivity +
-                           IHC.c + age.c + (1|TaskItem_num) +
-                     (1|LadlabID), family = "binomial", data = wcn_model.df)
-wcn.model.withinout  <- glmer(Accuracy ~ WithinOutsideIHC +
-                           IHC.c + age.c + (1|TaskItem_num) +
-                     (1|LadlabID), family = "binomial", data = wcn_model.df)
 wcn.model.noint <- glmer(Accuracy ~ Productivity + WithinOutsideIHC + 
                            IHC.c + age.c + (1|TaskItem_num) +
                      (1|LadlabID), family = "binomial", data = wcn_model.df)
@@ -1073,71 +1188,58 @@ wcn.model.int <- glmer(Accuracy ~ Productivity + WithinOutsideIHC +
                          Productivity:WithinOutsideIHC + 
                          IHC.c + age.c + (1|TaskItem_num) +
                      (1|LadlabID), family = "binomial", data = wcn_model.df)
-
-# compare against base models
-anova(wcn.model.int, wcn.model.noint, wcn.model.ihc, wcn.model.base, test='LRT')
-
-# test main effect productivity
-anova(wcn.model.noint, wcn.model.withinout, test='LRT')
-# test main effect within/outside
-anova(wcn.model.noint, wcn.model.prod, test='LRT')
-# test interaction 
-anova(wcn.model.int, wcn.model.noint, test='LRT')
 ```
 
+Model comparisons
+```{r}
+# compare against base models
+anova(wcn.model.int, wcn.model.noint, wcn.model.ihc, wcn.model.base, test='LRT')
+```
 
-### Remove IHC=99
+Interaction is significant:
+```{r}
+summary(wcn.model.int)
+```
+
+### Remove non-productive
+
+We can only compare accuracy for within-IHC trials:
 ```{r, echo=FALSE}
 wcn_model.df3 <- wcn.data %>%
   filter(TaskType == "immediate",
-         Productivity.tertiary != "Productive (IHC \u3365 99)") %>%
+         Productivity != "Nonproductive",
+         WithinOutsideIHC=="within") %>%
   mutate(IHC = as.integer(IHC),
-         LadlabID = factor(LadlabID))%>%
-  mutate(IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)), #scale and center for model fit
-         FHC.c = as.vector(scale(FHC, center = TRUE, scale=TRUE)), 
+         LadlabID = factor(LadlabID),
+         Productivity.tertiary=factor(Productivity.tertiary)) %>%
+  mutate(IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)), 
          age.c = as.vector(scale(Age, center = TRUE, scale=TRUE))) %>%
-  dplyr::select(LadlabID, TaskItem_num, age.c, IHC.c, Productivity, WithinOutsideIHC, Accuracy)
+  dplyr::select(LadlabID, TaskItem_num, age.c, IHC.c, Productivity.tertiary, Accuracy)
+# weighted effect coding
+wec <- mean(as.numeric(wcn_model.df3$Productivity.tertiary)-1)
+contrasts(wcn_model.df3$Productivity.tertiary) <- c(-wec,1-wec)
+# structure
+str(wcn_model.df3)
+```
 
-
+Construct models and compare
+```{r}
 ##WCN model looking at interaction between productivity and trial type in WCN task
 wcn.model3.base <- glmer(Accuracy ~ age.c + (1|TaskItem_num) + (1|LadlabID), 
                         family = "binomial", data = wcn_model.df3)
 wcn.model3.ihc <- glmer(Accuracy ~ IHC.c + age.c + (1|TaskItem_num) + (1|LadlabID), 
                        family = "binomial", data = wcn_model.df3)
-wcn.model3.noint <- glmer(Accuracy ~ Productivity + WithinOutsideIHC + 
+wcn.model3.prod <- glmer(Accuracy ~ Productivity.tertiary+
                             IHC.c + age.c + (1|TaskItem_num) +
                      (1|LadlabID), family = "binomial", data = wcn_model.df3)
-wcn.model3.prod  <- glmer(Accuracy ~ Productivity +
-                           IHC.c + age.c + (1|TaskItem_num) +
-                     (1|LadlabID), family = "binomial", data = wcn_model.df3)
-wcn.model3.withinout  <- glmer(Accuracy ~ WithinOutsideIHC +
-                           IHC.c + age.c + (1|TaskItem_num) +
-                     (1|LadlabID), family = "binomial", data = wcn_model.df3)
-wcn.model3.int <- glmer(Accuracy ~ Productivity+ WithinOutsideIHC + 
-                         Productivity:WithinOutsideIHC + IHC.c + age.c + (1|TaskItem_num) +
-                     (1|LadlabID), family = "binomial", data = wcn_model.df3)
-
-#comparison against base models
-anova(wcn.model3.int, wcn.model3.noint, wcn.model3.ihc, wcn.model3.base, test = 'LRT')
-
-# test main effect productivity
-anova(wcn.model3.noint, wcn.model3.withinout, test='LRT')
-# test main effect within/outside
-anova(wcn.model3.noint, wcn.model3.prod, test='LRT')
-# test interaction 
-anova(wcn.model3.int, wcn.model3.noint, test='LRT')
-
-# summary of final model
-summary(wcn.model3.int)
+# compare
+anova(wcn.model3.prod, wcn.model3.ihc, wcn.model3.base, test = 'LRT')
+```
+Final model: IHC only
+```{r}
+summary(wcn.model3.ihc)
 ```
 
-How many trials do kids have beyond their IHC?
-```{r, echo=FALSE}
-wcn.data %>%
-  dplyr::filter(TaskType == "immediate") %>%
-  dplyr::group_by(Productivity, WithinOutsideIHC)%>%
-  dplyr::summarise(n = n())
-```
 
 # Infinity Descriptives
 
@@ -1335,7 +1437,11 @@ distinct_model.df <- model.df %>%
          Age.c = as.vector(scale(Age, center = TRUE, scale=TRUE)),
          prod.gradient.c = as.vector(scale(prod.gradient, center=TRUE, scale=TRUE)),
          wcnscore.c = as.vector(scale(wcnscore, center = TRUE, scale=TRUE)))
-
+# weighted effect coding for productivity
+wec <- mean(as.numeric(distinct_model.df$Productivity)-1)
+contrasts(distinct_model.df$Productivity) <- c(-wec,1-wec)
+# structure
+str(distinct_model.df)
 ```
 ### Successor models
 ```{r}
@@ -1385,6 +1491,25 @@ anova(base.successor, model.prod.successor, test = 'LRT')# n.s.
 
 ##Exploratory vs. base
 anova(base.successor, model.gain.successor, test = 'LRT')# n.s.
+```
+
+#### Visualize
+
+Visualize relationship between IHC and SuccessorKnowledge, by productivity
+```{r}
+distinct_model.df %>% 
+  ggplot(data = .,
+         mapping = aes(x = IHC,
+                       y = SuccessorKnower,
+                       color = Productivity,
+                       group = Productivity)) +
+  geom_point(alpha = 0.2, size = 2) + 
+  geom_smooth(method = "glm",
+              method.args = list(family = "binomial"),
+              alpha = 0.2,
+              aes(fill = Productivity)) +
+  scale_color_manual(values=mypalette, name="Productivity") +
+    scale_fill_manual(values=mypalette, name="Productivity")
 ```
 
 ### Endless models
@@ -1437,6 +1562,108 @@ anova(model.prod.endless, base.endless, test = 'LRT')
 anova(base.endless, model.gain.endless, test = 'LRT')
 ```
 
+#### 2-factors
+Combining these factors don't explain additional variance over single-factor models.
+```{r}
+model.prod.nn.endless <- glm(EndlessKnower ~ Productivity + wcnscore.c + 
+                              Age.c, 
+                            family = "binomial", data = distinct_model.df)
+drop1(model.prod.nn.endless, test="Chisq")
+# prod + ihc
+model.prod.ihc.endless <- glm(EndlessKnower ~ Productivity + IHC.c + 
+                              Age.c, 
+                            family = "binomial", data = distinct_model.df)
+drop1(model.prod.ihc.endless, test="Chisq")
+# nn + ihc
+model.nn.ihc.endless <- glm(EndlessKnower ~ wcnscore.c + IHC.c + 
+                              Age.c, 
+                            family = "binomial", data = distinct_model.df)
+drop1(model.nn.ihc.endless, test="Chisq")
+# all 3
+large.endless.full <- glm(EndlessKnower ~ Productivity + wcnscore.c + 
+                              IHC.c + Age.c, 
+                            family = "binomial", data = distinct_model.df)
+summary(large.endless.full)
+```
+
+
+
+#### Visualize
+
+Regressions, simple models
+```{r}
+plot_models(model.nn.endless, model.prod.endless, model.ihc.endless, model.gain.endless,
+            transform="plogis", show.values = T, show.p=T,
+            colors="Dark2", show.intercept = T, spacing=0.7,
+            m.labels = c("Model 1: NN",
+                         "Model 2: Productivity",
+                         "Model 3: IHC",
+                         "Model 4: Prod. Grad"),
+            show.legend=T,
+            title="Regression analysis, Endless Knowledge, all participants",
+            axis.labels = c("Age.c"="Age", "wcnscore.c"="Next Number accuracy",
+                           "IHC.c"= "Initial Highest Count",
+                           "Productivity1"="Productivity Status",
+                           "prod.gradient.c"="Productivity Gradient"),
+            axis.title = "Endorsement Probability",
+            axis.lim=c(0,1)) +
+  theme_bw() +
+  ggplot2::geom_hline(yintercept = 0.5, linetype="dashed")
+ggsave("graphs/reg-endless.png", height=7, width=7)
+
+# twofactors
+plot_models(model.prod.nn.endless, model.prod.ihc.endless,
+            model.nn.ihc.endless,
+            transform="plogis", show.values = T, show.p=T, grid=T,
+            colors="Dark2", show.intercept = T, spacing=0.7,
+            m.labels = c("Model 1: Prod+NN",
+                         "Model 2: Prod+IHC",
+                         "Model 3: NN+IHC"),
+            show.legend=F,
+            title="Regression analysis, Endless Knowledge, all participants",
+            axis.labels = c("Age.c"="Age", "wcnscore.c"="Next Number accuracy",
+                           "IHC.c"= "Initial Highest Count",
+                           "Productivity1"="Productivity Status",
+                           "prod.gradient.c"="Productivity Gradient"),
+            axis.title = "Endorsement Probability",
+            axis.lim=c(0,1)) +
+  theme_bw() +
+  ggplot2::geom_hline(yintercept = 0.5, linetype="dashed")
+
+# graph
+plot_model(large.endless.full,
+            transform="plogis", show.values = T, show.p=T,
+            colors="Dark2", show.intercept = T, spacing=0.7,
+            title="Regression analysis, Endless Knowledge, all participants",
+            axis.labels = c("Age.c"="Age", "wcnscore.c"="Next Number accuracy",
+                           "IHC.c"= "Initial Highest Count",
+                           "Productivity1"="Productivity Status",
+                           "prod.gradient.c"="Productivity Gradient"),
+            axis.title = "Endorsement Probability",
+            axis.lim=c(0,1)) +
+  theme_bw() +
+  ggplot2::geom_hline(yintercept = 0.5, linetype="dashed")
+ggsave("graphs/reg-large.png", height=7, width=7)
+```
+
+Visualize relationship between IHC and SuccessorKnowledge, by productivity
+```{r}
+distinct_model.df %>% 
+  ggplot(data = .,
+         mapping = aes(x = IHC,
+                       y = EndlessKnower,
+                       color = Productivity,
+                       group = Productivity)) +
+  geom_point(alpha = 0.2, size = 2) + 
+  geom_smooth(method = "glm",
+              method.args = list(family = "binomial"),
+              alpha = 0.2,
+              aes(fill = Productivity)) +
+  scale_color_manual(values=mypalette, name="Productivity") +
+    scale_fill_manual(values=mypalette, name="Productivity")
+```
+
+
 ### Full Infinity Knowledge models
 ```{r}
 ###MODEL BUILDING AND COMPARISONS###
@@ -1486,50 +1713,57 @@ anova(base.infinity, model.prod.infinity, test = 'LRT')#n.s.
 anova(base.infinity, model.gain.infinity, test = 'LRT')#n.s.
 ```
 
-### Visualizations
+#### Visualize
+```{r}
+plot_models(model.nn.infinity, model.prod.infinity, model.ihc.infinity, model.gain.infinity,
+            transform="plogis", show.values = T, show.p=T,
+            colors="Dark2", show.intercept = T, spacing=0.7,
+            m.labels = c("Model 1: NN",
+                         "Model 2: Productivity",
+                         "Model 3: IHC",
+                         "Model 4: Prod. Grad"),
+            show.legend=T,
+            title="Regression analysis, Infinity Knowledge, all participants",
+            axis.labels = c("Age.c"="Age", "wcnscore.c"="Next Number accuracy",
+                           "IHC.c"= "Initial Highest Count",
+                           "Productivity1"="Productivity Status",
+                           "prod.gradient.c"="Productivity Gradient"),
+            axis.title = "Endorsement Probability",
+            axis.lim=c(0,1)) +
+  theme_bw() +
+  ggplot2::geom_hline(yintercept = 0.5, linetype="dashed")
+ggsave("graphs/reg-infinity.png", height=7, width=7)
+```
+
+
+### Graph maximal models
 ```{r, eval=FALSE}
-large.successor.full.grad <- glm(SuccessorKnower ~ Productivity + wcnscore.c + 
+large.successor.full.grad <- glm(SuccessorKnower ~ prod.gradient.c + wcnscore.c + 
                               IHC.c + Age.c, 
                             family = "binomial", data = distinct_model.df)
-large.endless.full.grad <- glm(EndlessKnower ~ Productivity + wcnscore.c + 
+large.endless.full.grad <- glm(EndlessKnower ~ prod.gradient.c + wcnscore.c + 
                               IHC.c + Age.c, 
                             family = "binomial", data = distinct_model.df)
-large.inf.full.grad <- glm(InfinityKnower ~ Productivity + wcnscore.c + 
+large.inf.full.grad <- glm(InfinityKnower ~ prod.gradient.c + wcnscore.c + 
                               IHC.c + Age.c, 
                             family = "binomial", data = distinct_model.df)
 
-# maximal endless model
-plot_model(large.endless.full.grad, type="std", transform="plogis",
-           title="'Numbers do not end'",
-           show.values = TRUE, colors="blue", value.offset = .3,
-           axis.labels = c("Age.c"="Age", "wcnscore.c"="Next Number accuracy",
+# plot all 3 together
+plot_models(large.successor.full.grad, large.endless.full.grad, large.inf.full.grad,
+            transform="plogis", show.values = TRUE, show.p=T, grid=T,
+            colors = "bw", show.intercept = T,
+            m.labels = c("SuccessorKnower"="Succesor: Can always +1",
+                         "EndlessKnower"="Endless: Numbers go forever",
+                         "InfinityKnower"="Full Infinity knowledge"),
+            show.legend=F,
+            title="Regression analysis, all participants",
+            axis.labels = c("Age.c"="Age", "wcnscore.c"="Next Number accuracy",
                            "IHC.c"= "Initial Highest Count",
-                           "Productivity"="Productivity",
-                           "Probabilities"="Endorsement Probability")) +
-  ggplot3::geom_hline(yintercept = 0.5, linetype="dashed")
-ggsave('graphs/regression-endless.png', width=6, height=3.5)
-
-# maximal successor model
-plot_model(large.successor.full.grad, type="std", transform="plogis",
-           title="'Can always add one'",
-           show.values = TRUE, colors="blue",value.offset = .3,
-           axis.labels = c("Age.c"="Age", "wcnscore.c"="Next Number accuracy",
-                           "IHC.c"= "Initial Highest Count",
-                           "Productivity"="Productivity",
-                           "Probabilities"="Endorsement Probability")) +
-  ggplot3::geom_hline(yintercept = 0.5, linetype="dashed")
-ggsave('graphs/regression-successor.png', width=6, height=3.5)
-
-# maximal infinity model
-plot_model(large.inf.full.grad, type="std", transform="plogis",
-           title="Full infinity knowledge",
-           show.values = TRUE, colors="blue",value.offset = .3,
-           axis.labels = c("Age.c"="Age", "wcnscore.c"="Next Number accuracy",
-                           "IHC.c"= "Initial Highest Count",
-                           "Productivity"="Productivity",
-                           "Probabilities"="Endorsement Probability")) +
-  ggplot3::geom_hline(yintercept = 0.5, linetype="dashed")
-ggsave('graphs/regression-fullinfinity.png', width=6, height=3.5)
+                           "Productivity1"="Productivity Status",
+                           "prod.gradient.c"="Productivity Gradient"),
+            axis.title = "Endorsement Probability") +
+  theme_bw() +
+  ggplot2::geom_hline(yintercept = 0.5, linetype="dashed")
 ```
 
 ## Correlations between variables
@@ -1544,112 +1778,122 @@ summary(lm3)
 
 ### prep
 ```{r}
-distinct_model.df3 <- model.df %>%
-  filter(Productivity.tertiary != "Productive (IHC \u3365 99)") %>%
-  mutate(IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)), #scale and center for model fit
+distinct_model.df2 <- model.df %>%
+  filter(Productivity.tertiary != "Productive (IHC \u2265 99)") %>%
+  mutate(IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)),
          Age.c = as.vector(scale(Age, center = TRUE, scale=TRUE)),
          prod.gradient.c = as.vector(scale(prod.gradient, center=TRUE, scale=TRUE)),
         wcnscore.c = as.vector(scale(wcnscore, center = TRUE, scale=TRUE)))
+# weighted effect coding for productivity
+wec <- mean(as.numeric(distinct_model.df2$Productivity)-1)
+contrasts(distinct_model.df2$Productivity) <- c(-wec, 1-wec)
+str(distinct_model.df2)
 ```
 
 ### Successor models
 ```{r}
 ###MODEL BUILDING AND COMPARISONS###
 #base model for successor knower
-base.successor3 <- glm(SuccessorKnower ~ Age.c, family = "binomial", 
-                        data = distinct_model.df3)
+base.successor2 <- glm(SuccessorKnower ~ Age.c, family = "binomial", 
+                        data = distinct_model.df2)
 
 ##IHC model##
-model.ihc.successor3 <- glm(SuccessorKnower ~ IHC.c + Age.c, family = "binomial", 
-                             data = distinct_model.df3)
+model.ihc.successor2 <- glm(SuccessorKnower ~ IHC.c + Age.c, family = "binomial", 
+                             data = distinct_model.df2)
 ##NN Model##
-model.nn.successor3 <- glm(SuccessorKnower ~ wcnscore.c + Age.c, family = "binomial", 
-                            data = distinct_model.df3)
+model.nn.successor2 <- glm(SuccessorKnower ~ wcnscore.c + Age.c, family = "binomial", 
+                            data = distinct_model.df2)
 ##Productivity model##
-model.prod.successor3 <- glm(SuccessorKnower ~ Productivity + Age.c, family = "binomial",
-                              data = distinct_model.df3)
+model.prod.successor2 <- glm(SuccessorKnower ~ Productivity + Age.c, family = "binomial",
+                              data = distinct_model.df2)
 
 ##EXPLORATORY## - GAIN SCORE
-model.gain.successor3 <- glm(SuccessorKnower ~ prod.gradient.c + Age.c, family = "binomial",
-                              data = distinct_model.df3)
+model.gain.successor2 <- glm(SuccessorKnower ~ prod.gradient.c + Age.c, family = "binomial",
+                              data = distinct_model.df2)
 
-##Regression table for Successor Knower Models (Table 3)
-mtable.sf.knowers3 <- mtable('Base' = base.successor3,
-            'IHC' = model.ihc.successor3,
-            'NN' = model.nn.successor3,
-            'Productivity' = model.prod.successor3,
-            'Prod. gain' = model.gain.successor3,
+##Regression table for Successor Knower Models (Table 2)
+mtable.sf.knowers2 <- mtable('Base' = base.successor2,
+            'IHC' = model.ihc.successor2,
+            'NN' = model.nn.successor2,
+            'Productivity' = model.prod.successor2,
+            'Prod. gain' = model.gain.successor2,
             #summary.stats = c('R-squared','F','p','N'))
             summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'))
-mtable.sf.knowers3
-write.mtable(mtable.sf.knowers3, file="graphs/table3.txt")
+mtable.sf.knowers2
+write.mtable(mtable.sf.knowers2, file="graphs/table2.txt")
 ```
 
 #### Model comparisons
 Looks like only IHC is a significant predictor. 
 ```{r}
 #base v. IHC
-anova(base.successor3, model.ihc.successor3, test = 'LRT') #IHC significant
+anova(base.successor2, model.ihc.successor2, test = 'LRT') #IHC significant
 
 #NN v. base
-anova(base.successor3, model.nn.successor3, test = 'LRT')#NN not significant
+anova(base.successor2, model.nn.successor2, test = 'LRT')#NN not significant
 
 #Productivity v. base
-anova(base.successor3, model.prod.successor3, test = 'LRT')# n.s.
+anova(base.successor2, model.prod.successor2, test = 'LRT')# n.s.
 
 ##Exploratory vs. base
-anova(base.successor3, model.gain.successor3, test = 'LRT')# n.s.
+anova(base.successor2, model.gain.successor2, test = 'LRT')# n.s.
 ```
 
+#### best model
+```{r}
+summary(model.ihc.successor2)
+
+plot_model(model.ihc.successor2, type="pred")
+```
 
 ### Endless Models
 ```{r}
 #Base model
-base.endless3 <- glm(EndlessKnower ~ Age.c, family = "binomial", 
-                      data = distinct_model.df3)
+base.endless2 <- glm(EndlessKnower ~ Age.c, family = "binomial", 
+                      data = distinct_model.df2)
 
 ###IHC MODEL###
-model.ihc.endless3 <- glm(EndlessKnower ~ IHC.c + Age.c, family = "binomial", 
-                           data = distinct_model.df3)
+model.ihc.endless2 <- glm(EndlessKnower ~ IHC.c + Age.c, family = "binomial", 
+                           data = distinct_model.df2)
 
 ###WCN MODEL###
-model.nn.endless3 <- glm(EndlessKnower ~ wcnscore.c + Age.c, family = "binomial", 
-                          data = distinct_model.df3) 
+model.nn.endless2 <- glm(EndlessKnower ~ wcnscore.c + Age.c, family = "binomial", 
+                          data = distinct_model.df2) 
 
 ###PRODUCTIVITY MODEL###
-model.prod.endless3 <- glm(EndlessKnower ~ Productivity + Age.c, family = "binomial", 
-                            data = distinct_model.df3)
+model.prod.endless2 <- glm(EndlessKnower ~ Productivity + Age.c, family = "binomial", 
+                            data = distinct_model.df2)
 
 ##EXPLORATORY## - GAIN SCORE
-model.gain.endless3 <- glm(EndlessKnower ~ prod.gradient.c + Age.c, family = "binomial", 
-                          data = distinct_model.df3)
+model.gain.endless2 <- glm(EndlessKnower ~ prod.gradient.c + Age.c, family = "binomial", 
+                          data = distinct_model.df2)
 
 ##Regression table for Endless Models
-mtable.endless.knowers3 <- mtable('Base' = base.endless3,
-            'IHC' = model.ihc.endless3,
-            'NN' = model.nn.endless3,
-            'Productivity' = model.prod.endless3,
-            'Prod. gradient' = model.gain.endless3,
+mtable.endless.knowers2 <- mtable('Base' = base.endless2,
+            'IHC' = model.ihc.endless2,
+            'NN' = model.nn.endless2,
+            'Productivity' = model.prod.endless2,
+            'Prod. gradient' = model.gain.endless2,
             summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','F','p','N'))
 
-mtable.endless.knowers3
-write.mtable(mtable.endless.knowers3, file="graphs/table3.txt")
+mtable.endless.knowers2
+write.mtable(mtable.endless.knowers2, file="graphs/table3.txt")
 ```
 
 #### Model comparisons
 Only productivity (& productivity gain) is significant
 ```{r}
 #base v. IHC
-anova(base.endless3, model.ihc.endless3, test = 'LRT') #IHC not significant
+anova(base.endless2, model.ihc.endless2, test = 'LRT') #IHC not significant
 
 #base v. highest contiguous
-anova(model.nn.endless3, base.endless3, test = 'LRT')#not significant
+anova(model.nn.endless2, base.endless2, test = 'LRT')#not significant
 
 #base v. productivity
-anova(model.prod.endless3, base.endless3, test = 'LRT')#Prod significant
+anova(model.prod.endless2, base.endless2, test = 'LRT')#Prod significant
 
 ##Exploratory base v. productivity gradient
-anova(base.endless3, model.gain.endless3, test = 'LRT')# prod. gradient significant
+anova(base.endless2, model.gain.endless2, test = 'LRT')# prod. gradient significant
 ```
 
 
@@ -1657,96 +1901,78 @@ anova(base.endless3, model.gain.endless3, test = 'LRT')# prod. gradient signific
 ```{r}
 ###MODEL BUILDING AND COMPARISONS###
 #base model for successor knower
-base.infinity3 <- glm(InfinityKnower ~ Age.c, family = "binomial", 
-                        data = distinct_model.df3)
+base.infinity2 <- glm(InfinityKnower ~ Age.c, family = "binomial", 
+                        data = distinct_model.df2)
 
 ##IHC model
-model.ihc.infinity3 <- glm(InfinityKnower ~ IHC.c + Age.c, family = "binomial", 
-                             data = distinct_model.df3)
+model.ihc.infinity2 <- glm(InfinityKnower ~ IHC.c + Age.c, family = "binomial", 
+                             data = distinct_model.df2)
 ##Highest NN Model
-model.nn.infinity3 <- glm(InfinityKnower ~ wcnscore.c + Age.c, family = "binomial", 
-                            data = distinct_model.df3)
+model.nn.infinity2 <- glm(InfinityKnower ~ wcnscore.c + Age.c, family = "binomial", 
+                            data = distinct_model.df2)
 ##Productivity model
-model.prod.infinity3 <- glm(InfinityKnower ~ Productivity + Age.c, family = "binomial",
-                              data = distinct_model.df3)
+model.prod.infinity2 <- glm(InfinityKnower ~ Productivity + Age.c, family = "binomial",
+                              data = distinct_model.df2)
 
 ##Gain Score model
-model.gain.infinity3 <- glm(InfinityKnower ~ prod.gradient.c + Age.c, family = "binomial",
-                              data = distinct_model.df3)
+model.gain.infinity2 <- glm(InfinityKnower ~ prod.gradient.c + Age.c, family = "binomial",
+                              data = distinct_model.df2)
 
 ##Regression table for Infinity Knower Models (Table 4)
-mtable.inf.knowers3 <- mtable('Base' = base.infinity3,
-            'IHC' = model.ihc.infinity3,
-            'NN' = model.nn.infinity3,
-            'Prod. Group' = model.prod.infinity3,
-            'Prod. Gain' = model.gain.infinity3,
+mtable.inf.knowers2 <- mtable('Base' = base.infinity2,
+            'IHC' = model.ihc.infinity2,
+            'NN' = model.nn.infinity2,
+            'Prod. Group' = model.prod.infinity2,
+            'Prod. Gain' = model.gain.infinity2,
             #summary.stats = c('R-squared','F','p','N'))
             summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'))
-mtable.inf.knowers3
+mtable.inf.knowers2
 # save as txt
-write.mtable(mtable.inf.knowers3, file="graphs/table4.txt")
+write.mtable(mtable.inf.knowers2, file="graphs/table4.txt")
 ```
 
 #### Model comparisons
 No variable is predictive. 
 ```{r}
 #base v. IHC
-anova(base.infinity3, model.ihc.infinity3, test = 'LRT') #n.s.
+anova(base.infinity2, model.ihc.infinity2, test = 'LRT') #n.s.
 
 #base v. highest contiguous
-anova(base.infinity3, model.nn.infinity3, test = 'LRT')# n.s.
+anova(base.infinity2, model.nn.infinity2, test = 'LRT')# n.s.
 
 #base v. productivity
-anova(base.infinity3, model.prod.infinity3, test = 'LRT')#n.s. 
+anova(base.infinity2, model.prod.infinity2, test = 'LRT')#n.s. 
 
 #base v. productivity gradient
-anova(base.infinity3, model.gain.infinity3, test = 'LRT')#n.s.
+anova(base.infinity2, model.gain.infinity2, test = 'LRT')#n.s.
 ```
 
 ### Visualizations
 ```{r, eval=FALSE}
-large.endless.full3 <- glm(EndlessKnower ~ Productivity + wcnscore.c + 
+large.endless.full2 <- glm(EndlessKnower ~ Productivity + wcnscore.c + 
                               IHC.c + Age.c, 
-                            family = "binomial", data = distinct_model.df3)
-large.successor.full3 <- glm(SuccessorKnower ~ Productivity + wcnscore.c + 
+                            family = "binomial", data = distinct_model.df2)
+large.successor.full2 <- glm(SuccessorKnower ~ Productivity + wcnscore.c + 
                               IHC.c + Age.c, 
-                            family = "binomial", data = distinct_model.df3)
-large.inf.full3 <- glm(InfinityKnower ~ Productivity + wcnscore.c + 
+                            family = "binomial", data = distinct_model.df2)
+large.inf.full2 <- glm(InfinityKnower ~ Productivity + wcnscore.c + 
                               IHC.c + Age.c, 
-                            family = "binomial", data = distinct_model.df3)
-
-# maximal endless model
-plot_model(large.endless.full3, type="std", transform="plogis",
-           title="'Numbers do not end', exclude errorless kids",
-           show.values = TRUE, colors="blue", value.offset = .3,
-           axis.labels = c("Age.c"="Age", "wcnscore.c"="Next Number accuracy",
+                            family = "binomial", data = distinct_model.df2)
+# plot all 3 together
+plot_models(large.successor.full2, large.endless.full2, large.inf.full2,
+            transform="plogis", show.values = TRUE, show.p=T, grid=T,
+            colors = "bw", show.intercept = T,
+            m.labels = c("SuccessorKnower"="Succesor: Can always +1",
+                         "EndlessKnower"="Endless: Numbers go forever",
+                         "InfinityKnower"="Full Infinity knowledge"),
+            show.legend=F, 
+            title="Regression analysis, exclude IHC \u2265 99",
+            axis.labels = c("Age.c"="Age", "wcnscore.c"="Next Number accuracy",
                            "IHC.c"= "Initial Highest Count",
-                           "Productivity"="Productivity Status",
-                           "Probabilities"="Endorsement Probability")) +
-  ggplot3::geom_hline(yintercept = 0.5, linetype="dashed")
-ggsave('graphs/regression-endless3.png', width=6, height=3.5)
-
-# maximal successor model
-plot_model(large.successor.full3, type="std", transform="plogis",
-           title="'Can always add one', exclude errorless kids",
-           show.values = TRUE, colors="blue",value.offset = .3,
-           axis.labels = c("Age.c"="Age", "wcnscore.c"="Next Number accuracy",
-                           "IHC.c"= "Initial Highest Count",
-                           "Productivity"="Productivity Status",
-                           "Probabilities"="Endorsement Probability")) +
-  ggplot3::geom_hline(yintercept = 0.5, linetype="dashed")
-ggsave('graphs/regression-successor3.png', width=6, height=3.5)
-
-# maximal infinity model
-plot_model(large.inf.full3, type="std", transform="plogis",
-           title="Full infinity knowledge, exclude errorless kids",
-           show.values = TRUE, colors="blue",value.offset = .3,
-           axis.labels = c("Age.c"="Age", "wcnscore.c"="Next Number accuracy",
-                           "IHC.c"= "Initial Highest Count",
-                           "Productivity"="Productivity Status",
-                           "Probabilities"="Endorsement Probability")) +
-  ggplot3::geom_hline(yintercept = 0.5, linetype="dashed")
-ggsave('graphs/regression-fullinfinity3.png', width=6, height=3.5)
+                           "Productivity1"="Productivity Status"),
+            axis.title = "Endorsement Probability") +
+  theme_bw() +
+  ggplot2::geom_hline(yintercept = 0.5, linetype="dashed")
 ```
 
 ## Regressions productive kids only
@@ -1755,10 +1981,15 @@ ggsave('graphs/regression-fullinfinity3.png', width=6, height=3.5)
 ```{r}
 distinct_model.df3 <- model.df %>%
   filter(Productivity.tertiary != "Nonproductive") %>%
-  mutate(IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)), #scale and center for model fit
+  mutate(Productivity.tertiary=factor(Productivity.tertiary),
+         IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)),
          Age.c = as.vector(scale(Age, center = TRUE, scale=TRUE)),
          prod.gradient.c = as.vector(scale(prod.gradient, center=TRUE, scale=TRUE)),
         wcnscore.c = as.vector(scale(wcnscore, center = TRUE, scale=TRUE)))
+# weighted effect coding for productivity
+wec <- mean(as.numeric(distinct_model.df3$Productivity.tertiary)-1)
+contrasts(distinct_model.df3$Productivity.tertiary) <- c(-wec,1-wec)
+
 ```
 
 ### Successor models
@@ -1798,10 +2029,10 @@ write.mtable(mtable.sf.knowers3, file="graphs/table2-prodonly.txt")
 Productivity gradient marginally significant, in negative direction.
 ```{r}
 #base v. IHC
-anova(base.successor3, model.ihc.successor3, test = 'LRT') #IHC significant
+anova(base.successor3, model.ihc.successor3, test = 'LRT') #n.s.
 
 #NN v. base
-anova(base.successor3, model.nn.successor3, test = 'LRT')#NN not significant
+anova(base.successor3, model.nn.successor3, test = 'LRT')#n.s.
 
 #Productivity v. base
 anova(base.successor3, model.prod.successor3, test = 'LRT')# n.s.
@@ -1859,6 +2090,11 @@ anova(model.prod.endless3, base.endless3, test = 'LRT')
 
 ##Exploratory base v. productivity gradient
 anova(base.endless3, model.gain.endless3, test = 'LRT')
+```
+
+Final model
+```{r}
+summary(model.nn.endless3)
 ```
 
 
