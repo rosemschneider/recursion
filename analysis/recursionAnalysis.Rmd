@@ -34,6 +34,7 @@ library(RColorBrewer)
 library(ggthemes)
 library(memisc)
 library(broom)
+library(broom.mixed)
 library(sjPlot)
 # Set seed for reproducible analyses
 set.seed(43)
@@ -804,9 +805,9 @@ anova(fig3.modelA.full, fig3.modelA.main, test = 'LRT')
 # summary(fig3.modelA.full)
 ```
 
-Test of main effects:
+Confidence intervals
 ```{r}
-drop1(fig3.modelA.main, test="Chisq")
+confint(fig3.modelA.full)
 ```
 
 Final model
@@ -1153,53 +1154,32 @@ Interaction was significant, let's view the full model
 summary(wcn.model2.int)
 ```
 
-### Analysis full sample
-
-Analysis of WCN accuracy by productivity and trial type. First construct the dataframe, again centering all variables:
+Confidence intervals
 ```{r}
-wcn_model.df <- wcn.data %>%
-  filter(TaskType == "immediate")%>%
-  mutate(IHC = as.integer(IHC),
-         LadlabID = factor(LadlabID),
-         WithinOutsideIHC=factor(WithinOutsideIHC))%>%
-  mutate(IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)),
-         age.c = as.vector(scale(Age, center = TRUE, scale=TRUE))) %>%
-  dplyr::select(LadlabID, TaskItem_num, age.c, IHC.c, Productivity, WithinOutsideIHC, Accuracy)
-# weighted effect coding
-wec <- mean(as.numeric(wcn_model.df$Productivity)-1)
-contrasts(wcn_model.df$Productivity) <- c(-wec,1-wec)
-wec <- mean(as.numeric(wcn_model.df$WithinOutsideIHC)-1)
-contrasts(wcn_model.df$WithinOutsideIHC) <- c(-wec,1-wec)
-# structure
-str(wcn_model.df)
+tidy(wcn.model2.int,conf.int=TRUE,exponentiate=F,effects="fixed")
 ```
 
-Construct models.
+
+Planned contrasts, t-test
 ```{r}
-##WCN model looking at interaction between productivity and trial type in WCN task
-wcn.model.base <- glmer(Accuracy ~ age.c + (1|TaskItem_num) + (1|LadlabID), 
-                        family = "binomial", data = wcn_model.df)
-wcn.model.ihc <- glmer(Accuracy ~ IHC.c + age.c + (1|TaskItem_num) + (1|LadlabID), 
-                       family = "binomial", data = wcn_model.df)
-wcn.model.noint <- glmer(Accuracy ~ Productivity + WithinOutsideIHC + 
-                           IHC.c + age.c + (1|TaskItem_num) +
-                     (1|LadlabID), family = "binomial", data = wcn_model.df)
-wcn.model.int <- glmer(Accuracy ~ Productivity + WithinOutsideIHC + 
-                         Productivity:WithinOutsideIHC + 
-                         IHC.c + age.c + (1|TaskItem_num) +
-                     (1|LadlabID), family = "binomial", data = wcn_model.df)
+# within
+wcn_model.df2 %>% 
+  group_by(LadlabID, Productivity, WithinOutsideIHC) %>%
+  summarise(score=mean(Accuracy, na.rm=T)) %>%
+  filter(WithinOutsideIHC=="within") %>%
+  t.test(score ~ 
+    Productivity, data = .)
+
+# outside
+wcn_model.df2 %>% 
+  group_by(LadlabID, Productivity, WithinOutsideIHC) %>%
+  summarise(score=mean(Accuracy, na.rm=T)) %>%
+  filter(WithinOutsideIHC=="outside") %>%
+  t.test(score ~ 
+    Productivity, data = .)
 ```
 
-Model comparisons
-```{r}
-# compare against base models
-anova(wcn.model.int, wcn.model.noint, wcn.model.ihc, wcn.model.base, test='LRT')
-```
 
-Interaction is significant:
-```{r}
-summary(wcn.model.int)
-```
 
 ### Remove non-productive
 
@@ -1494,6 +1474,27 @@ anova(base.successor, model.gain.successor, test = 'LRT')# n.s.
 ```
 
 #### Visualize
+
+```{r}
+plot_models(model.nn.successor, model.prod.successor, model.ihc.successor, model.gain.successor,
+            transform="plogis", show.values = T, show.p=T,
+            colors="Dark2", show.intercept = T, spacing=0.7,
+            m.labels = c("Model 1: NN",
+                         "Model 2: Productivity",
+                         "Model 3: IHC",
+                         "Model 4: Prod. Grad"),
+            show.legend=T,
+            title="Regression analysis, Successor Knowledge of infinity, all participants",
+            axis.labels = c("Age.c"="Age", "wcnscore.c"="Next Number accuracy",
+                           "IHC.c"= "Initial Highest Count",
+                           "Productivity1"="Productivity Status",
+                           "prod.gradient.c"="Productivity Gradient"),
+            axis.title = "Endorsement Probability",
+            axis.lim=c(0,1)) +
+  theme_bw() +
+  ggplot2::geom_hline(yintercept = 0.5, linetype="dashed")+
+ggsave("graphs/reg-succ.png", height=7, width=7)
+```
 
 Visualize relationship between IHC and SuccessorKnowledge, by productivity
 ```{r}

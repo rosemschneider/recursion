@@ -1284,7 +1284,7 @@ wcn.data %>%
   stat_summary(aes(color=Productivity.tertiary), fill="white",
                fun.y = mean,
 #               position = position_dodge(width=0.8), 
-               geom="point", shape=33, size=3) +
+               geom="point", shape=23, size=3) +
   stat_summary(fun.y="mean", geom="line", aes(color=Productivity.tertiary,
                                               group=factor(Productivity.tertiary))) +
       scale_colour_manual(values=prod.pal, name="Productivity") + 
@@ -2055,6 +2055,20 @@ anova(base.successor, model.gain.successor, test = "LRT")  # n.s.
 
 #### Visualize
 
+
+```r
+plot_models(model.nn.successor, model.prod.successor, model.ihc.successor, model.gain.successor, 
+    transform = "plogis", show.values = T, show.p = T, colors = "Dark2", show.intercept = T, 
+    spacing = 0.7, m.labels = c("Model 1: NN", "Model 2: Productivity", "Model 3: IHC", 
+        "Model 4: Prod. Grad"), show.legend = T, title = "Regression analysis, Successor Knowledge of infinity, all participants", 
+    axis.labels = c(Age.c = "Age", wcnscore.c = "Next Number accuracy", IHC.c = "Initial Highest Count", 
+        Productivity1 = "Productivity Status", prod.gradient.c = "Productivity Gradient"), 
+    axis.title = "Endorsement Probability", axis.lim = c(0, 1)) + theme_bw() + ggplot2::geom_hline(yintercept = 0.5, 
+    linetype = "dashed") + ggsave("graphs/reg-succ.png", height = 7, width = 7)
+```
+
+![](recursionAnalysis_files/figure-html/unnamed-chunk-73-1.png)<!-- -->
+
 Visualize relationship between IHC and SuccessorKnowledge, by productivity
 
 ```r
@@ -2065,7 +2079,7 @@ distinct_model.df %>% ggplot(data = ., mapping = aes(x = IHC, y = SuccessorKnowe
     scale_fill_manual(values = mypalette, name = "Productivity")
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-73-1.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-74-1.png)<!-- -->
 
 ### Endless models
 
@@ -2324,7 +2338,7 @@ plot_models(model.nn.endless, model.prod.endless, model.ihc.endless, model.gain.
     linetype = "dashed")
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-77-1.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-78-1.png)<!-- -->
 
 ```r
 ggsave("graphs/reg-endless.png", height = 7, width = 7)
@@ -2340,7 +2354,7 @@ plot_models(model.prod.nn.endless, model.prod.ihc.endless, model.nn.ihc.endless,
     linetype = "dashed")
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-77-2.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-78-2.png)<!-- -->
 
 ```r
 # graph
@@ -2352,7 +2366,7 @@ plot_model(large.endless.full, transform = "plogis", show.values = T, show.p = T
     linetype = "dashed")
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-77-3.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-78-3.png)<!-- -->
 
 ```r
 ggsave("graphs/reg-large.png", height = 7, width = 7)
@@ -2368,7 +2382,7 @@ distinct_model.df %>% ggplot(data = ., mapping = aes(x = IHC, y = EndlessKnower,
     scale_fill_manual(values = mypalette, name = "Productivity")
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-78-1.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-79-1.png)<!-- -->
 
 
 ### Full Infinity Knowledge models
@@ -2526,7 +2540,7 @@ plot_models(model.nn.infinity, model.prod.infinity, model.ihc.infinity, model.ga
     linetype = "dashed")
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-81-1.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-82-1.png)<!-- -->
 
 ```r
 ggsave("graphs/reg-infinity.png", height = 7, width = 7)
@@ -2804,14 +2818,14 @@ plot_model(model.ihc.successor2, type = "pred")
 ## $IHC.c
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-87-1.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-88-1.png)<!-- -->
 
 ```
 ## 
 ## $Age.c
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-87-2.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-88-2.png)<!-- -->
 
 ### Endless Models
 
