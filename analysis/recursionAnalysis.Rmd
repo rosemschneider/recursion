@@ -58,16 +58,6 @@ R Version for citation is: `r R.version.string`.
 full.data <- read.csv('data/recursion_full.csv', na.strings=c(""," ","NA", "NA "))
 ```
 
-Reasons for exclusion and their numbers
-```{r}
-full.data %>%
-  dplyr::filter(ExclusionGroup != "include") %>%
-  dplyr::distinct(LadlabID, .keep_all = TRUE) %>%
-  dplyr::group_by(ExclusionGroup) %>%
-  dplyr::summarize(countN = dplyr::n_distinct(LadlabID)) %>%
-  kable()
-```
-
 
 RMS original code for checking who failed practice - do not need to run. EVAL set to FALSE
 ```{r eval = FALSE}
@@ -103,17 +93,28 @@ Exclude those who failed the practice trials on What Comes Next Task
 # added 033516-ML on 3018-09-03 to the exclusion list. kid had NA data for wcn practice trials and 0 correct on test. assume kid failed wcn.
 
 full.data %<>%
-  mutate(ExclusionGroup = ifelse(LadlabID == "033616-JM"| LadlabID == "030316-AD"|
+  mutate(ExclusionGroup = ifelse(LadlabID == "022616-JM"| LadlabID == "030216-AD"|
                                    LadlabID == "031516-A" | LadlabID == "041316-AR"|
-                                   LadlabID == "041316-VN" | LadlabID == "033316-RC"|
-                                   LadlabID == "013316-BO"| LadlabID == "041316-NC"|
-                                   LadlabID == "033516-ML", "fail wcn", levels(ExclusionGroup)[ExclusionGroup]),
+                                   LadlabID == "041316-VN" | LadlabID == "032216-RC"|
+                                   LadlabID == "012316-BO"| LadlabID == "041316-NC"|
+                                   LadlabID == "022516-ML", "fail wcn", levels(ExclusionGroup)[ExclusionGroup]),
          ExclusionGroup = as.factor(ExclusionGroup))
 
 # check. good
 # full.data %>%
 #   filter(LadlabID == "033616-JM")
 
+```
+
+
+Reasons for exclusion and their numbers
+```{r}
+full.data %>%
+  dplyr::filter(ExclusionGroup != "include") %>%
+  dplyr::distinct(LadlabID, .keep_all = TRUE) %>%
+  dplyr::group_by(ExclusionGroup) %>%
+  dplyr::summarize(countN = dplyr::n_distinct(LadlabID)) %>%
+  kable()
 ```
 
 Let's remove anyone who should not be included in the final dataset.
