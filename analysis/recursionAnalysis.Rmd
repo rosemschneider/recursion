@@ -141,8 +141,8 @@ full.data %<>%
                 DCE = dce)%>%
   dplyr::mutate(Productivity = factor(Productivity, levels = c("nonprod", "prod"), 
                                       labels = c("Nonproductive", "Productive")), 
-                IHC = ifelse(IHC > 100, 100, IHC),
-                FHC = ifelse(FHC > 100, 100, FHC)) %>%
+                IHC = ifelse(IHC > 99, 99, IHC),
+                FHC = ifelse(FHC > 99, 99, FHC)) %>%
     mutate(Productivity.tertiary = ifelse(IHC >= 99, "Productive (IHC \u2265 99)", 
                              ifelse(Productivity == "Productive", "Productive (IHC < 99)", "Nonproductive")))
 
@@ -436,7 +436,7 @@ ggplot(hc.dev.prod, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) +
              size = 2, stroke = 1.5) +
   scale_color_brewer(palette = "Dark2", labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
   scale_shape_manual(values = c(4,5,20), labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
-  ylim(0, 100) +
+  scale_y_continuous(breaks=seq(0,100,20), lim=c(0,100)) +
   labs(title="a. Distance, Productive Counters",
        x = "Each line = individual participant",
        y="Highest Count",
@@ -457,7 +457,7 @@ ggplot(hc.dev.nonprod, aes(x = reorder(LadlabID, hc, FUN=min), y = hc)) +
              size = 2, stroke = 1.5) +
   scale_color_brewer(palette = "Dark2", labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
   scale_shape_manual(values = c(4,5,20), labels=c("Initial Highest Count", "Decade-Change Error", "Final Highest Count")) +
-  ylim(0, 100) +
+  scale_y_continuous(breaks=seq(0,100,20), lim=c(0,100)) +
   labs(title="b. Distance, Non-productive Counters",
        x = "Each line = individual participant",
        y="Highest Count",
@@ -1234,16 +1234,19 @@ full.data <- full.data %>%
     SuccessorKnower==0 & EndlessKnower==1 ~ "B Endless-only",
     SuccessorKnower==1 & EndlessKnower==0 ~ "C Successor-only",
     SuccessorKnower==1 & EndlessKnower==1 ~ "D Full-knower"),
-    InfinityKnower = factor(case_when(SuccessorKnower==0 | EndlessKnower==0 ~ 0,
-                                      SuccessorKnower==1 & EndlessKnower==1 ~ 1),
-                            levels=c(0,1)))
+    InfinityKnower = ifelse(SuccessorKnower==1 & EndlessKnower==1, 1, 0),
+    NonKnower = ifelse(SuccessorKnower==0 & EndlessKnower==0, 1, 0))
 
 full.data %>%
   dplyr::distinct(LadlabID, Category, Productivity)%>%
   dplyr::group_by(Productivity, Category)%>%
   dplyr::summarise(n = n())
+```
+
+Number of kids for each 0/1 classification
+```{r}
 classification.data <- full.data %>%
-  dplyr::distinct(LadlabID, EndlessKnower, SuccessorKnower, InfinityKnower,
+  dplyr::distinct(LadlabID, EndlessKnower, SuccessorKnower, InfinityKnower, NonKnower,
                   Productivity, Productivity.tertiary)
 # Cross tab
 xtabs(~SuccessorKnower + EndlessKnower, classification.data)
@@ -1269,6 +1272,12 @@ table(classification.data$InfinityKnower, classification.data$Productivity)
 chisq.test(table(classification.data$InfinityKnower, classification.data$Productivity))
 ```
 
+Non-knower status by productivity
+```{r, echo=FALSE}
+#Endless contingency table
+table(classification.data$NonKnower, classification.data$Productivity)
+chisq.test(table(classification.data$NonKnower, classification.data$Productivity))
+```
 ## Age
 Average age of kids for Endless and Successor Knowers
 ```{r, echo=FALSE}
@@ -1307,19 +1316,25 @@ full.data %>%
   dplyr::distinct(LadlabID, EndlessKnower, IHC, FHC) %>%
   dplyr::group_by(EndlessKnower) %>%
   dplyr::summarize(mean_IHC = mean(IHC),
-                   mean_FHC = mean(FHC))
+                   mean_FHC = mean(FHC),
+                   min_IHC = min(IHC),
+                   max_IHC= max(IHC))
 
 full.data %>%
   dplyr::distinct(LadlabID, SuccessorKnower, IHC, FHC) %>%
   dplyr::group_by(SuccessorKnower) %>%
   dplyr::summarize(mean_IHC = mean(IHC),
-                   mean_FHC = mean(FHC))
+                   mean_FHC = mean(FHC),
+                   min_IHC = min(IHC),
+                   max_IHC= max(IHC))
 
 full.data %>%
   dplyr::distinct(LadlabID, InfinityKnower, IHC, FHC) %>%
   dplyr::group_by(InfinityKnower) %>%
   dplyr::summarize(mean_IHC = mean(IHC),
-                   mean_FHC = mean(FHC))
+                   mean_FHC = mean(FHC),
+                   min_IHC = min(IHC),
+                   max_IHC= max(IHC))
 ```
 
 ## WCN 
@@ -1348,9 +1363,9 @@ full.data %>%
 
 ```
 
-# Productivity gradient
+# [remove] Productivity gradient
 
-```{r, echo=FALSE}
+```{r eval=FALSE, include=FALSE}
 ggplot(full.data, aes(x = IHC, y= prod.gradient, colour = Productivity.tertiary)) +
   geom_point(size = 3, alpha = .1)+
   geom_jitter()+
@@ -1362,7 +1377,7 @@ ggplot(full.data, aes(x = IHC, y= prod.gradient, colour = Productivity.tertiary)
 ```
 
 ## Correlation between productivity gradient and IHC/FHC
-```{r, echo=FALSE}
+```{r eval=FALSE, include=FALSE}
 ms.cor <- full.data %>%
   distinct(LadlabID, Age, IHC, FHC, prod.gradient)
 
@@ -1371,7 +1386,7 @@ cor.test(ms.cor$FHC, ms.cor$prod.gradient) #sig. correlation between FHC and pro
 ```
 
 ## Correlation between Productivity classification and Prod.gradient
-```{r, echo=FALSE}
+```{r eval=FALSE, include=FALSE}
 ms.cor <- full.data %>%
   dplyr::distinct(LadlabID, Productivity, prod.gradient)%>%
   mutate(Productivity = factor(Productivity, levels = c("Productive", "Nonproductive"),
