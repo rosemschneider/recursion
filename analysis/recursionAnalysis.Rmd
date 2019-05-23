@@ -409,6 +409,9 @@ ggplot(unique.hc.data, aes(x=AgeMonths, colour = Productivity.tertiary)) +
         legend.title = element_blank())
 ggsave('graphs/prod-by-age-3.png',
        width=6, height=3)
+
+unique.hc.data %>% ggplot(aes(x=AgeMonths, y=IHC)) +geom_point() +
+  geom_smooth(method="lm")
 ```
 
 ## Distance between IHC and FHC
@@ -425,7 +428,7 @@ hc.dev.prod <- subset(hc.dev.data, Productivity == "Productive")
 hc.dev.nonprod <- subset(hc.dev.data, Productivity == "Nonproductive")
 ```
 
-### Fig 3a/b
+### Fig 2a/b
 Separate graphs for productivity groups, sorted by ascending IHC. One participant was coded as non-productive despite having an FHC of 100 because they made more than 3 errors.
 ```{r echo=FALSE}
 #productive
@@ -1234,8 +1237,8 @@ full.data <- full.data %>%
     SuccessorKnower==0 & EndlessKnower==1 ~ "B Endless-only",
     SuccessorKnower==1 & EndlessKnower==0 ~ "C Successor-only",
     SuccessorKnower==1 & EndlessKnower==1 ~ "D Full-knower"),
-    InfinityKnower = ifelse(SuccessorKnower==1 & EndlessKnower==1, 1, 0),
-    NonKnower = ifelse(SuccessorKnower==0 & EndlessKnower==0, 1, 0))
+    InfinityKnower = factor(ifelse(SuccessorKnower==1 & EndlessKnower==1, 1, 0), levels=c(0,1), labels=c('None or partial', 'Full Infinity')),
+    NonKnower = factor(ifelse(SuccessorKnower==0 & EndlessKnower==0, 1, 0), levels=c(0,1), labels=c('Some knowledge', 'No knowledge')))
 
 full.data %>%
   dplyr::distinct(LadlabID, Category, Productivity)%>%
@@ -1415,7 +1418,7 @@ First, we need to make a model data frame that readily has all of this informati
 # each participant only needs one row here, because we only need to know whether they are a Successor Knower or Endless Knower
 model.df <- full.data %>%
   dplyr::distinct(LadlabID, Age, AgeGroup, Gender, 
-                SuccessorKnower, EndlessKnower, InfinityKnower,
+                SuccessorKnower, EndlessKnower, InfinityKnower, NonKnower,
                 IHC, Productivity, Productivity.tertiary, prod.gradient)
 model.df <- right_join(model.df, wcn.accuracy, by="LadlabID") %>%
   mutate(SuccessorKnower = factor(SuccessorKnower, levels = c(0,1)), 
@@ -1423,6 +1426,103 @@ model.df <- right_join(model.df, wcn.accuracy, by="LadlabID") %>%
          IHC = as.integer(IHC), 
          LadlabID = factor(LadlabID))
 ```
+
+Let's show a scatter plot first for the base models
+```{r}
+ggplot(model.df, aes(x=Age, y=IHC)) +
+  # specify points
+  geom_point(aes(color=InfinityKnower)) +
+  # specify that we want the rug plot
+  geom_rug(aes(color=InfinityKnower), size=0.2) +   
+  # improve the data/ink ratio
+  theme_minimal()+
+  theme(legend.position="top")
+
+ggplot(model.df, aes(x=Age, y=IHC)) +
+  # specify points
+  geom_point(aes(color=SuccessorKnower)) +
+  # specify that we want the rug plot
+  geom_rug(aes(color=SuccessorKnower), size=0.2) +   
+  # improve the data/ink ratio
+  theme_minimal()+
+  theme(legend.position="top")
+
+ggplot(model.df, aes(x=Age, y=IHC)) +
+  # specify points
+  geom_point(aes(color=EndlessKnower)) +
+  # specify that we want the rug plot
+  geom_rug(aes(color=EndlessKnower), size=0.2) +   
+  # improve the data/ink ratio
+  theme_minimal()+
+  theme(legend.position="top")
+
+ggplot(model.df, aes(x=Age, y=IHC)) +
+  # specify points
+  geom_point(aes(color=NonKnower)) +
+  # specify that we want the rug plot
+  geom_rug(aes(color=NonKnower), size=0.2) +   
+  # improve the data/ink ratio
+  theme_minimal()+
+  theme(legend.position="top")
+```
+
+
+By productivity
+```{r}
+ggplot(model.df, aes(x=Age, y=IHC)) +
+  # specify points
+  geom_point(aes(color=InfinityKnower)) +
+  # specify that we want the rug plot
+  geom_rug(aes(color=InfinityKnower), size=0.2) +   
+  facet_wrap(.~Productivity.tertiary) +
+  # improve the data/ink ratio
+  theme_minimal()+
+  theme(legend.position="top")
+
+ggplot(model.df, aes(x=Age, y=IHC)) +
+  # specify points
+  geom_point(aes(color=SuccessorKnower)) +
+  # specify that we want the rug plot
+  geom_rug(aes(color=SuccessorKnower), size=0.2) +   
+  facet_wrap(.~Productivity.tertiary) +
+  # improve the data/ink ratio
+  theme_minimal()+
+  theme(legend.position="top")
+
+ggplot(model.df, aes(x=Age, y=IHC)) +
+  # specify points
+  geom_point(aes(color=EndlessKnower)) +
+  # specify that we want the rug plot
+  geom_rug(aes(color=EndlessKnower), size=0.2) +   
+  facet_wrap(.~Productivity.tertiary) +
+  # improve the data/ink ratio
+  theme_minimal()+
+  theme(legend.position="top")
+
+ggplot(model.df, aes(x=Age, y=IHC)) +
+  # specify points
+  geom_point(aes(color=NonKnower)) +
+  # specify that we want the rug plot
+  geom_rug(aes(color=NonKnower), size=0.2) +   
+  facet_wrap(.~Productivity.tertiary) +
+  # improve the data/ink ratio
+  theme_minimal()+
+  theme(legend.position="top")
+```
+
+```{r}
+ggplot(model.df, aes(x=Age, y=SuccessorKnower)) +
+  # specify points
+  geom_point(aes(color=IHC))
+  # specify that we want the rug plot
+  geom_rug(aes(color=SuccessorKnower), size=0.2) +   
+  facet_wrap(.~Productivity.tertiary) +
+  # improve the data/ink ratio
+  theme_minimal()+
+  theme(legend.position="top")
+```
+
+
 
 ## Regression with All subjects
 ### prep
@@ -1807,7 +1907,11 @@ contrasts(distinct_model.df2$Productivity) <- c(-wec, 1-wec)
 str(distinct_model.df2)
 ```
 
+
 ### Successor models
+
+
+Now the regressions
 ```{r}
 ###MODEL BUILDING AND COMPARISONS###
 #base model for successor knower
@@ -1913,6 +2017,9 @@ anova(model.prod.endless2, base.endless2, test = 'LRT')#Prod significant
 anova(base.endless2, model.gain.endless2, test = 'LRT')# prod. gradient significant
 ```
 
+```{r}
+plot_model(model.prod.endless2, type="pred")
+```
 
 ### Full Infinity Knowledge models
 ```{r}
