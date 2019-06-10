@@ -12,7 +12,7 @@ mypalette3 <- c("#009E73", "#E69F00", "#56B4E9")
 
 ## Load data ====
 hc.recoded <- read.csv('data/HCdata_jccoding.csv', stringsAsFactors = F)
-load("data/includedsubj.RData")
+load("/Users/junyichu/Sites/recursion/data/includedsubj.RData")
 hc.recoded %<>% filter(LadlabID %in% unique.full)
 
 ## Check participant N, etc ====
