@@ -2866,26 +2866,7 @@ wec &lt;- mean(as.numeric(fig3.modelA.df$Productivity.tertiary) - 1)
 contrasts(fig3.modelA.df$Productivity.tertiary) &lt;- c(-wec, 1 - wec)
 wec &lt;- mean(as.numeric(fig3.modelA.df$TaskItem_type) - 1)
 contrasts(fig3.modelA.df$TaskItem_type) &lt;- c(-wec, 1 - wec)
-# structure
-str(fig3.modelA.df)</code></pre>
-<pre><code>## &#39;data.frame&#39;:    720 obs. of  9 variables:
-##  $ LadlabID             : Factor w/ 90 levels &quot;010516-K4&quot;,&quot;011216-KD1&quot;,..: 1 1 1 1 1 1 1 1 2 2 ...
-##  $ IHC                  : int  13 13 13 13 13 13 13 13 5 5 ...
-##  $ Age                  : num  4.17 4.17 4.17 4.17 4.17 4.17 4.17 4.17 4 4 ...
-##  $ Productivity.tertiary: Factor w/ 2 levels &quot;Nonproductive&quot;,..: 1 1 1 1 1 1 1 1 1 1 ...
-##   ..- attr(*, &quot;contrasts&quot;)= num [1:2, 1] -0.456 0.544
-##   .. ..- attr(*, &quot;dimnames&quot;)=List of 2
-##   .. .. ..$ : chr  &quot;Nonproductive&quot; &quot;Productive (IHC &lt; 99)&quot;
-##   .. .. ..$ : NULL
-##  $ TaskItem_num         : num  23 40 62 70 37 29 86 59 23 40 ...
-##  $ TaskItem_type        : Factor w/ 2 levels &quot;Decade transition&quot;,..: 2 2 2 2 2 1 2 1 2 2 ...
-##   ..- attr(*, &quot;contrasts&quot;)= num [1:2, 1] -0.75 0.25
-##   .. ..- attr(*, &quot;dimnames&quot;)=List of 2
-##   .. .. ..$ : chr  &quot;Decade transition&quot; &quot;Mid-decade&quot;
-##   .. .. ..$ : NULL
-##  $ Accuracy             : int  0 0 0 0 0 0 0 0 0 0 ...
-##  $ IHC.c                : num  -1.07 -1.07 -1.07 -1.07 -1.07 ...
-##  $ age.c                : num  -1.32 -1.32 -1.32 -1.32 -1.32 ...</code></pre>
+# structure str(fig3.modelA.df)</code></pre>
 <div id="productivity-effect" class="section level4">
 <h4>Productivity effect</h4>
 <pre class="r"><code>fig3.modelA.ihc &lt;- glmer(Accuracy ~ IHC.c + age.c + (1 | TaskItem_num) + (1 | LadlabID), 
@@ -2907,6 +2888,51 @@ anova(fig3.modelA.ihc, fig3.modelA.prod, test = &quot;LRT&quot;)</code></pre>
 ## fig3.modelA.prod    0.08042 .
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>Model summary</p>
+<pre class="r"><code>summary(fig3.modelA.prod)</code></pre>
+<pre><code>## Generalized linear mixed model fit by maximum likelihood (Laplace
+##   Approximation) [glmerMod]
+##  Family: binomial  ( logit )
+## Formula: 
+## Accuracy ~ Productivity.tertiary + IHC.c + age.c + (1 | TaskItem_num) +  
+##     (1 | LadlabID)
+##    Data: fig3.modelA.df
+## 
+##      AIC      BIC   logLik deviance df.resid 
+##    769.8    797.3   -378.9    757.8      713 
+## 
+## Scaled residuals: 
+##     Min      1Q  Median      3Q     Max 
+## -2.9292 -0.5241 -0.2445  0.5562  6.9091 
+## 
+## Random effects:
+##  Groups       Name        Variance Std.Dev.
+##  LadlabID     (Intercept) 1.470    1.212   
+##  TaskItem_num (Intercept) 1.132    1.064   
+## Number of obs: 719, groups:  LadlabID, 90; TaskItem_num, 8
+## 
+## Fixed effects:
+##                        Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)            -0.65919    0.41088  -1.604 0.108638    
+## Productivity.tertiary1  0.76118    0.43218   1.761 0.078196 .  
+## IHC.c                   0.84938    0.21848   3.888 0.000101 ***
+## age.c                   0.01657    0.20876   0.079 0.936752    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Correlation of Fixed Effects:
+##             (Intr) Prdc.1 IHC.c 
+## Prdctvty.t1 -0.014              
+## IHC.c       -0.024 -0.386       
+## age.c        0.001 -0.353 -0.332</code></pre>
+<pre class="r"><code>tidy(fig3.modelA.prod, conf.int = TRUE, exponentiate = F, effects = &quot;fixed&quot;)</code></pre>
+<pre><code>## # A tibble: 4 x 8
+##   effect term       estimate std.error statistic p.value conf.low conf.high
+##   &lt;chr&gt;  &lt;chr&gt;         &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
+## 1 fixed  (Intercep…  -0.659      0.411   -1.60   1.09e-1  -1.46       0.146
+## 2 fixed  Productiv…   0.761      0.432    1.76   7.82e-2  -0.0859     1.61 
+## 3 fixed  IHC.c        0.849      0.218    3.89   1.01e-4   0.421      1.28 
+## 4 fixed  age.c        0.0166     0.209    0.0794 9.37e-1  -0.393      0.426</code></pre>
 </div>
 <div id="item-type-mid-or-cross-decade" class="section level4">
 <h4>Item type (mid or cross decade)</h4>
@@ -2947,7 +2973,16 @@ anova(fig3.modelA.full, fig3.modelA.main, test = &quot;LRT&quot;)</code></pre>
 ## fig3.modelA.full     0.4121</code></pre>
 <pre class="r"><code># summary(fig3.modelA.full)</code></pre>
 <p>Confidence intervals</p>
-<pre class="r"><code># confint(fig3.modelA.full)</code></pre>
+<pre class="r"><code>tidy(fig3.modelA.full, conf.int = TRUE, exponentiate = F, effects = &quot;fixed&quot;)</code></pre>
+<pre><code>## # A tibble: 6 x 8
+##   effect term       estimate std.error statistic p.value conf.low conf.high
+##   &lt;chr&gt;  &lt;chr&gt;         &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
+## 1 fixed  (Intercep…  -0.649      0.227   -2.87   4.15e-3   -1.09     -0.205
+## 2 fixed  Productiv…   0.731      0.438    1.67   9.49e-2   -0.127     1.59 
+## 3 fixed  TaskItem_…   2.22       0.450    4.92   8.47e-7    1.33      3.10 
+## 4 fixed  IHC.c        0.844      0.222    3.81   1.39e-4    0.410     1.28 
+## 5 fixed  age.c        0.0192     0.211    0.0909 9.28e-1   -0.395     0.434
+## 6 fixed  Productiv…   0.443      0.536    0.827  4.08e-1   -0.607     1.49</code></pre>
 <p>Final model</p>
 <pre class="r"><code>summary(fig3.modelA.main)</code></pre>
 <pre><code>## Generalized linear mixed model fit by maximum likelihood (Laplace
@@ -4183,10 +4218,20 @@ anova(base.endless2, model.gain.endless2, test = &quot;LRT&quot;)  # prod. gradi
 ## AIC: 84.924
 ## 
 ## Number of Fisher Scoring iterations: 5</code></pre>
-<pre class="r"><code>confint(model.prod.endless2, &quot;Productivity1&quot;)</code></pre>
-<pre><code>## Waiting for profiling to be done...</code></pre>
-<pre><code>##     2.5 %    97.5 % 
-## 0.2622983 3.1558550</code></pre>
+<pre class="r"><code>tidy(model.prod.endless2, conf.int = TRUE, exponentiate = F, effects = &quot;fixed&quot;)</code></pre>
+<pre><code>## # A tibble: 3 x 7
+##   term          estimate std.error statistic     p.value conf.low conf.high
+##   &lt;chr&gt;            &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;       &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
+## 1 (Intercept)    -1.67       0.323   -5.17   0.000000236   -2.38     -1.09 
+## 2 Productivity1   1.63       0.726    2.24   0.0252         0.262     3.16 
+## 3 Age.c           0.0246     0.334    0.0739 0.941         -0.640     0.684</code></pre>
+<pre class="r"><code>tidy(model.prod.endless2, conf.int = TRUE, exponentiate = T, effects = &quot;fixed&quot;)</code></pre>
+<pre><code>## # A tibble: 3 x 7
+##   term          estimate std.error statistic     p.value conf.low conf.high
+##   &lt;chr&gt;            &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;       &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
+## 1 (Intercept)      0.189     0.323   -5.17   0.000000236   0.0926     0.337
+## 2 Productivity1    5.08      0.726    2.24   0.0252        1.30      23.5  
+## 3 Age.c            1.02      0.334    0.0739 0.941         0.527      1.98</code></pre>
 <p>Test base model against null model</p>
 <pre class="r"><code># NULL MODEL
 null.endless2 &lt;- glm(EndlessKnower ~ 1, family = &quot;binomial&quot;, data = distinct_model.df2)
@@ -4681,34 +4726,7 @@ drop1(model.nn.ihc.endless, test = &quot;Chisq&quot;)</code></pre>
 <pre class="r"><code># all 3
 large.endless.full &lt;- glm(EndlessKnower ~ Productivity + wcnscore.c + IHC.c + Age.c, 
     family = &quot;binomial&quot;, data = distinct_model.df)
-summary(large.endless.full)</code></pre>
-<pre><code>## 
-## Call:
-## glm(formula = EndlessKnower ~ Productivity + wcnscore.c + IHC.c + 
-##     Age.c, family = &quot;binomial&quot;, data = distinct_model.df)
-## 
-## Deviance Residuals: 
-##     Min       1Q   Median       3Q      Max  
-## -1.3528  -0.8714  -0.4191   1.0431   2.4089  
-## 
-## Coefficients:
-##               Estimate Std. Error z value Pr(&gt;|z|)    
-## (Intercept)    -1.2281     0.2601  -4.721 2.34e-06 ***
-## Productivity1   1.0915     0.7336   1.488    0.137    
-## wcnscore.c      0.2906     0.3662   0.794    0.427    
-## IHC.c           0.2511     0.3508   0.716    0.474    
-## Age.c           0.2507     0.2646   0.947    0.343    
-## ---
-## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
-## 
-## (Dispersion parameter for binomial family taken to be 1)
-## 
-##     Null deviance: 144.38  on 121  degrees of freedom
-## Residual deviance: 122.00  on 117  degrees of freedom
-## AIC: 132
-## 
-## Number of Fisher Scoring iterations: 5</code></pre>
-<pre class="r"><code>drop1(large.endless.full, test = &quot;Chisq&quot;)</code></pre>
+drop1(large.endless.full, test = &quot;Chisq&quot;)</code></pre>
 <pre><code>## Single term deletions
 ## 
 ## Model:
@@ -4765,6 +4783,42 @@ mtable.endless.knowers</code></pre>
 ##   N                 122         122         122          122          122         
 ## ==================================================================================</code></pre>
 <pre class="r"><code>write.mtable(mtable.endless.knowers, file=&quot;graphs/table3-all.txt&quot;)</code></pre>
+<pre class="r"><code>summary(large.endless.full)</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = EndlessKnower ~ Productivity + wcnscore.c + IHC.c + 
+##     Age.c, family = &quot;binomial&quot;, data = distinct_model.df)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -1.3528  -0.8714  -0.4191   1.0431   2.4089  
+## 
+## Coefficients:
+##               Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)    -1.2281     0.2601  -4.721 2.34e-06 ***
+## Productivity1   1.0915     0.7336   1.488    0.137    
+## wcnscore.c      0.2906     0.3662   0.794    0.427    
+## IHC.c           0.2511     0.3508   0.716    0.474    
+## Age.c           0.2507     0.2646   0.947    0.343    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 144.38  on 121  degrees of freedom
+## Residual deviance: 122.00  on 117  degrees of freedom
+## AIC: 132
+## 
+## Number of Fisher Scoring iterations: 5</code></pre>
+<pre class="r"><code>tidy(large.endless.full, conf.int = TRUE, exponentiate = F, effects = &quot;fixed&quot;)</code></pre>
+<pre><code>## # A tibble: 5 x 7
+##   term          estimate std.error statistic    p.value conf.low conf.high
+##   &lt;chr&gt;            &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;      &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
+## 1 (Intercept)     -1.23      0.260    -4.72  0.00000234   -1.79     -0.753
+## 2 Productivity1    1.09      0.734     1.49  0.137        -0.304     2.62 
+## 3 wcnscore.c       0.291     0.366     0.794 0.427        -0.423     1.03 
+## 4 IHC.c            0.251     0.351     0.716 0.474        -0.432     0.957
+## 5 Age.c            0.251     0.265     0.947 0.343        -0.266     0.780</code></pre>
 </div>
 <div id="visualize-1" class="section level4">
 <h4>Visualize</h4>
@@ -4916,6 +4970,38 @@ anova(base.infinity, model.gain.infinity, test = &quot;LRT&quot;)  #n.s.</code><
 ## 2       119     105.70  1   3.0068  0.08292 .
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>summary(model.nn.infinity)</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = InfinityKnower ~ wcnscore.c + Age.c, family = &quot;binomial&quot;, 
+##     data = distinct_model.df)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -1.1692  -0.6799  -0.4667  -0.2927   2.5111  
+## 
+## Coefficients:
+##             Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept)  -1.7167     0.2860  -6.002 1.95e-09 ***
+## wcnscore.c    0.5734     0.3040   1.887   0.0592 .  
+## Age.c         0.5318     0.2818   1.887   0.0592 .  
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 118.11  on 121  degrees of freedom
+## Residual deviance: 104.86  on 119  degrees of freedom
+## AIC: 110.86
+## 
+## Number of Fisher Scoring iterations: 5</code></pre>
+<pre class="r"><code>tidy(model.nn.infinity, conf.int = TRUE, exponentiate = F, effects = &quot;fixed&quot;)</code></pre>
+<pre><code>## # A tibble: 3 x 7
+##   term        estimate std.error statistic       p.value conf.low conf.high
+##   &lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;         &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
+## 1 (Intercept)   -1.72      0.286     -6.00 0.00000000195 -2.34e+0     -1.20
+## 2 wcnscore.c     0.573     0.304      1.89 0.0592         9.01e-4      1.21
+## 3 Age.c          0.532     0.282      1.89 0.0592        -4.65e-3      1.11</code></pre>
 </div>
 <div id="visualize-2" class="section level4">
 <h4>Visualize</h4>

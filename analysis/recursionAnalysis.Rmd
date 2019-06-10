@@ -868,7 +868,7 @@ contrasts(fig3.modelA.df$Productivity.tertiary) <- c(-wec,1-wec)
 wec <- mean(as.numeric(fig3.modelA.df$TaskItem_type)-1)
 contrasts(fig3.modelA.df$TaskItem_type) <- c(-wec,1-wec)
 # structure
-str(fig3.modelA.df)
+#str(fig3.modelA.df)
 ```
 
 #### Productivity effect
@@ -883,6 +883,11 @@ fig3.modelA.prod <- glmer(Accuracy ~ Productivity.tertiary + IHC.c + age.c +
 anova(fig3.modelA.ihc, fig3.modelA.prod, test='LRT')
 ```
 
+Model summary
+```{r}
+summary(fig3.modelA.prod)
+tidy(fig3.modelA.prod, conf.int = TRUE, exponentiate = F, effects = "fixed")
+```
 
 #### Item type (mid or cross decade)
 ```{r}
@@ -907,7 +912,7 @@ anova(fig3.modelA.full, fig3.modelA.main, test = 'LRT')
 
 Confidence intervals
 ```{r}
-# confint(fig3.modelA.full)
+tidy(fig3.modelA.full,conf.int=TRUE,exponentiate=F,effects="fixed")
 ```
 
 Final model
@@ -1819,7 +1824,8 @@ anova(base.endless2, model.gain.endless2, test = 'LRT')# prod. gradient signific
 Report confidence interval around productivity group model 
 ```{r}
 summary(model.prod.endless2)
-confint(model.prod.endless2, "Productivity1")
+tidy(model.prod.endless2,conf.int=TRUE,exponentiate=F,effects="fixed")
+tidy(model.prod.endless2,conf.int=TRUE,exponentiate=T,effects="fixed")
 ```
 
 Test base model against null model
@@ -2192,7 +2198,6 @@ drop1(model.nn.ihc.endless, test="Chisq")
 large.endless.full <- glm(EndlessKnower ~ Productivity + wcnscore.c + 
                               IHC.c + Age.c, 
                             family = "binomial", data = distinct_model.df)
-summary(large.endless.full)
 drop1(large.endless.full, test="Chisq")
 
 ```
@@ -2211,6 +2216,11 @@ mtable.endless.knowers <- mtable('Base' = base.endless,
 
 mtable.endless.knowers
 write.mtable(mtable.endless.knowers, file="graphs/table3-all.txt")
+```
+
+```{r}
+summary(large.endless.full)
+tidy(large.endless.full,conf.int=TRUE,exponentiate=F,effects="fixed")
 ```
 
 
@@ -2340,6 +2350,11 @@ anova(base.infinity, model.prod.infinity, test = 'LRT')#n.s.
 
 #base v. productivity gradient
 anova(base.infinity, model.gain.infinity, test = 'LRT')#n.s.
+```
+
+```{r}
+summary(model.nn.infinity)
+tidy(model.nn.infinity, conf.int=TRUE,exponentiate=F,effects="fixed")
 ```
 
 #### Visualize

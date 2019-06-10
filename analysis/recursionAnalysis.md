@@ -852,29 +852,7 @@ wec <- mean(as.numeric(fig3.modelA.df$Productivity.tertiary) - 1)
 contrasts(fig3.modelA.df$Productivity.tertiary) <- c(-wec, 1 - wec)
 wec <- mean(as.numeric(fig3.modelA.df$TaskItem_type) - 1)
 contrasts(fig3.modelA.df$TaskItem_type) <- c(-wec, 1 - wec)
-# structure
-str(fig3.modelA.df)
-```
-
-```
-## 'data.frame':	720 obs. of  9 variables:
-##  $ LadlabID             : Factor w/ 90 levels "010516-K4","011216-KD1",..: 1 1 1 1 1 1 1 1 2 2 ...
-##  $ IHC                  : int  13 13 13 13 13 13 13 13 5 5 ...
-##  $ Age                  : num  4.17 4.17 4.17 4.17 4.17 4.17 4.17 4.17 4 4 ...
-##  $ Productivity.tertiary: Factor w/ 2 levels "Nonproductive",..: 1 1 1 1 1 1 1 1 1 1 ...
-##   ..- attr(*, "contrasts")= num [1:2, 1] -0.456 0.544
-##   .. ..- attr(*, "dimnames")=List of 2
-##   .. .. ..$ : chr  "Nonproductive" "Productive (IHC < 99)"
-##   .. .. ..$ : NULL
-##  $ TaskItem_num         : num  23 40 62 70 37 29 86 59 23 40 ...
-##  $ TaskItem_type        : Factor w/ 2 levels "Decade transition",..: 2 2 2 2 2 1 2 1 2 2 ...
-##   ..- attr(*, "contrasts")= num [1:2, 1] -0.75 0.25
-##   .. ..- attr(*, "dimnames")=List of 2
-##   .. .. ..$ : chr  "Decade transition" "Mid-decade"
-##   .. .. ..$ : NULL
-##  $ Accuracy             : int  0 0 0 0 0 0 0 0 0 0 ...
-##  $ IHC.c                : num  -1.07 -1.07 -1.07 -1.07 -1.07 ...
-##  $ age.c                : num  -1.32 -1.32 -1.32 -1.32 -1.32 ...
+# structure str(fig3.modelA.df)
 ```
 
 #### Productivity effect
@@ -904,6 +882,63 @@ anova(fig3.modelA.ihc, fig3.modelA.prod, test = "LRT")
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
 
+Model summary
+
+```r
+summary(fig3.modelA.prod)
+```
+
+```
+## Generalized linear mixed model fit by maximum likelihood (Laplace
+##   Approximation) [glmerMod]
+##  Family: binomial  ( logit )
+## Formula: 
+## Accuracy ~ Productivity.tertiary + IHC.c + age.c + (1 | TaskItem_num) +  
+##     (1 | LadlabID)
+##    Data: fig3.modelA.df
+## 
+##      AIC      BIC   logLik deviance df.resid 
+##    769.8    797.3   -378.9    757.8      713 
+## 
+## Scaled residuals: 
+##     Min      1Q  Median      3Q     Max 
+## -2.9292 -0.5241 -0.2445  0.5562  6.9091 
+## 
+## Random effects:
+##  Groups       Name        Variance Std.Dev.
+##  LadlabID     (Intercept) 1.470    1.212   
+##  TaskItem_num (Intercept) 1.132    1.064   
+## Number of obs: 719, groups:  LadlabID, 90; TaskItem_num, 8
+## 
+## Fixed effects:
+##                        Estimate Std. Error z value Pr(>|z|)    
+## (Intercept)            -0.65919    0.41088  -1.604 0.108638    
+## Productivity.tertiary1  0.76118    0.43218   1.761 0.078196 .  
+## IHC.c                   0.84938    0.21848   3.888 0.000101 ***
+## age.c                   0.01657    0.20876   0.079 0.936752    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Correlation of Fixed Effects:
+##             (Intr) Prdc.1 IHC.c 
+## Prdctvty.t1 -0.014              
+## IHC.c       -0.024 -0.386       
+## age.c        0.001 -0.353 -0.332
+```
+
+```r
+tidy(fig3.modelA.prod, conf.int = TRUE, exponentiate = F, effects = "fixed")
+```
+
+```
+## # A tibble: 4 x 8
+##   effect term       estimate std.error statistic p.value conf.low conf.high
+##   <chr>  <chr>         <dbl>     <dbl>     <dbl>   <dbl>    <dbl>     <dbl>
+## 1 fixed  (Intercep…  -0.659      0.411   -1.60   1.09e-1  -1.46       0.146
+## 2 fixed  Productiv…   0.761      0.432    1.76   7.82e-2  -0.0859     1.61 
+## 3 fixed  IHC.c        0.849      0.218    3.89   1.01e-4   0.421      1.28 
+## 4 fixed  age.c        0.0166     0.209    0.0794 9.37e-1  -0.393      0.426
+```
 
 #### Item type (mid or cross decade)
 
@@ -962,7 +997,19 @@ anova(fig3.modelA.full, fig3.modelA.main, test = "LRT")
 Confidence intervals
 
 ```r
-# confint(fig3.modelA.full)
+tidy(fig3.modelA.full, conf.int = TRUE, exponentiate = F, effects = "fixed")
+```
+
+```
+## # A tibble: 6 x 8
+##   effect term       estimate std.error statistic p.value conf.low conf.high
+##   <chr>  <chr>         <dbl>     <dbl>     <dbl>   <dbl>    <dbl>     <dbl>
+## 1 fixed  (Intercep…  -0.649      0.227   -2.87   4.15e-3   -1.09     -0.205
+## 2 fixed  Productiv…   0.731      0.438    1.67   9.49e-2   -0.127     1.59 
+## 3 fixed  TaskItem_…   2.22       0.450    4.92   8.47e-7    1.33      3.10 
+## 4 fixed  IHC.c        0.844      0.222    3.81   1.39e-4    0.410     1.28 
+## 5 fixed  age.c        0.0192     0.211    0.0909 9.28e-1   -0.395     0.434
+## 6 fixed  Productiv…   0.443      0.536    0.827  4.08e-1   -0.607     1.49
 ```
 
 Final model
@@ -1016,14 +1063,14 @@ plot_model(fig3.modelA.full, type = "est", transform = NULL, show.intercept = T,
     show.p = T, show.values = T, title = "What Comes Next Accuracy")
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-41-1.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-42-1.png)<!-- -->
 
 ```r
 plot_model(fig3.modelA.full, type = "est", show.intercept = T, show.p = T, show.values = T, 
     title = "What Comes Next Accuracy")
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-41-2.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-42-2.png)<!-- -->
 
 Excluding IHC>=99, report averages by each factor
 
@@ -1351,10 +1398,10 @@ Productive (IHC ≥ 99)   within              0.91   0.15   32
 
 Plotting WCN as within vs. beyond by productivity 
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-49-1.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-50-1.png)<!-- -->
 
 Same graph but three-way productvity grouping
-![](recursionAnalysis_files/figure-html/unnamed-chunk-50-1.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-51-1.png)<!-- -->
 
 ### Fig 4
 Try without violins
@@ -1386,7 +1433,7 @@ wcn.data %>%
         panel.grid.minor = element_blank())
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-51-1.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-52-1.png)<!-- -->
 
 ```r
 ggsave('graphs/wcn-within-beyond-final.png', width=6, height=4)
@@ -1854,7 +1901,7 @@ full.data %>%
   scale_fill_manual(values=mypalette, labels=c('Non-Productive Counters', 'Productive Counters'))
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-68-1.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-69-1.png)<!-- -->
 
 
 ## WCN 
@@ -1946,7 +1993,7 @@ geom_rug(aes(color = InfinityKnower), size = 0.2) + facet_wrap(. ~ Productivity.
 theme_minimal() + theme(legend.position = "top")
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-75-1.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-76-1.png)<!-- -->
 
 ```r
 ggplot(model.df, aes(x = Age, y = IHC)) + # specify points
@@ -1956,7 +2003,7 @@ geom_rug(aes(color = SuccessorKnower), size = 0.2) + facet_wrap(. ~ Productivity
 theme_minimal() + theme(legend.position = "top")
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-75-2.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-76-2.png)<!-- -->
 
 ```r
 ggplot(model.df, aes(x = Age, y = IHC)) + # specify points
@@ -1966,7 +2013,7 @@ geom_rug(aes(color = EndlessKnower), size = 0.2) + facet_wrap(. ~ Productivity.t
 theme_minimal() + theme(legend.position = "top")
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-75-3.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-76-3.png)<!-- -->
 
 ```r
 ggplot(model.df, aes(x = Age, y = IHC)) + # specify points
@@ -1976,7 +2023,7 @@ geom_rug(aes(color = NonKnower), size = 0.2) + facet_wrap(. ~ Productivity.terti
 theme_minimal() + theme(legend.position = "top")
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-75-4.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-76-4.png)<!-- -->
 
 
 ```r
@@ -1987,7 +2034,7 @@ geom_rug(aes(color = as.numeric(SuccessorKnower)), size = 0.2) + facet_wrap(. ~ 
 theme_minimal() + theme(legend.position = "top")
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-76-1.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-77-1.png)<!-- -->
 
 
 
@@ -2152,7 +2199,7 @@ plot_models(model.nn.successor2, model.prod.successor2, model.ihc.successor2, mo
     linetype = "dashed")
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-81-1.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-82-1.png)<!-- -->
 
 ```r
 ggsave("graphs/reg1-succ.png", height = 6, width = 13)
@@ -2178,7 +2225,7 @@ ggarrange(reg1.succ.ihc, reg1.succ.nn, reg1.succ.prod, reg1.succ.gain, ncol = 2,
     nrow = 2)
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-82-1.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-83-1.png)<!-- -->
 
 
 
@@ -2353,16 +2400,29 @@ summary(model.prod.endless2)
 ```
 
 ```r
-confint(model.prod.endless2, "Productivity1")
+tidy(model.prod.endless2, conf.int = TRUE, exponentiate = F, effects = "fixed")
 ```
 
 ```
-## Waiting for profiling to be done...
+## # A tibble: 3 x 7
+##   term          estimate std.error statistic     p.value conf.low conf.high
+##   <chr>            <dbl>     <dbl>     <dbl>       <dbl>    <dbl>     <dbl>
+## 1 (Intercept)    -1.67       0.323   -5.17   0.000000236   -2.38     -1.09 
+## 2 Productivity1   1.63       0.726    2.24   0.0252         0.262     3.16 
+## 3 Age.c           0.0246     0.334    0.0739 0.941         -0.640     0.684
+```
+
+```r
+tidy(model.prod.endless2, conf.int = TRUE, exponentiate = T, effects = "fixed")
 ```
 
 ```
-##     2.5 %    97.5 % 
-## 0.2622983 3.1558550
+## # A tibble: 3 x 7
+##   term          estimate std.error statistic     p.value conf.low conf.high
+##   <chr>            <dbl>     <dbl>     <dbl>       <dbl>    <dbl>     <dbl>
+## 1 (Intercept)      0.189     0.323   -5.17   0.000000236   0.0926     0.337
+## 2 Productivity1    5.08      0.726    2.24   0.0252        1.30      23.5  
+## 3 Age.c            1.02      0.334    0.0739 0.941         0.527      1.98
 ```
 
 Test base model against null model
@@ -2400,7 +2460,7 @@ plot_models(model.nn.endless2, model.prod.endless2, model.ihc.endless2, model.ga
     linetype = "dashed")
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-87-1.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-88-1.png)<!-- -->
 
 ```r
 ggsave("graphs/reg1-endless.png", height = 6, width = 13)
@@ -2425,7 +2485,7 @@ ggsave("graphs/reg1-endless-prodgrad.png", width = 6, height = 4)
 ggarrange(reg1.end.ihc, reg1.end.nn, reg1.end.prod, reg1.end.gain, ncol = 2, nrow = 2)
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-88-1.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-89-1.png)<!-- -->
 
 
 ### Full Infinity Knowledge models
@@ -2578,7 +2638,7 @@ plot_models(model.nn.infinity2, model.prod.infinity2, model.ihc.infinity2, model
     linetype = "dashed")
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-91-1.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-92-1.png)<!-- -->
 
 ```r
 ggsave("graphs/reg1-fullinf.png", height = 6, width = 13)
@@ -2604,7 +2664,7 @@ ggarrange(reg1.full.ihc, reg1.full.nn, reg1.full.prod, reg1.full.gain, ncol = 2,
     nrow = 2, labels = "AUTO")
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-92-1.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-93-1.png)<!-- -->
 
 
 
@@ -2650,7 +2710,7 @@ plot_models(large.successor.full2.gain, large.endless.full2.gain, large.inf.full
     linetype = "dashed")
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-94-1.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-95-1.png)<!-- -->
 
 ```r
 ggsave("graphs/reg1-all-gain.png", height = 6, width = 9)
@@ -2848,7 +2908,7 @@ plot_models(model.ihc.successor, model.nn.successor, model.prod.successor, model
     linetype = "dashed") + ggsave("graphs/reg2-succ.png", height = 6, width = 10)
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-98-1.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-99-1.png)<!-- -->
 
 Visualize relationship between IHC and SuccessorKnowledge, by productivity
 
@@ -2860,7 +2920,7 @@ distinct_model.df %>% ggplot(data = ., mapping = aes(x = IHC, y = SuccessorKnowe
     scale_fill_manual(values = mypalette, name = "Productivity")
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-99-1.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-100-1.png)<!-- -->
 
 ### Endless models
 
@@ -3022,39 +3082,6 @@ drop1(model.nn.ihc.endless, test = "Chisq")
 # all 3
 large.endless.full <- glm(EndlessKnower ~ Productivity + wcnscore.c + IHC.c + Age.c, 
     family = "binomial", data = distinct_model.df)
-summary(large.endless.full)
-```
-
-```
-## 
-## Call:
-## glm(formula = EndlessKnower ~ Productivity + wcnscore.c + IHC.c + 
-##     Age.c, family = "binomial", data = distinct_model.df)
-## 
-## Deviance Residuals: 
-##     Min       1Q   Median       3Q      Max  
-## -1.3528  -0.8714  -0.4191   1.0431   2.4089  
-## 
-## Coefficients:
-##               Estimate Std. Error z value Pr(>|z|)    
-## (Intercept)    -1.2281     0.2601  -4.721 2.34e-06 ***
-## Productivity1   1.0915     0.7336   1.488    0.137    
-## wcnscore.c      0.2906     0.3662   0.794    0.427    
-## IHC.c           0.2511     0.3508   0.716    0.474    
-## Age.c           0.2507     0.2646   0.947    0.343    
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-## 
-## (Dispersion parameter for binomial family taken to be 1)
-## 
-##     Null deviance: 144.38  on 121  degrees of freedom
-## Residual deviance: 122.00  on 117  degrees of freedom
-## AIC: 132
-## 
-## Number of Fisher Scoring iterations: 5
-```
-
-```r
 drop1(large.endless.full, test = "Chisq")
 ```
 
@@ -3126,6 +3153,55 @@ write.mtable(mtable.endless.knowers, file="graphs/table3-all.txt")
 ```
 
 
+```r
+summary(large.endless.full)
+```
+
+```
+## 
+## Call:
+## glm(formula = EndlessKnower ~ Productivity + wcnscore.c + IHC.c + 
+##     Age.c, family = "binomial", data = distinct_model.df)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -1.3528  -0.8714  -0.4191   1.0431   2.4089  
+## 
+## Coefficients:
+##               Estimate Std. Error z value Pr(>|z|)    
+## (Intercept)    -1.2281     0.2601  -4.721 2.34e-06 ***
+## Productivity1   1.0915     0.7336   1.488    0.137    
+## wcnscore.c      0.2906     0.3662   0.794    0.427    
+## IHC.c           0.2511     0.3508   0.716    0.474    
+## Age.c           0.2507     0.2646   0.947    0.343    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 144.38  on 121  degrees of freedom
+## Residual deviance: 122.00  on 117  degrees of freedom
+## AIC: 132
+## 
+## Number of Fisher Scoring iterations: 5
+```
+
+```r
+tidy(large.endless.full, conf.int = TRUE, exponentiate = F, effects = "fixed")
+```
+
+```
+## # A tibble: 5 x 7
+##   term          estimate std.error statistic    p.value conf.low conf.high
+##   <chr>            <dbl>     <dbl>     <dbl>      <dbl>    <dbl>     <dbl>
+## 1 (Intercept)     -1.23      0.260    -4.72  0.00000234   -1.79     -0.753
+## 2 Productivity1    1.09      0.734     1.49  0.137        -0.304     2.62 
+## 3 wcnscore.c       0.291     0.366     0.794 0.427        -0.423     1.03 
+## 4 IHC.c            0.251     0.351     0.716 0.474        -0.432     0.957
+## 5 Age.c            0.251     0.265     0.947 0.343        -0.266     0.780
+```
+
+
 #### Visualize
 
 Regressions, simple models
@@ -3141,7 +3217,7 @@ plot_models(model.nn.endless, model.prod.endless, model.ihc.endless, model.gain.
     linetype = "dashed")
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-104-1.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-106-1.png)<!-- -->
 
 ```r
 ggsave("graphs/reg2-endless.png", height = 6, width = 13)
@@ -3161,7 +3237,7 @@ plot_models(model.prod.nn.endless, model.prod.ihc.endless, model.nn.ihc.endless,
     linetype = "dashed")
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-105-1.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-107-1.png)<!-- -->
 
 ```r
 # graph
@@ -3173,7 +3249,7 @@ plot_model(large.endless.full, transform = "plogis", show.values = T, show.p = T
     linetype = "dashed")
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-105-2.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-107-2.png)<!-- -->
 
 ```r
 ggsave("graphs/reg-large.png", height = 7, width = 7)
@@ -3189,7 +3265,7 @@ distinct_model.df %>% ggplot(data = ., mapping = aes(x = IHC, y = EndlessKnower,
     scale_fill_manual(values = mypalette, name = "Productivity")
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-106-1.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-108-1.png)<!-- -->
 
 
 ### Full Infinity Knowledge models
@@ -3334,6 +3410,51 @@ anova(base.infinity, model.gain.infinity, test = "LRT")  #n.s.
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
 
+
+```r
+summary(model.nn.infinity)
+```
+
+```
+## 
+## Call:
+## glm(formula = InfinityKnower ~ wcnscore.c + Age.c, family = "binomial", 
+##     data = distinct_model.df)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -1.1692  -0.6799  -0.4667  -0.2927   2.5111  
+## 
+## Coefficients:
+##             Estimate Std. Error z value Pr(>|z|)    
+## (Intercept)  -1.7167     0.2860  -6.002 1.95e-09 ***
+## wcnscore.c    0.5734     0.3040   1.887   0.0592 .  
+## Age.c         0.5318     0.2818   1.887   0.0592 .  
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 118.11  on 121  degrees of freedom
+## Residual deviance: 104.86  on 119  degrees of freedom
+## AIC: 110.86
+## 
+## Number of Fisher Scoring iterations: 5
+```
+
+```r
+tidy(model.nn.infinity, conf.int = TRUE, exponentiate = F, effects = "fixed")
+```
+
+```
+## # A tibble: 3 x 7
+##   term        estimate std.error statistic       p.value conf.low conf.high
+##   <chr>          <dbl>     <dbl>     <dbl>         <dbl>    <dbl>     <dbl>
+## 1 (Intercept)   -1.72      0.286     -6.00 0.00000000195 -2.34e+0     -1.20
+## 2 wcnscore.c     0.573     0.304      1.89 0.0592         9.01e-4      1.21
+## 3 Age.c          0.532     0.282      1.89 0.0592        -4.65e-3      1.11
+```
+
 #### Visualize
 
 ```r
@@ -3347,7 +3468,7 @@ plot_models(model.nn.infinity, model.prod.infinity, model.ihc.infinity, model.ga
     linetype = "dashed")
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-109-1.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-112-1.png)<!-- -->
 
 ```r
 ggsave("graphs/reg-infinity.png", height = 7, width = 7)
