@@ -4584,49 +4584,7 @@ model.prod.endless &lt;- glm(EndlessKnower ~ Productivity + Age.c, family = &quo
 
 ## EXPLORATORY## - GAIN SCORE
 model.gain.endless &lt;- glm(EndlessKnower ~ prod.gradient.c + Age.c, family = &quot;binomial&quot;, 
-    data = distinct_model.df)
-
-## Regression table for Endless Models
-mtable.endless.knowers &lt;- mtable(Base = base.endless, IHC = model.ihc.endless, NN = model.nn.endless, 
-    Productivity = model.prod.endless, `Prod. gradient` = model.gain.endless, summary.stats = c(&quot;Nagelkerke R-sq.&quot;, 
-        &quot;Log-likelihood&quot;, &quot;AIC&quot;, &quot;F&quot;, &quot;p&quot;, &quot;N&quot;))
-
-mtable.endless.knowers</code></pre>
-<pre><code>## 
-## Calls:
-## Base: glm(formula = EndlessKnower ~ Age.c, family = &quot;binomial&quot;, data = distinct_model.df)
-## IHC: glm(formula = EndlessKnower ~ IHC.c + Age.c, family = &quot;binomial&quot;, 
-##     data = distinct_model.df)
-## NN: glm(formula = EndlessKnower ~ wcnscore.c + Age.c, family = &quot;binomial&quot;, 
-##     data = distinct_model.df)
-## Productivity: glm(formula = EndlessKnower ~ Productivity + Age.c, family = &quot;binomial&quot;, 
-##     data = distinct_model.df)
-## Prod. gradient: glm(formula = EndlessKnower ~ prod.gradient.c + Age.c, family = &quot;binomial&quot;, 
-##     data = distinct_model.df)
-## 
-## ======================================================================================
-##                        Base        IHC          NN      Productivity  Prod. gradient  
-## --------------------------------------------------------------------------------------
-##   (Intercept)        -1.057***   -1.134***   -1.152***    -1.202***      -1.217***    
-##                      (0.221)     (0.236)     (0.240)      (0.256)        (0.259)      
-##   Age.c               0.707**     0.403       0.448        0.329          0.283       
-##                      (0.224)     (0.250)     (0.244)      (0.258)        (0.266)      
-##   IHC.c                           0.675**                                             
-##                                  (0.244)                                              
-##   wcnscore.c                                  0.693**                                 
-##                                              (0.265)                                  
-##   Productivity: 1                                          1.698**                    
-##                                                           (0.636)                     
-##   prod.gradient.c                                                         0.900**     
-##                                                                          (0.326)      
-## --------------------------------------------------------------------------------------
-##   Nagelkerke R-sq.    0.125       0.207       0.204        0.212          0.221       
-##   Log-likelihood    -66.655     -62.752     -62.893      -62.463        -62.032       
-##   AIC               137.311     131.504     131.786      130.927        130.063       
-##   p                   0.001       0.000       0.000        0.000          0.000       
-##   N                 122         122         122          122            122           
-## ======================================================================================</code></pre>
-<pre class="r"><code>write.mtable(mtable.endless.knowers, file = &quot;graphs/table3-all.txt&quot;)</code></pre>
+    data = distinct_model.df)</code></pre>
 <div id="model-comparisons-4" class="section level4">
 <h4>Model comparisons</h4>
 <p>Unlike for successor knowledge, here we find that every predictor is significant addition to the base model.</p>
@@ -4675,9 +4633,9 @@ anova(base.endless, model.gain.endless, test = &quot;LRT&quot;)</code></pre>
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
 </div>
-<div id="factors" class="section level4">
-<h4>2-factors</h4>
-<p>Combining these factors don’t explain additional variance over single-factor models.</p>
+<div id="larger-models" class="section level4">
+<h4>Larger models</h4>
+<p>Combining two factors don’t explain additional variance over single-factor models.</p>
 <pre class="r"><code>model.prod.nn.endless &lt;- glm(EndlessKnower ~ Productivity + wcnscore.c + Age.c, family = &quot;binomial&quot;, 
     data = distinct_model.df)
 drop1(model.prod.nn.endless, test = &quot;Chisq&quot;)</code></pre>
@@ -4750,6 +4708,63 @@ summary(large.endless.full)</code></pre>
 ## AIC: 132
 ## 
 ## Number of Fisher Scoring iterations: 5</code></pre>
+<pre class="r"><code>drop1(large.endless.full, test = &quot;Chisq&quot;)</code></pre>
+<pre><code>## Single term deletions
+## 
+## Model:
+## EndlessKnower ~ Productivity + wcnscore.c + IHC.c + Age.c
+##              Df Deviance    AIC     LRT Pr(&gt;Chi)
+## &lt;none&gt;            122.00 132.00                 
+## Productivity  1   124.33 132.33 2.33019   0.1269
+## wcnscore.c    1   122.64 130.63 0.63592   0.4252
+## IHC.c         1   122.52 130.52 0.51726   0.4720
+## Age.c         1   122.90 130.90 0.90512   0.3414</code></pre>
+</div>
+<div id="table" class="section level4">
+<h4>Table</h4>
+<pre class="r"><code>##Regression table for Endless Models
+mtable.endless.knowers &lt;- mtable(&#39;Base&#39; = base.endless,
+            &#39;IHC&#39; = model.ihc.endless,
+            &#39;NN&#39; = model.nn.endless,
+            &#39;Productivity&#39; = model.prod.endless,
+            &#39;Full&#39; = large.endless.full,
+            #&#39;Prod. gradient&#39; = model.gain.endless,
+            summary.stats = c(&#39;Nagelkerke R-sq.&#39;,&#39;Log-likelihood&#39;,&#39;AIC&#39;,&#39;F&#39;,&#39;p&#39;,&#39;N&#39;))
+
+mtable.endless.knowers</code></pre>
+<pre><code>## 
+## Calls:
+## Base: glm(formula = EndlessKnower ~ Age.c, family = &quot;binomial&quot;, data = distinct_model.df)
+## IHC: glm(formula = EndlessKnower ~ IHC.c + Age.c, family = &quot;binomial&quot;, 
+##     data = distinct_model.df)
+## NN: glm(formula = EndlessKnower ~ wcnscore.c + Age.c, family = &quot;binomial&quot;, 
+##     data = distinct_model.df)
+## Productivity: glm(formula = EndlessKnower ~ Productivity + Age.c, family = &quot;binomial&quot;, 
+##     data = distinct_model.df)
+## Full: glm(formula = EndlessKnower ~ Productivity + wcnscore.c + IHC.c + 
+##     Age.c, family = &quot;binomial&quot;, data = distinct_model.df)
+## 
+## ==================================================================================
+##                        Base        IHC          NN      Productivity     Full     
+## ----------------------------------------------------------------------------------
+##   (Intercept)        -1.057***   -1.134***   -1.152***    -1.202***    -1.228***  
+##                      (0.221)     (0.236)     (0.240)      (0.256)      (0.260)    
+##   Age.c               0.707**     0.403       0.448        0.329        0.251     
+##                      (0.224)     (0.250)     (0.244)      (0.258)      (0.265)    
+##   IHC.c                           0.675**                               0.251     
+##                                  (0.244)                               (0.351)    
+##   wcnscore.c                                  0.693**                   0.291     
+##                                              (0.265)                   (0.366)    
+##   Productivity: 1                                          1.698**      1.092     
+##                                                           (0.636)      (0.734)    
+## ----------------------------------------------------------------------------------
+##   Nagelkerke R-sq.    0.125       0.207       0.204        0.212        0.242     
+##   Log-likelihood    -66.655     -62.752     -62.893      -62.463      -61.000     
+##   AIC               137.311     131.504     131.786      130.927      131.999     
+##   p                   0.001       0.000       0.000        0.000        0.000     
+##   N                 122         122         122          122          122         
+## ==================================================================================</code></pre>
+<pre class="r"><code>write.mtable(mtable.endless.knowers, file=&quot;graphs/table3-all.txt&quot;)</code></pre>
 </div>
 <div id="visualize-1" class="section level4">
 <h4>Visualize</h4>

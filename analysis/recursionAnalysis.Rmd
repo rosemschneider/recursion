@@ -2153,17 +2153,6 @@ model.prod.endless <- glm(EndlessKnower ~ Productivity + Age.c, family = "binomi
 ##EXPLORATORY## - GAIN SCORE
 model.gain.endless <- glm(EndlessKnower ~ prod.gradient.c + Age.c, family = "binomial", 
                           data = distinct_model.df)
-
-##Regression table for Endless Models
-mtable.endless.knowers <- mtable('Base' = base.endless,
-            'IHC' = model.ihc.endless,
-            'NN' = model.nn.endless,
-            'Productivity' = model.prod.endless,
-            'Prod. gradient' = model.gain.endless,
-            summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','F','p','N'))
-
-mtable.endless.knowers
-write.mtable(mtable.endless.knowers, file="graphs/table3-all.txt")
 ```
 
 #### Model comparisons
@@ -2182,8 +2171,8 @@ anova(model.prod.endless, base.endless, test = 'LRT')
 anova(base.endless, model.gain.endless, test = 'LRT')
 ```
 
-#### 2-factors
-Combining these factors don't explain additional variance over single-factor models.
+#### Larger models
+Combining two factors don't explain additional variance over single-factor models.
 ```{r}
 model.prod.nn.endless <- glm(EndlessKnower ~ Productivity + wcnscore.c + 
                               Age.c, 
@@ -2204,8 +2193,25 @@ large.endless.full <- glm(EndlessKnower ~ Productivity + wcnscore.c +
                               IHC.c + Age.c, 
                             family = "binomial", data = distinct_model.df)
 summary(large.endless.full)
+drop1(large.endless.full, test="Chisq")
+
 ```
 
+#### Table
+```{r}
+
+##Regression table for Endless Models
+mtable.endless.knowers <- mtable('Base' = base.endless,
+            'IHC' = model.ihc.endless,
+            'NN' = model.nn.endless,
+            'Productivity' = model.prod.endless,
+            'Full' = large.endless.full,
+            #'Prod. gradient' = model.gain.endless,
+            summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','F','p','N'))
+
+mtable.endless.knowers
+write.mtable(mtable.endless.knowers, file="graphs/table3-all.txt")
+```
 
 
 #### Visualize

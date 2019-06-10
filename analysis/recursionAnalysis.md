@@ -2882,54 +2882,6 @@ model.prod.endless <- glm(EndlessKnower ~ Productivity + Age.c, family = "binomi
 ## EXPLORATORY## - GAIN SCORE
 model.gain.endless <- glm(EndlessKnower ~ prod.gradient.c + Age.c, family = "binomial", 
     data = distinct_model.df)
-
-## Regression table for Endless Models
-mtable.endless.knowers <- mtable(Base = base.endless, IHC = model.ihc.endless, NN = model.nn.endless, 
-    Productivity = model.prod.endless, `Prod. gradient` = model.gain.endless, summary.stats = c("Nagelkerke R-sq.", 
-        "Log-likelihood", "AIC", "F", "p", "N"))
-
-mtable.endless.knowers
-```
-
-```
-## 
-## Calls:
-## Base: glm(formula = EndlessKnower ~ Age.c, family = "binomial", data = distinct_model.df)
-## IHC: glm(formula = EndlessKnower ~ IHC.c + Age.c, family = "binomial", 
-##     data = distinct_model.df)
-## NN: glm(formula = EndlessKnower ~ wcnscore.c + Age.c, family = "binomial", 
-##     data = distinct_model.df)
-## Productivity: glm(formula = EndlessKnower ~ Productivity + Age.c, family = "binomial", 
-##     data = distinct_model.df)
-## Prod. gradient: glm(formula = EndlessKnower ~ prod.gradient.c + Age.c, family = "binomial", 
-##     data = distinct_model.df)
-## 
-## ======================================================================================
-##                        Base        IHC          NN      Productivity  Prod. gradient  
-## --------------------------------------------------------------------------------------
-##   (Intercept)        -1.057***   -1.134***   -1.152***    -1.202***      -1.217***    
-##                      (0.221)     (0.236)     (0.240)      (0.256)        (0.259)      
-##   Age.c               0.707**     0.403       0.448        0.329          0.283       
-##                      (0.224)     (0.250)     (0.244)      (0.258)        (0.266)      
-##   IHC.c                           0.675**                                             
-##                                  (0.244)                                              
-##   wcnscore.c                                  0.693**                                 
-##                                              (0.265)                                  
-##   Productivity: 1                                          1.698**                    
-##                                                           (0.636)                     
-##   prod.gradient.c                                                         0.900**     
-##                                                                          (0.326)      
-## --------------------------------------------------------------------------------------
-##   Nagelkerke R-sq.    0.125       0.207       0.204        0.212          0.221       
-##   Log-likelihood    -66.655     -62.752     -62.893      -62.463        -62.032       
-##   AIC               137.311     131.504     131.786      130.927        130.063       
-##   p                   0.001       0.000       0.000        0.000          0.000       
-##   N                 122         122         122          122            122           
-## ======================================================================================
-```
-
-```r
-write.mtable(mtable.endless.knowers, file = "graphs/table3-all.txt")
 ```
 
 #### Model comparisons
@@ -3003,8 +2955,8 @@ anova(base.endless, model.gain.endless, test = "LRT")
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
 
-#### 2-factors
-Combining these factors don't explain additional variance over single-factor models.
+#### Larger models
+Combining two factors don't explain additional variance over single-factor models.
 
 ```r
 model.prod.nn.endless <- glm(EndlessKnower ~ Productivity + wcnscore.c + Age.c, family = "binomial", 
@@ -3102,6 +3054,76 @@ summary(large.endless.full)
 ## Number of Fisher Scoring iterations: 5
 ```
 
+```r
+drop1(large.endless.full, test = "Chisq")
+```
+
+```
+## Single term deletions
+## 
+## Model:
+## EndlessKnower ~ Productivity + wcnscore.c + IHC.c + Age.c
+##              Df Deviance    AIC     LRT Pr(>Chi)
+## <none>            122.00 132.00                 
+## Productivity  1   124.33 132.33 2.33019   0.1269
+## wcnscore.c    1   122.64 130.63 0.63592   0.4252
+## IHC.c         1   122.52 130.52 0.51726   0.4720
+## Age.c         1   122.90 130.90 0.90512   0.3414
+```
+
+#### Table
+
+```r
+##Regression table for Endless Models
+mtable.endless.knowers <- mtable('Base' = base.endless,
+            'IHC' = model.ihc.endless,
+            'NN' = model.nn.endless,
+            'Productivity' = model.prod.endless,
+            'Full' = large.endless.full,
+            #'Prod. gradient' = model.gain.endless,
+            summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','F','p','N'))
+
+mtable.endless.knowers
+```
+
+```
+## 
+## Calls:
+## Base: glm(formula = EndlessKnower ~ Age.c, family = "binomial", data = distinct_model.df)
+## IHC: glm(formula = EndlessKnower ~ IHC.c + Age.c, family = "binomial", 
+##     data = distinct_model.df)
+## NN: glm(formula = EndlessKnower ~ wcnscore.c + Age.c, family = "binomial", 
+##     data = distinct_model.df)
+## Productivity: glm(formula = EndlessKnower ~ Productivity + Age.c, family = "binomial", 
+##     data = distinct_model.df)
+## Full: glm(formula = EndlessKnower ~ Productivity + wcnscore.c + IHC.c + 
+##     Age.c, family = "binomial", data = distinct_model.df)
+## 
+## ==================================================================================
+##                        Base        IHC          NN      Productivity     Full     
+## ----------------------------------------------------------------------------------
+##   (Intercept)        -1.057***   -1.134***   -1.152***    -1.202***    -1.228***  
+##                      (0.221)     (0.236)     (0.240)      (0.256)      (0.260)    
+##   Age.c               0.707**     0.403       0.448        0.329        0.251     
+##                      (0.224)     (0.250)     (0.244)      (0.258)      (0.265)    
+##   IHC.c                           0.675**                               0.251     
+##                                  (0.244)                               (0.351)    
+##   wcnscore.c                                  0.693**                   0.291     
+##                                              (0.265)                   (0.366)    
+##   Productivity: 1                                          1.698**      1.092     
+##                                                           (0.636)      (0.734)    
+## ----------------------------------------------------------------------------------
+##   Nagelkerke R-sq.    0.125       0.207       0.204        0.212        0.242     
+##   Log-likelihood    -66.655     -62.752     -62.893      -62.463      -61.000     
+##   AIC               137.311     131.504     131.786      130.927      131.999     
+##   p                   0.001       0.000       0.000        0.000        0.000     
+##   N                 122         122         122          122          122         
+## ==================================================================================
+```
+
+```r
+write.mtable(mtable.endless.knowers, file="graphs/table3-all.txt")
+```
 
 
 #### Visualize
@@ -3119,7 +3141,7 @@ plot_models(model.nn.endless, model.prod.endless, model.ihc.endless, model.gain.
     linetype = "dashed")
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-103-1.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-104-1.png)<!-- -->
 
 ```r
 ggsave("graphs/reg2-endless.png", height = 6, width = 13)
@@ -3139,7 +3161,7 @@ plot_models(model.prod.nn.endless, model.prod.ihc.endless, model.nn.ihc.endless,
     linetype = "dashed")
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-104-1.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-105-1.png)<!-- -->
 
 ```r
 # graph
@@ -3151,7 +3173,7 @@ plot_model(large.endless.full, transform = "plogis", show.values = T, show.p = T
     linetype = "dashed")
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-104-2.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-105-2.png)<!-- -->
 
 ```r
 ggsave("graphs/reg-large.png", height = 7, width = 7)
@@ -3167,7 +3189,7 @@ distinct_model.df %>% ggplot(data = ., mapping = aes(x = IHC, y = EndlessKnower,
     scale_fill_manual(values = mypalette, name = "Productivity")
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-105-1.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-106-1.png)<!-- -->
 
 
 ### Full Infinity Knowledge models
@@ -3325,7 +3347,7 @@ plot_models(model.nn.infinity, model.prod.infinity, model.ihc.infinity, model.ga
     linetype = "dashed")
 ```
 
-![](recursionAnalysis_files/figure-html/unnamed-chunk-108-1.png)<!-- -->
+![](recursionAnalysis_files/figure-html/unnamed-chunk-109-1.png)<!-- -->
 
 ```r
 ggsave("graphs/reg-infinity.png", height = 7, width = 7)
