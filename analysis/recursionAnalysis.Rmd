@@ -11,9 +11,9 @@ rm(list = ls())
 require("knitr")
 
 # # Set WD
- opts_knit$set(root.dir = "~/Sites/recursion/")
+ # opts_knit$set(root.dir = "~/Sites/recursion/")
 #opts_knit$set(root.dir = "~/Projects/Junyi study/recursiongithub/") #for PC
-#opts_knit$set(root.dir = "~/Documents/Projects/recursion/") #this is specific to RMS, change accordinglyz
+opts_knit$set(root.dir = "~/Documents/Projects/recursion/") #this is specific to RMS, change accordinglyz
 
 # For wrapping lines when knitting
 opts_chunk$set(tidy.opts=list(width.cutoff=80),tidy=TRUE,
@@ -55,27 +55,27 @@ full.data %>%
 
 RMS original code for checking who failed practice - do not need to run. EVAL set to FALSE
 ```{r eval = FALSE}
-
-# check how many failed both practice trials
-x <- full.data %>%
-  filter(Task == "WCN" &
-           (TaskItem == 1 | TaskItem == 5))%>%
-  group_by(LadlabID)%>%
-  summarise(sum = sum(Accuracy))%>%
-  filter(sum != 2)
-
-#just hardcoding kids because it's easier than going back to the full data frame
-#These kids got 1 right, 5 wrong: 
-one.corr <- as.vector(c("012316-BO", "022616-JM", "030216-ED", 
-                        "030817-ZI", "031516-A", "032216-JH", 
-                        "032216-RC", "040317-AL", "040317-SL", 
-                        "041316-AR", "041316-NC", "041316-VN", 
-                        "062416-MC"))
-
-five.corr <- as.vector("050617-Z1")
-
-zero.corr <- as.vector(c("030216-AD", "040616-K"))
-
+# 
+# # check how many failed both practice trials
+# x <- full.data %>%
+#   filter(Task == "WCN" &
+#            (TaskItem == 1 | TaskItem == 5))%>%
+#   group_by(LadlabID)%>%
+#   summarise(sum = sum(Accuracy))%>%
+#   filter(sum != 2)
+# 
+# #just hardcoding kids because it's easier than going back to the full data frame
+# #These kids got 1 right, 5 wrong: 
+# one.corr <- as.vector(c("012316-BO", "022616-JM", "030216-ED", 
+#                         "030817-ZI", "031516-A", "032216-JH", 
+#                         "032216-RC", "040317-AL", "040317-SL", 
+#                         "041316-AR", "041316-NC", "041316-VN", 
+#                         "062416-MC"))
+# 
+# five.corr <- as.vector("050617-Z1")
+# 
+# zero.corr <- as.vector(c("030216-AD", "040616-K"))
+# 
 
 ```
 
@@ -174,24 +174,24 @@ full.data %>%
   kable()
 ```
 
-Just for reference, this is the number of kids who switched classifications from PC, JC, RMS recode
+Just for reference, this is the number of kids who switched classifications from PC, JC, RMS recode. Don't need to run, commented.
 ```{r}
-full.data %>%
-  dplyr::filter(TaskType == "productivity") %>%
-  droplevels()%>%
-  dplyr::distinct(LadlabID, Response, Productivity) %>%
-  dplyr::mutate(Response = factor(Response, levels = c("nonprod", "prod"), 
-                                  labels = c("Nonproductive", "Productive")))%>%
-  dplyr::mutate(changed_classification = ifelse((is.na(Response) & Productivity == "Nonproductive"),
-                                                "NA_toNonprod",
-                                                ifelse((is.na(Response) & Productivity == "Productive"), 
-                                                       "NA_toProd", 
-                                                       ifelse((Response == "Nonproductive" & Productivity == "Productive"), 
-                                                              "Nonprod_toProd", 
-                                                              ifelse((Response == "Productive" & Productivity == "Nonproductive"),
-                                                                     "Prod_toNonprod", "no_change")))))%>%
-  dplyr::group_by(changed_classification)%>%
-  dplyr::summarise(n =n())
+# full.data %>%
+#   dplyr::filter(TaskType == "productivity") %>%
+#   droplevels()%>%
+#   dplyr::distinct(LadlabID, Response, Productivity) %>%
+#   dplyr::mutate(Response = factor(Response, levels = c("nonprod", "prod"), 
+#                                   labels = c("Nonproductive", "Productive")))%>%
+#   dplyr::mutate(changed_classification = ifelse((is.na(Response) & Productivity == "Nonproductive"),
+#                                                 "NA_toNonprod",
+#                                                 ifelse((is.na(Response) & Productivity == "Productive"), 
+#                                                        "NA_toProd", 
+#                                                        ifelse((Response == "Nonproductive" & Productivity == "Productive"), 
+#                                                               "Nonprod_toProd", 
+#                                                               ifelse((Response == "Productive" & Productivity == "Nonproductive"),
+#                                                                      "Prod_toNonprod", "no_change")))))%>%
+#   dplyr::group_by(changed_classification)%>%
+#   dplyr::summarise(n =n())
 ```
 
 ## Productivity gradient
@@ -494,7 +494,7 @@ full.data %>%
   distinct(LadlabID, HCReceivedSupport, TaskItem, Response) %>%
   mutate(Response = as.numeric(levels(Response)[Response])) %>%
   group_by(HCReceivedSupport) %>%
-  summarize(mean = mean(Response, na.rm=TRUE),
+  dplyr::summarise(mean = mean(Response, na.rm=TRUE),
             sd = sd(Response, na.rm=TRUE),
             min = min(Response, na.rm=TRUE),
             max = max(Response, na.rm=TRUE),
@@ -514,7 +514,7 @@ full.data %>%
   distinct(LadlabID, HCReceivedSupport, TaskItem, Response) %>%
   mutate(Response = as.numeric(levels(Response)[Response])) %>%
   group_by(HCReceivedSupport) %>%
-  summarize(mean = mean(Response, na.rm=TRUE),
+  dplyr::summarise(mean = mean(Response, na.rm=TRUE),
             sd = sd(Response, na.rm=TRUE),
             min = min(Response, na.rm=TRUE),
             max = max(Response, na.rm=TRUE),
@@ -531,7 +531,7 @@ full.data %>%
   dplyr::select(LadlabID, Productivity, reminders.total, reminders.recovered) %>%
   unique()%>%
   na.omit() %>%
-  summarise(Ncoded=n(), 
+  dplyr::summarise(Ncoded=n(), 
             total.min=min(reminders.total),
             total.max=max(reminders.total),
             total.mean=mean(reminders.total),
