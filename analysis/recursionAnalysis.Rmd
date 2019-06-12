@@ -757,7 +757,7 @@ T-test
 ```{r}
 wcn.data %>%
   dplyr::distinct(LadlabID, Productivity, wcnscore)%>%
-  t.test(wcnscore ~ Productivity, data=.)
+  t.test(wcnscore ~ Productivity, data=., var.equal = TRUE)
 ```
 
 
@@ -800,6 +800,7 @@ fig3.data <- wcn.data %>%
   mutate(TaskItem_type_ordered = ordered(TaskItem_type, levels=c("Mid-decade", "Decade transition")))
 
 fig3.data %>%
+  mutate(Productivity.tertiary = factor(Productivity.tertiary, levels = c("Nonproductive", "Productive (IHC ≥ 99)", "Productive (IHC < 99)")))%>%
   group_by(TaskItem_type_ordered, TaskItem, Productivity.tertiary)%>%
    summarise(mean = mean(Accuracy, na.rm = TRUE), 
             n = n(), 
@@ -895,22 +896,22 @@ tidy(fig3.modelA.prod, conf.int = TRUE, exponentiate = F, effects = "fixed")
 
 #### Item type (mid or cross decade)
 ```{r}
-fig3.modelA.main <- glmer(Accuracy ~ Productivity.tertiary + TaskItem_type +
+fig3.modelA.main<- glmer(Accuracy ~  TaskItem_type + Productivity.tertiary + 
                                 IHC.c + age.c +
                                 (1|TaskItem_num) + (1|LadlabID), 
                               family = "binomial", data = fig3.modelA.df)
 # LRT test for itemtype main effect
-anova(fig3.modelA.main, fig3.modelA.prod, test = 'LRT')
+anova(fig3.modelA.prod, fig3.modelA.main, test = 'LRT')
 ```
 
 Test of interaction (n.s.): Regression testing for interaction of productivity and decade/non-decade item type on WCN accuracy
 ```{r}
-fig3.modelA.full <- glmer(Accuracy ~ Productivity.tertiary + TaskItem_type +
-                            Productivity.tertiary:TaskItem_type + IHC.c + age.c + 
+fig3.modelA.full <- glmer(Accuracy ~  Productivity.tertiary:TaskItem_type + TaskItem_type + Productivity.tertiary + 
+                            + IHC.c + age.c + 
                             (1|TaskItem_num) + (1|LadlabID), 
                           family = "binomial", data = fig3.modelA.df)
 # LRT test for interaction effect
-anova(fig3.modelA.full, fig3.modelA.main, test = 'LRT')
+anova(fig3.modelA.main, fig3.modelA.full, test = 'LRT')
 # summary(fig3.modelA.full)
 ```
 
@@ -1195,7 +1196,9 @@ Try without violins
 ## HM? 
 wcn.data %>%
   mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels = c("within", "outside"), 
-                                   labels = c("Within IHC", "Beyond IHC")))%>%
+                                   labels = c("Within IHC", "Beyond IHC")), 
+         Productivity.tertiary = factor(Productivity.tertiary, levels = c("Nonproductive", "Productive (IHC ≥ 99)", 
+                                                                          "Productive (IHC < 99)")))%>%
   dplyr::filter(TaskType == "immediate") %>%
   dplyr::group_by(Productivity.tertiary, WithinOutsideIHC, LadlabID, prod.gradient) %>%
   dplyr::summarize(meansubj = mean(Accuracy, na.rm = TRUE)) %>%
