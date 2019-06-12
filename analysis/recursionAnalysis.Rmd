@@ -696,7 +696,8 @@ fig3.data %>%
   facet_grid(~TaskItem_type_ordered, scales = "free_x") +#, space = "free_x") +
   theme_bw(base_size = 13) + 
   scale_colour_manual(values = prod.pal) +
-  theme(legend.position = "right", legend.title = element_blank()) +
+  theme(legend.position = "right", legend.title = element_blank(), 
+        panel.grid.minor = element_blank()) +
   labs(x = "Task item", y = "Mean performance") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
         #, strip.text=element_text(margin=margin(t=5, b=5, l=20, r=20)))
