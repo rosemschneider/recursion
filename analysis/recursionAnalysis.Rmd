@@ -816,7 +816,7 @@ fig3.data %>%
   scale_colour_manual(values = prod.pal) +
   theme(legend.position = "right", legend.title = element_blank(), 
         panel.grid.minor = element_blank()) +
-  labs(x = "Task item", y = "Mean performance") +
+  labs(x = "Task item", y = "Average proportion correct") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
         #, strip.text=element_text(margin=margin(t=5, b=5, l=30, r=30)))
 ggsave('graphs/wcn-trial-accuracy.png',
@@ -1250,6 +1250,8 @@ wcn.model2.base <- glmer(Accuracy ~ age.c + (1|TaskItem_num) + (1|LadlabID),
                         family = "binomial", data = wcn_model.df2)
 wcn.model2.ihc <- glmer(Accuracy ~ IHC.c + age.c + (1|TaskItem_num) + (1|LadlabID), 
                        family = "binomial", data = wcn_model.df2)
+wcn.model2.range <- glmer(Accuracy ~ WithinOutsideIHC + IHC.c + age.c + (1|TaskItem_num) + (1|LadlabID), 
+                       family = "binomial", data = wcn_model.df2)
 wcn.model2.noint <- glmer(Accuracy ~ Productivity + WithinOutsideIHC + 
                             IHC.c + age.c + (1|TaskItem_num) +
                      (1|LadlabID), family = "binomial", data = wcn_model.df2)
@@ -1257,7 +1259,7 @@ wcn.model2.int <- glmer(Accuracy ~ Productivity+ WithinOutsideIHC +
                          Productivity:WithinOutsideIHC + IHC.c + age.c + (1|TaskItem_num) +
                      (1|LadlabID), family = "binomial", data = wcn_model.df2)
 #comparison against base models
-anova(wcn.model2.int, wcn.model2.noint, wcn.model2.ihc, wcn.model2.base, test = 'LRT')
+anova(wcn.model2.base, wcn.model2.ihc, wcn.model2.range, wcn.model2.noint, wcn.model2.int, test = 'LRT')
 ```
 
 Interaction was significant, let's view the full model
@@ -1280,7 +1282,7 @@ wcn_model.df2 %>%
   summarise(score=mean(Accuracy, na.rm=T)) %>%
   filter(WithinOutsideIHC=="within") %>%
   t.test(score ~ 
-    Productivity, data = .)
+    Productivity, data = ., var.equal = TRUE)
 
 # outside
 wcn_model.df2 %>% 
@@ -1288,7 +1290,7 @@ wcn_model.df2 %>%
   summarise(score=mean(Accuracy, na.rm=T)) %>%
   filter(WithinOutsideIHC=="outside") %>%
   t.test(score ~ 
-    Productivity, data = .)
+    Productivity, data = ., var.equal = TRUE)
 ```
 
 
@@ -1692,7 +1694,7 @@ model.ihc.successor2 <- glm(SuccessorKnower ~ IHC.c + Age.c, family = "binomial"
 model.nn.successor2 <- glm(SuccessorKnower ~ wcnscore.c + Age.c, family = "binomial", 
                             data = distinct_model.df2)
 ##Productivity model##
-model.prod.successor2 <- glm(SuccessorKnower ~ Productivity + Age.c, family = "binomial",
+model.prod.successor2 <- glm(SuccessorKnower ~ Productivity.tertiary + Age.c, family = "binomial",
                               data = distinct_model.df2)
 
 ##EXPLORATORY## - GAIN SCORE
@@ -1793,7 +1795,7 @@ model.nn.endless2 <- glm(EndlessKnower ~ wcnscore.c + Age.c, family = "binomial"
                           data = distinct_model.df2) 
 
 ###PRODUCTIVITY MODEL###
-model.prod.endless2 <- glm(EndlessKnower ~ Productivity + Age.c, family = "binomial", 
+model.prod.endless2 <- glm(EndlessKnower ~ Productivity.tertiary + Age.c, family = "binomial", 
                             data = distinct_model.df2)
 
 ##EXPLORATORY## - GAIN SCORE
@@ -1899,7 +1901,7 @@ model.ihc.infinity2 <- glm(InfinityKnower ~ IHC.c + Age.c, family = "binomial",
 model.nn.infinity2 <- glm(InfinityKnower ~ wcnscore.c + Age.c, family = "binomial", 
                             data = distinct_model.df2)
 ##Productivity model
-model.prod.infinity2 <- glm(InfinityKnower ~ Productivity + Age.c, family = "binomial",
+model.prod.infinity2 <- glm(InfinityKnower ~ Productivity.tertiary + Age.c, family = "binomial",
                               data = distinct_model.df2)
 
 ##Gain Score model
