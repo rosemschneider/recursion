@@ -16,9 +16,9 @@ rm(list = ls())
 require("knitr")
 
 # # Set WD
- # opts_knit$set(root.dir = "~/Sites/recursion/")
+ opts_knit$set(root.dir = "~/Sites/recursion/")
 #opts_knit$set(root.dir = "~/Projects/Junyi study/recursiongithub/") #for PC
-opts_knit$set(root.dir = "~/Documents/Projects/recursion/") #this is specific to RMS, change accordinglyz
+#opts_knit$set(root.dir = "~/Documents/Projects/recursion/") #this is specific to RMS, change accordinglyz
 
 # For wrapping lines when knitting
 opts_chunk$set(tidy.opts=list(width.cutoff=80),tidy=TRUE,
@@ -40,9 +40,6 @@ library(sjPlot)
 # Set seed for reproducible analyses
 set.seed(43)
 '%!in%' <- function(x,y)!('%in%'(x,y))
-
-# colors
-prod.pal <- c("#E41A1C", "#4DAF4A", "#377EB8")
 
 # cb friendly red blue green
 mypalette <- c("#D55E00", "#0073B3", "#009E73")
@@ -370,6 +367,14 @@ ggplot(unique.hc.data, aes(x=IHC)) +
 ggsave('graphs/ihc.png')
 ```
 
+### First error
+```{r}
+unique.hc.data %>% filter(IHC<99) %>%
+  mutate(stop.at.decade = IHC%%10==9) %>%
+  count(stop.at.decade)
+```
+
+
 ### by age
 Plotting productivity as a function of age in months
 
@@ -480,6 +485,15 @@ First we load the data with errors and prompts marked
 hc.recoded <- read.csv('data/HCdata_jccoding.csv', stringsAsFactors = F)
 load("data/includedsubj.RData")
 hc.recoded %<>% filter(LadlabID %in% unique.full)
+```
+
+Check: distribution of first and second errors
+```{r}
+hc.recoded %>% filter(ihc<99) %>%
+  mutate(stop.at.decade = ihc%%10==9) %>%
+  dplyr::select(LadlabID, stop.at.decade) %>% unique() %>%
+  count(stop.at.decade)
+
 ```
 
 Next plot graph for productive kids
@@ -796,11 +810,11 @@ Jess graph
 ```{r fig3}
 fig3.data <- wcn.data %>%
   filter(TaskType == "immediate")%>%
-  mutate(TaskItem_type= ifelse(mod(TaskItem_num,10)==9, "Decade transition", "Mid-decade")) %>%
-  mutate(TaskItem_type_ordered = ordered(TaskItem_type, levels=c("Mid-decade", "Decade transition")))
+  mutate(TaskItem_type= ifelse(mod(TaskItem_num,10)==9, "Item Type: Decade transition", "Item Type: Mid-decade")) %>%
+  mutate(TaskItem_type_ordered = ordered(TaskItem_type, levels=c("Item Type: Mid-decade", "Item Type: Decade transition")))
 
 fig3.data %>%
-  mutate(Productivity.tertiary = factor(Productivity.tertiary, levels = c("Nonproductive", "Productive (IHC ≥ 99)", "Productive (IHC < 99)")))%>%
+#  mutate(Productivity.tertiary = factor(Productivity.tertiary, levels = c("Nonproductive", "Productive (IHC ≥ 99)", "Productive (IHC < 99)")))%>%
   group_by(TaskItem_type_ordered, TaskItem, Productivity.tertiary)%>%
    summarise(mean = mean(Accuracy, na.rm = TRUE), 
             n = n(), 
@@ -813,14 +827,17 @@ fig3.data %>%
                 width = 0, size = .5) +
   facet_grid(~TaskItem_type_ordered, scales = "free_x") +#, space = "free_x") +
   theme_bw(base_size = 13) + 
-  scale_colour_manual(values = prod.pal) +
-  theme(legend.position = "right", legend.title = element_blank(), 
+  scale_colour_manual(name="Productivity classification",
+                      values = mypalette, 
+                      labels=c("Non-Productive", "Productive (IHC < 99)", "Productive (IHC ≥ 99)"),
+                      guide = guide_legend(reverse=TRUE)) +
+  theme(legend.position = "right", #legend.title = element_blank(), 
         panel.grid.minor = element_blank()) +
-  labs(x = "Task item", y = "Average proportion correct") +
+  labs(x = "Item magnitude", y = "Average proportion correct") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
         #, strip.text=element_text(margin=margin(t=5, b=5, l=30, r=30)))
 ggsave('graphs/wcn-trial-accuracy.png',
-       width=7, height=4)
+       width=7.5, height=4)
 ```
 
 Get summary statistics by productivity and item type
@@ -1196,30 +1213,29 @@ Try without violins
 ## HM? 
 wcn.data %>%
   mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels = c("within", "outside"), 
-                                   labels = c("Within IHC", "Beyond IHC")), 
-         Productivity.tertiary = factor(Productivity.tertiary, levels = c("Nonproductive", "Productive (IHC ≥ 99)", 
-                                                                          "Productive (IHC < 99)")))%>%
+                                   labels = c("Within IHC", "Beyond IHC")))%>%
   dplyr::filter(TaskType == "immediate") %>%
   dplyr::group_by(Productivity.tertiary, WithinOutsideIHC, LadlabID, prod.gradient) %>%
   dplyr::summarize(meansubj = mean(Accuracy, na.rm = TRUE)) %>%
-  ggplot(aes(x=WithinOutsideIHC, y=meansubj)) +
-  stat_summary(aes(color=Productivity.tertiary),
-               fun.data = mean_cl_boot, geom="errorbar",
+  ggplot(aes(x=WithinOutsideIHC, y=meansubj, colour = Productivity.tertiary, group= Productivity.tertiary)) +
+  stat_summary(fun.data = mean_cl_boot, geom="errorbar",
                width = 0.3)+
-  stat_summary(aes(color=Productivity.tertiary), fill="white",
+  stat_summary(fill="white",
                fun.y = mean,
 #               position = position_dodge(width=0.8), 
                geom="point", shape=23, size=3) +
-  stat_summary(fun.y="mean", geom="line", aes(color=Productivity.tertiary,
-                                              group=factor(Productivity.tertiary))) +
-      scale_colour_manual(values=prod.pal, name="Productivity") + 
+  stat_summary(fun.y="mean", geom="line") +
+  scale_colour_manual(name="Productivity classification",
+                      values = mypalette, 
+                      labels=c("Non-Productive", "Productive (IHC < 99)", "Productive (IHC ≥ 99)"),
+                      guide = guide_legend(reverse=TRUE)) +
   scale_fill_brewer(guide=FALSE) +
   scale_y_continuous(limits=c(0,1)) +
-  labs(y="Average Proportion Correct", x="Trial Type") +
+  labs(y="Average Proportion Correct", x="Relative Item Magnitude") +
   theme_bw(base_size = 13) +
   theme(panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank())
-ggsave('graphs/wcn-within-beyond-final.png', width=6, height=4)
+ggsave('graphs/wcn-within-beyond-final.png', width=6.5, height=4)
 ```
 
 ### Remove IHC=99
