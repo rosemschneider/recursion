@@ -336,10 +336,10 @@ ggplot(unique.hc.data, aes(x=IHC, color=Productivity)) +
 ggsave('graphs/ihc-by-prod.png')
 
 ## three-way productivity
-ggplot(unique.hc.data, aes(x=IHC, color=Productivity.tertiary)) + 
+ggplot(unique.hc.data, aes(x=IHC)) + 
   geom_dotplot(aes(fill = Productivity.tertiary),
                binwidth=1, stackgroups=TRUE, binpositions="all",method="dotdensity", dotsize = 1) +
-  scale_color_manual(values=mypalette, name="Productivity") + 
+#  scale_color_manual(values=mypalette, name="Productivity") + 
   scale_fill_manual(values=mypalette, name="Productivity") +
   coord_fixed(ratio=1) +
   scale_y_continuous(breaks=seq(0,40,10), lim=c(0,35)) +
@@ -367,10 +367,53 @@ ggplot(unique.hc.data, aes(x=IHC)) +
 ggsave('graphs/ihc.png')
 ```
 
+### Fig1 grayscale
+```{r}
+# values=c("#D55E00", "#0073B3", "#009E73")
+
+## SUBSET of data
+unique.hc.data %>% filter(IHC<99) %>%
+  ggplot(aes(x=IHC)) + 
+  geom_dotplot(aes(fill = Productivity.tertiary, 
+                   color=Productivity.tertiary),
+               binwidth=1, stackgroups=TRUE, binpositions="all",method="dotdensity", dotsize = 1) +
+  scale_fill_manual(values=mypalette, name="Productivity") +
+  scale_color_manual(values=c('black','black'), name="Productivity") +
+  coord_fixed(ratio=1) +
+  scale_y_continuous(breaks=seq(0,15,5), lim=c(0,15)) +
+  scale_x_continuous(breaks=seq(0,100,by=10)) +
+  labs(x="Initial Highest Count", 
+       y="Frequency") +
+  theme_bw(base_size = 11) + 
+  theme(legend.position="bottom", 
+        legend.title = element_blank(), 
+        panel.grid.minor = element_blank())
+ggsave('graphs/ihc-by-prod3-subset.png')
+
+## BW friendly version
+unique.hc.data %>% 
+  ggplot(aes(x=IHC)) + 
+  geom_dotplot(aes(fill = Productivity.tertiary, 
+                   color=Productivity.tertiary),
+               binwidth=1, stackgroups=TRUE, binpositions="all",method="dotdensity", dotsize = 1) +
+  scale_color_manual(values=c('black','black','black'), name="Productivity") +
+  scale_fill_manual(values=c('black','white','grey'), name="Productivity") +
+  coord_fixed(ratio=1) +
+  scale_y_continuous(breaks=seq(0,40,10), lim=c(0,35)) +
+  scale_x_continuous(breaks=seq(0,100,by=10)) +
+  labs(x="Initial Highest Count", 
+       y="Frequency") +
+  theme_bw(base_size = 11) + 
+  theme(legend.position="bottom", 
+        legend.title = element_blank(), 
+        panel.grid.minor = element_blank())
+ggsave('graphs/ihc-by-prod3-grayscale.png')
+```
+
 ### First error
 ```{r}
 unique.hc.data %>% filter(IHC<99) %>%
-  mutate(stop.at.decade = IHC%%10==9) %>%
+  mutate(stop.at.decade = IHC>10 & IHC%%10==9) %>%
   count(stop.at.decade)
 ```
 
@@ -489,11 +532,23 @@ hc.recoded %<>% filter(LadlabID %in% unique.full)
 
 Check: distribution of first and second errors
 ```{r}
+# First error at decade transition?
 hc.recoded %>% filter(ihc<99) %>%
-  mutate(stop.at.decade = ihc%%10==9) %>%
+  mutate(stop.at.decade = ihc>10 & ihc%%10==9) %>%
   dplyr::select(LadlabID, stop.at.decade) %>% unique() %>%
   count(stop.at.decade)
 
+# dce on first or second error?
+hc.recoded %>% filter(ihc<99) %>%
+  mutate(stop.at.decade = ihc>10 & ihc%%10==9) %>%
+  dplyr::select(LadlabID, ihc, stop.at.decade, dce, fhc) %>% unique() %>%
+  group_by(stop.at.decade, has.decade.support=!is.na(dce)) %>% count
+
+# Well, so two kids stopped at decade but didn't get prompted;
+# one kid got to 99 on their own with <3 errors
+# one kid didn't get prompted because made two errors before 29 (skipped 20, 25). 
+hc.recoded %>% filter(ihc<99, ihc>10 & ihc%%10==9, is.na(dce)) %>%
+  dplyr::select(LadlabID, ihc, dce, fhc, error.start, error.end)
 ```
 
 Next plot graph for productive kids
@@ -868,8 +923,8 @@ fig3.df %>%
   kable(digits=3)
 ```
 
-## Item magnitude
-### Remove IHC=99
+## ANALYSIS 1: Item magnitude
+### Remove IHC=99,
 
 Build dataframe and mean-center IHC and age, and use weighted effect coding for Productivity.
 ```{r}
@@ -905,10 +960,16 @@ fig3.modelA.prod <- glmer(Accuracy ~ Productivity.tertiary + IHC.c + age.c +
 anova(fig3.modelA.ihc, fig3.modelA.prod, test='LRT')
 ```
 
+Test other factors
+```{r}
+drop1(fig3.modelA.prod,test="Chisq")
+```
+
 Model summary
 ```{r}
 summary(fig3.modelA.prod)
-tidy(fig3.modelA.prod, conf.int = TRUE, exponentiate = F, effects = "fixed")
+tidy(fig3.modelA.prod, conf.int = TRUE, exponentiate = F, effects = "fixed") %>%
+  kable(digits=3)
 ```
 
 #### Item type (mid or cross decade)
@@ -934,19 +995,19 @@ anova(fig3.modelA.main, fig3.modelA.full, test = 'LRT')
 
 Confidence intervals
 ```{r}
-tidy(fig3.modelA.full,conf.int=TRUE,exponentiate=F,effects="fixed")
+tidy(fig3.modelA.full,conf.int=TRUE,exponentiate=F,effects="fixed") %>%
+  kable(digits=3)
 ```
 
 Final model
 ```{r}
 summary(fig3.modelA.main)
-plot_model(fig3.modelA.full, type="est", transform = NULL,
-           show.intercept = T, show.p = T, show.values = T,
-           title='What Comes Next Accuracy')
-plot_model(fig3.modelA.full, type="est", 
-           show.intercept = T, show.p = T, show.values = T,
-           title='What Comes Next Accuracy')
-
+# plot_model(fig3.modelA.full, type="est", transform = NULL,
+#            show.intercept = T, show.p = T, show.values = T,
+#            title='What Comes Next Accuracy')
+# plot_model(fig3.modelA.full, type="est", 
+#            show.intercept = T, show.p = T, show.values = T,
+#            title='What Comes Next Accuracy')
 ```
 
 Excluding IHC>=99, report averages by each factor
@@ -972,66 +1033,6 @@ fig3.df %>%
 ```
 
 
-### Remove nonproductive
-Compare both productive groups
-
-Build dataframe and mean-center IHC, FHC and age.
-```{r}
-fig3.modelB.df <- fig3.data %>%
-  filter(Productivity.tertiary != "Nonproductive") %>%
-  dplyr::select(c(LadlabID, IHC, Age, Productivity.tertiary,
-                  TaskItem_num, TaskItem_type, Accuracy)) %>%
-  mutate(Productivity.tertiary=as.factor(Productivity.tertiary),
-         IHC = as.integer(IHC),
-         LadlabID=as.factor(LadlabID),
-         TaskItem_type=as.factor(TaskItem_type)) %>%
-  mutate(IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)),
-         age.c = as.vector(scale(Age, center = TRUE, scale=TRUE)))
-# weighted effects coding
-wec <- mean(as.numeric(fig3.modelB.df$Productivity.tertiary)-1)
-contrasts(fig3.modelB.df$Productivity.tertiary) <- c(-wec,1-wec)
-wec <- mean(as.numeric(fig3.modelB.df$TaskItem_type)-1)
-contrasts(fig3.modelB.df$TaskItem_type) <- c(-wec,1-wec)
-str(fig3.modelB.df)
-```
-
-Regression testing for interaction of productivity and decade/non-decade item type on WCN accuracy
-```{r}
-##WCN model looking at interaction between productivity and decade/non-decade item accuracy
-fig3.modelB.base <- glmer(Accuracy ~ age.c + 
-                            (1|TaskItem_num) + (1|LadlabID),
-                          family = "binomial", data = fig3.modelB.df)
-fig3.modelB.ihc <- glmer(Accuracy ~ IHC.c + age.c + 
-                           (1|TaskItem_num) + (1|LadlabID), 
-                         family = "binomial", data = fig3.modelB.df)
-fig3.modelB.prod <- glmer(Accuracy ~ Productivity.tertiary + IHC.c + age.c + 
-                            (1|TaskItem_num) + (1|LadlabID), 
-                          family = "binomial", data = fig3.modelB.df)
-fig3.modelB.itemtype <- glmer(Accuracy ~ TaskItem_type +
-                                IHC.c + age.c +
-                                (1|TaskItem_num) + (1|LadlabID), 
-                              family = "binomial", data = fig3.modelB.df)
-fig3.modelB.main <- glmer(Accuracy ~ Productivity.tertiary + TaskItem_type +
-                                IHC.c + age.c +
-                                (1|TaskItem_num) + (1|LadlabID), 
-                              family = "binomial", data = fig3.modelB.df)
-fig3.modelB.full <- glmer(Accuracy ~ Productivity.tertiary + TaskItem_type +
-                            Productivity.tertiary:TaskItem_type + IHC.c + age.c + 
-                            (1|TaskItem_num) + (1|LadlabID), 
-                          family = "binomial", data = fig3.modelB.df)
-
-# LRT test for interaction effect
-anova(fig3.modelB.full, fig3.modelB.main, test = 'LRT')
-```
-
-Main effect model
-```{r}
-# LRT tests for main effects
-drop1(fig3.modelB.main, test="Chisq")
-
-# summary of final model
-summary(fig3.modelB.main)
-```
 
 ### All kids
 Analyses including all participants
@@ -1050,22 +1051,40 @@ wec <- mean(as.numeric(fig3.modelC.df$Productivity)-1)
 contrasts(fig3.modelC.df$Productivity) <- c(-wec,1-wec)
 wec <- mean(as.numeric(fig3.modelC.df$TaskItem_type)-1)
 contrasts(fig3.modelC.df$TaskItem_type) <- c(-wec,1-wec)
+```
 
-## regressions
-fig3.modelC.noint <- glmer(Accuracy ~ Productivity + TaskItem_type+ 
+First, test Accuracy ~ Productivity + Age + IHC (without item type)
+```{r}
+fig3.modelC.ihc <- glmer(Accuracy ~ Productivity + 
                              IHC.c + age.c + 
                              (1|TaskItem_num) + (1|LadlabID), 
                            family = "binomial", data = fig3.modelC.df)
 # LRT tests
-drop1(fig3.modelC.noint,test="Chisq")
+drop1(fig3.modelC.ihc,test="Chisq")
+```
 
+
+Next, include item type (mid/cross decade). Item type is significant, IHC still significant.
+
+```{r}
+## regressions
+fig3.modelC.prod <- glmer(Accuracy ~ Productivity + TaskItem_type+ 
+                             IHC.c + age.c + 
+                             (1|TaskItem_num) + (1|LadlabID), 
+                           family = "binomial", data = fig3.modelC.df)
+# LRT tests
+drop1(fig3.modelC.prod,test="Chisq")
+```
+
+Next, test interaction of productivity and item type: n.s.
+```{r}
 # Test for interaction
 fig3.modelC.full <- glmer(Accuracy ~ Productivity + TaskItem_type +
                             Productivity:TaskItem_type +
                          IHC.c + age.c + 
                              (1|TaskItem_num) + (1|LadlabID), 
                            family = "binomial", data = fig3.modelC.df)
-anova(fig3.modelC.full, fig3.modelC.noint, test = 'LRT')
+anova(fig3.modelC.full, fig3.modelC.prod, test = 'LRT')
 ```
 
 
@@ -1101,6 +1120,7 @@ determine_count_range <- function(df) {
 wcn.data <- determine_count_range(wcn.data)
 ```
 
+### Descriptives
 
 WCN accuracy, within and outside of IHC, by various contrasts
 ```{r}
@@ -1240,6 +1260,7 @@ ggsave('graphs/wcn-within-beyond-final.png', width=6.5, height=4)
 
 ### Remove IHC=99
 
+
 ```{r, echo=FALSE}
 wcn_model.df2 <- wcn.data %>%
   filter(TaskType == "immediate",
@@ -1262,31 +1283,43 @@ str(wcn_model.df2)
 Construct models and compare
 ```{r}
 ##WCN model looking at interaction between productivity and trial type in WCN task
-wcn.model2.base <- glmer(Accuracy ~ age.c + (1|TaskItem_num) + (1|LadlabID), 
-                        family = "binomial", data = wcn_model.df2)
-wcn.model2.ihc <- glmer(Accuracy ~ IHC.c + age.c + (1|TaskItem_num) + (1|LadlabID), 
+wcn.model2.prod <- glmer(Accuracy ~ Productivity + IHC.c + age.c + (1|TaskItem_num) + (1|LadlabID), 
                        family = "binomial", data = wcn_model.df2)
 wcn.model2.range <- glmer(Accuracy ~ WithinOutsideIHC + IHC.c + age.c + (1|TaskItem_num) + (1|LadlabID), 
                        family = "binomial", data = wcn_model.df2)
-wcn.model2.noint <- glmer(Accuracy ~ Productivity + WithinOutsideIHC + 
+wcn.model2.main <- glmer(Accuracy ~ Productivity + WithinOutsideIHC + 
                             IHC.c + age.c + (1|TaskItem_num) +
                      (1|LadlabID), family = "binomial", data = wcn_model.df2)
+# test main effect of prod, n.s.
+anova(wcn.model2.range, wcn.model2.main, test="LRT")
+# test main effect of range, n.s.
+anova(wcn.model2.prod, wcn.model2.main, test="LRT")
+```
+
+Test interaction effect (sig)
+```{r}
 wcn.model2.int <- glmer(Accuracy ~ Productivity+ WithinOutsideIHC + 
                          Productivity:WithinOutsideIHC + IHC.c + age.c + (1|TaskItem_num) +
                      (1|LadlabID), family = "binomial", data = wcn_model.df2)
+# test interaction
+anova(wcn.model2.main, wcn.model2.int, test="LRT")
+
 #comparison against base models
-anova(wcn.model2.base, wcn.model2.ihc, wcn.model2.range, wcn.model2.noint, wcn.model2.int, test = 'LRT')
+anova(wcn.model2.range, wcn.model2.prod, wcn.model2.int, test = 'LRT')
 ```
 
 Interaction was significant, let's view the full model
+`Accuracy ~ Productivity + WithinOutsideIHC + Productivity:WithinOutsideIHC +  
+    IHC.c + age.c + (1 | TaskItem_num) + (1 | LadlabID)`
 ```{r}
 # summary of final model
 summary(wcn.model2.int)
 ```
 
-Confidence intervals
+Confidence intervals and coefficient tests against 0
 ```{r}
-tidy(wcn.model2.int,conf.int=TRUE,exponentiate=F,effects="fixed")
+tidy(wcn.model2.int,conf.int=TRUE,exponentiate=F,effects="fixed")  %>%
+  kable(digits=3)
 ```
 
 
@@ -1309,46 +1342,6 @@ wcn_model.df2 %>%
     Productivity, data = ., var.equal = TRUE)
 ```
 
-
-
-### Remove non-productive
-
-We can only compare accuracy for within-IHC trials:
-```{r, echo=FALSE}
-wcn_model.df3 <- wcn.data %>%
-  filter(TaskType == "immediate",
-         Productivity != "Nonproductive",
-         WithinOutsideIHC=="within") %>%
-  mutate(IHC = as.integer(IHC),
-         LadlabID = factor(LadlabID),
-         Productivity.tertiary=factor(Productivity.tertiary)) %>%
-  mutate(IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)), 
-         age.c = as.vector(scale(Age, center = TRUE, scale=TRUE))) %>%
-  dplyr::select(LadlabID, TaskItem_num, age.c, IHC.c, Productivity.tertiary, Accuracy)
-# weighted effect coding
-wec <- mean(as.numeric(wcn_model.df3$Productivity.tertiary)-1)
-contrasts(wcn_model.df3$Productivity.tertiary) <- c(-wec,1-wec)
-# structure
-str(wcn_model.df3)
-```
-
-Construct models and compare
-```{r}
-##WCN model looking at interaction between productivity and trial type in WCN task
-wcn.model3.base <- glmer(Accuracy ~ age.c + (1|TaskItem_num) + (1|LadlabID), 
-                        family = "binomial", data = wcn_model.df3)
-wcn.model3.ihc <- glmer(Accuracy ~ IHC.c + age.c + (1|TaskItem_num) + (1|LadlabID), 
-                       family = "binomial", data = wcn_model.df3)
-wcn.model3.prod <- glmer(Accuracy ~ Productivity.tertiary+
-                            IHC.c + age.c + (1|TaskItem_num) +
-                     (1|LadlabID), family = "binomial", data = wcn_model.df3)
-# compare
-anova(wcn.model3.prod, wcn.model3.ihc, wcn.model3.base, test = 'LRT')
-```
-Final model: IHC only
-```{r}
-summary(wcn.model3.ihc)
-```
 
 
 # Infinity Descriptives
@@ -1849,8 +1842,10 @@ anova(base.endless2, model.gain.endless2, test = 'LRT')# prod. gradient signific
 Report confidence interval around productivity group model 
 ```{r}
 summary(model.prod.endless2)
-tidy(model.prod.endless2,conf.int=TRUE,exponentiate=F,effects="fixed")
-tidy(model.prod.endless2,conf.int=TRUE,exponentiate=T,effects="fixed")
+tidy(model.prod.endless2,conf.int=TRUE,exponentiate=F,effects="fixed") %>%
+  kable(digits=3)
+tidy(model.prod.endless2,conf.int=TRUE,exponentiate=T,effects="fixed") %>%
+  kable(digits=3)
 ```
 
 Test base model against null model
@@ -2245,7 +2240,8 @@ write.mtable(mtable.endless.knowers, file="graphs/table3-all.txt")
 
 ```{r}
 summary(large.endless.full)
-tidy(large.endless.full,conf.int=TRUE,exponentiate=F,effects="fixed")
+tidy(large.endless.full,conf.int=TRUE,exponentiate=F,effects="fixed") %>%
+  kable(digits=3)
 ```
 
 
@@ -2379,7 +2375,8 @@ anova(base.infinity, model.gain.infinity, test = 'LRT')#n.s.
 
 ```{r}
 summary(model.nn.infinity)
-tidy(model.nn.infinity, conf.int=TRUE,exponentiate=F,effects="fixed")
+tidy(model.nn.infinity, conf.int=TRUE,exponentiate=F,effects="fixed") %>%
+  kable(digits=3)
 ```
 
 #### Visualize
