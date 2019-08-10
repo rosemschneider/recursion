@@ -2235,29 +2235,88 @@ anova(model.prod.endless, base.endless, test = 'LRT')
 anova(base.endless, model.gain.endless, test = 'LRT')
 ```
 
+#### Report CI 
+
+Report confidence interval around IHC model 
+```{r}
+summary(model.ihc.endless)
+tidy(model.ihc.endless,conf.int=TRUE,exponentiate=F,effects="fixed") %>%
+  kable(digits=3)
+tidy(model.ihc.endless,conf.int=TRUE,exponentiate=T,effects="fixed") %>%
+  kable(digits=3)
+```
+
+
+Report confidence interval around next number model 
+```{r}
+summary(model.nn.endless)
+tidy(model.nn.endless,conf.int=TRUE,exponentiate=F,effects="fixed") %>%
+  kable(digits=2)
+# exponentiated for OR
+tidy(model.nn.endless,conf.int=TRUE,exponentiate=T,effects="fixed") %>%
+  kable(digits=3)
+```
+
+
+Report confidence interval around Productivity model 
+```{r}
+summary(model.prod.endless)
+tidy(model.prod.endless,conf.int=TRUE,exponentiate=F,effects="fixed") %>%
+  kable(digits=3)
+# exponentiated for OR
+tidy(model.prod.endless,conf.int=TRUE,exponentiate=T,effects="fixed") %>%
+  kable(digits=3)
+```
+
+
 #### Larger models
 Combining two factors don't explain additional variance over single-factor models.
+
+Productivity + NN
 ```{r}
 model.prod.nn.endless <- glm(EndlessKnower ~ Productivity + wcnscore.c + 
                               Age.c, 
                             family = "binomial", data = distinct_model.df)
 drop1(model.prod.nn.endless, test="Chisq")
-# prod + ihc
+```
+
+Productivity + IHC
+```{r}
 model.prod.ihc.endless <- glm(EndlessKnower ~ Productivity + IHC.c + 
                               Age.c, 
                             family = "binomial", data = distinct_model.df)
 drop1(model.prod.ihc.endless, test="Chisq")
-# nn + ihc
+```
+
+NN + IHC
+```{r}
 model.nn.ihc.endless <- glm(EndlessKnower ~ wcnscore.c + IHC.c + 
                               Age.c, 
                             family = "binomial", data = distinct_model.df)
 drop1(model.nn.ihc.endless, test="Chisq")
+```
+
+Full model:
+```{r}
 # all 3
 large.endless.full <- glm(EndlessKnower ~ Productivity + wcnscore.c + 
                               IHC.c + Age.c, 
                             family = "binomial", data = distinct_model.df)
 drop1(large.endless.full, test="Chisq")
 
+```
+
+Full model vs base (sig)
+```{r}
+anova(large.endless.full, base.endless, test = 'LRT')
+```
+
+Full model vs. 1-factor models (n.s.)
+```{r}
+# full model vs. initial models
+anova(large.endless.full, model.ihc.endless, test = 'LRT')
+anova(large.endless.full, model.nn.endless, test = 'LRT')
+anova(large.endless.full, model.prod.endless, test = 'LRT')
 ```
 
 #### Table
@@ -2414,6 +2473,9 @@ anova(base.infinity, model.gain.infinity, test = 'LRT')#n.s.
 ```{r}
 summary(model.nn.infinity)
 tidy(model.nn.infinity, conf.int=TRUE,exponentiate=F,effects="fixed") %>%
+  kable(digits=3)
+## exponentiate for OR
+tidy(model.nn.infinity, conf.int=TRUE,exponentiate=T,effects="fixed") %>%
   kable(digits=3)
 ```
 
