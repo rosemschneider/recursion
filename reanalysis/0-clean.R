@@ -172,14 +172,14 @@ data.full <- full.data %>% dplyr::select(-c("LadlabID", "DOT", "ExclusionGroup")
 data.hcerrors <- hc.errorscoded %>% dplyr::select(-c("LadlabID", "SortedID"))
 # Make dataframe for subject-level highest count measurements (without errors)
 data.hcunique <- full.data %>%
-  dplyr::distinct(subID, Gender, Age, AgeGroup, AgeMonths, HCReceivedSupport, IHC, DCE, FHC, Productivity, Productivity.tertiary)
+  dplyr::distinct(subID, Gender, Age, AgeGroup, AgeMonths, HCReceivedSupport, IHC, DCE, FHC, Productivity, Productivity.tertiary, ProductivityStrict, ProductivityStrict.tertiary)
 # Make long dataframe for item-level Next Number data
 data.wcn.long <- data.wcn %>%
   dplyr::select(c(subID, IHC, FHC, Age, 
                   Productivity, Productivity.tertiary, ProductivityStrict, ProductivityStrict.tertiary,
                   TaskItem_num, TaskItem_type, Accuracy, WithinOutsideIHC)) %>%
   mutate(IHC = as.integer(IHC), subID=as.factor(subID), TaskItem_type=as.factor(TaskItem_type))
-data.wcn.wide <- data.wcn.long %>% group_by(subID, IHC, Age, Productivity, Productivity.tertiary) %>%
+data.wcn.wide <- data.wcn.long %>% group_by(subID, IHC, Age, Productivity, Productivity.tertiary, ProductivityStrict, ProductivityStrict.tertiary) %>%
   summarise(score=sum(Accuracy), perc=mean(Accuracy)) %>% ungroup()
 # Export
 save(data.full, data.hcunique, data.hcerrors, 
