@@ -8,6 +8,8 @@ myRGBpalette <- c("#D55E00", "#0073B3", "#009E73")
 # colorblind friendly green, orange, bright blue
 myGOBpalette <- c("#009E73", "#E69F00", "#56B4E9")
 
+library(tidyverse)
+library(ggpubr)
 theme_set(theme_bw() + theme(text = element_text(size=9), 
                              axis.title=element_text(size=8),
                              strip.text = element_text(margin=margin(2,0,2,0))))
@@ -172,12 +174,12 @@ nn.long %>%
   dplyr::group_by(Productivity.tertiary, WithinOutsideIHC, subID) %>%
   dplyr::summarize(meansubj = mean(Accuracy, na.rm = TRUE)) %>%
   ggplot(aes(x=WithinOutsideIHC, y=meansubj, colour = Productivity.tertiary, group= Productivity.tertiary)) +
-  stat_summary(fun.y="mean", geom="line", position = position_dodge(width=0.3)) +
-  stat_summary(fun.data = mean_cl_boot, geom="errorbar",position = position_dodge(width=0.3), 
-               width = 0.3)+
+  stat_summary(fun.y="mean", geom="line")+#, position = position_dodge(width=0.3)) +
+  stat_summary(fun.data = mean_cl_boot, geom="errorbar",#position = position_dodge(width=0.3), 
+               width = 0.1)+
   stat_summary(fill="white",
                fun.y = mean,
-               position = position_dodge(width=0.3), 
+               #position = position_dodge(width=0.3), 
                geom="point", shape=23, size=3) +
   scale_colour_manual(name="Productivity classification",
                       values = myRGBpalette, 
@@ -187,4 +189,5 @@ nn.long %>%
   labs(y="Average Accuracy", x="Item Range") +
   theme(panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank())
-ggsave('graphs/fig4-nnn-within-beyond-final.png', width=5, height=3)
+#ggsave('graphs/fig4-nnn-within-beyond-final.png', width=5, height=3)
+ggsave('graphs/fig4-nnn-within-beyond-final-nojitter.png', width=5, height=3)

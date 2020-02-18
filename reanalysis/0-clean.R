@@ -26,7 +26,7 @@ full.data %<>%
 # productivity, fhc, ihc coding from pc, jc, and rms
 
 # Read in data and keep final coding decisions
-hc.data <- read.csv('raw data/HC-datawide-forcoding - hc.datawide.csv') %>%
+hc.data <- read.csv('raw data/recursion_hc-coding-wide.csv') %>%
   dplyr::select(LadlabID, prod_tomerge, ihc_final, fhc_final, dce, why_productive, suptimes.final=suptimes_final,
                 ProductivityStrict)
 # add to full dataframe
@@ -60,7 +60,7 @@ tmp <- hc.data %>%
 subjectlist <- unique(full.data$LadlabID)
 
 # Add in coding for reminder prompts and recovery from reminders
-reminders.data <- read.csv('raw data/sara-HC-datawide-forcoding - hc.datawide.csv') %>%
+reminders.data <- read.csv('raw data/recursion_hc-reminders-wide.csv') %>%
   dplyr::select(LadlabID, reminders.total, reminders.recovered)
 full.data <- dplyr::left_join(full.data, reminders.data, by="LadlabID")
 
@@ -74,7 +74,7 @@ full.data %<>%
 
 # Read in data file with counting errors individually labeled
 # This is wide format separate long data frame for highst count errors, for analysis and Fig 2
-hc.errorscoded <- read.csv('raw data/HCdata_jccoding.csv', stringsAsFactors = F)
+hc.errorscoded <- read.csv('raw data/recursion_hc-errors_long.csv', stringsAsFactors = F)
 hc.errorscoded %<>% filter(LadlabID %in% subjectlist)
 
 # Replace subject IDs

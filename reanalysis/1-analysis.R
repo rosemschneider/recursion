@@ -473,7 +473,7 @@ write.mtable(memisc::mtable('Base' = succ.age,
                             'NN' = succ.age.nn,
                             'Prod' =succ.age.prod,
                             summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'), digits=4),
-             format="HTML", file="table2.html")
+             format="HTML", file="tables/main-table2.html")
 
 write.mtable(memisc::mtable('Base' = end.age,
        'IHC' = end.age.ihc,
@@ -482,11 +482,11 @@ write.mtable(memisc::mtable('Base' = end.age,
        'Prod+IHC'=end.age.prod.ihc,
        'Prod*IHC'=end.age.prodXihc,
        summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'), digits=4),
-       format="HTML", file="table3.html")
+       format="HTML", file="tables/main-table3.html")
 
 write.mtable(memisc::mtable('Base' = inf.age,
                             'IHC' = inf.age.ihc,
                             'NN' = inf.age.nn,
                             'Prod' =inf.age.prod,
                             summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'), digits=4),
-             format="HTML", file="table4.html")
+             format="HTML", file="tables/main-table4.html")
