@@ -53,6 +53,7 @@ theme_set(theme_bw() + theme(text = element_text(size=9),
 ## ---- 1) HIGHEST COUNT ----
 
 ## ... Descriptives ----
+## Binary productivity
 data.full%>%
   dplyr::distinct(subID, Productivity, Age, IHC, DCE, FHC, delta.hc, prod.gradient, suptimes.final)%>%
   group_by(Productivity) %>%
@@ -67,6 +68,7 @@ data.full%>%
   separate(stat, into = c("var", "stat"), sep = "_") %>%
   spread(stat, val) %>%
   dplyr::select(Productivity, var, n=sum, mean, sd,  median, min, max)
+
 ## now by 3-way productivity
 data.full%>%
   dplyr::distinct(subID, Productivity.tertiary, Age, IHC, DCE, FHC, delta.hc, prod.gradient, suptimes.final)%>%
@@ -86,6 +88,7 @@ data.full%>%
 # ... IHC ~ Age ----
 ## ihc and age are correlated
 tidy(cor.test(data.hcunique$IHC, data.hcunique$AgeMonths))
+
 ## regression shows significant beta
 fit_ihc <- lm(IHC~ scale(AgeMonths, scale = F), data=data.hcunique)
 summary(fit_ihc)
@@ -123,7 +126,7 @@ data.wcn.wide %>% group_by(Productivity) %>%
   summarise(mean=mean(score), sd=sd(score), meanperc=mean(perc), n=n())
 t.test(perc ~ 
          Productivity, data = data.wcn.wide, var.equal = TRUE) %>% tidy()
-# remove ihc=99
+# Productivity tertiary
 data.wcn.wide %>% group_by(Productivity.tertiary) %>%
   summarise(mean=mean(score), sd=sd(score), meanperc=mean(perc), n=n())
 t.test(perc ~ 
@@ -149,7 +152,7 @@ ggsave('graphs/nn-hist.png', width=6, dpi=600)
 ## Note: Age should be centered and scaled across participants. 
 nn.wide %<>% mutate(age.c = scale(Age, center=TRUE, scale=TRUE),
                      ihc.c = scale(IHC, center=TRUE, scale=TRUE))
-nn.long <- left_join(nn.long, dplyr::select(nn.wide, subID, age.c, ihc.c), by="subID")
+nn.long <- left_join(nn.long, dplyr::select(nn.wide, LadlabID, age.c, ihc.c), by="LadlabID")
 ## Note: weighted effect coding allows regression estimates to be interpreted as differences from grand mean,
 ## even though samples are unbalanced
 wec <- mean(as.numeric(nn.long$Productivity)-1)
@@ -159,7 +162,7 @@ contrasts(nn.long$TaskItem_type) <- c(-wec,1-wec)
 
 ## ... a) prod*ihc +age ----
 set.seed(1234)
-fit_nn_log <- glmer(Accuracy ~ ihc.c * Productivity + age.c + (1|subID) + (1|TaskItem_num),
+fit_nn_log <- glmer(Accuracy ~ ihc.c * Productivity + age.c + (1|LadlabID) + (1|TaskItem_num),
                      data = nn.long, family = binomial, 
                     glmerControl(optimizer = "bobyqa")) # optimizer to deal with convergence error
 glance(fit_nn_log)
