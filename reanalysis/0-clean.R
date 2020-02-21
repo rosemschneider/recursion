@@ -13,7 +13,7 @@ full.data <- read.csv('raw data/recursion_full.csv', na.strings=c(""," ","NA", "
 
 ## Removing individual participants
 # final decision: remove kids who fail 1 trial out of 3 trials, with no additional information about whether E reran the failed trial. Removing 8 kids in total
-# added 033516-ML on 3018-09-03 to the exclusion list. kid had NA data for wcn practice trials and 0 correct on test. assume kid failed wcn.
+# added 022516-ML on 2018-09-03 to the exclusion list. kid had NA data for wcn practice trials and 0 correct on test. assume kid failed wcn.
 full.data %<>%
   mutate(ExclusionGroup = ifelse(LadlabID == "022616-JM"| LadlabID == "030216-AD"|
                                    LadlabID == "031516-A" | LadlabID == "041316-AR"|
