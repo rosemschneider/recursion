@@ -34,6 +34,7 @@ library(broom)
 library(broom.mixed)
 library(sjstats)
 library(sjPlot)
+library(tidylog)
 require("lmPerm") ## permutation tests for linear regressions
 require("lm.beta") ## standardized regression parameters
 if (!require("lmtest")) {install.packages("lmtest"); require("lmtest")}          ## testing infrastructure for lm 
@@ -186,11 +187,12 @@ ggsave("graphs/fig3b-nn-by-prod-ihc.png",
 ## ... b) prod*mid/cross decade +age ----
 ## (are decade transitions more difficult?)
 set.seed(1234)
-fit_nn2_log <- glmer(Accuracy ~ Productivity*ihc.c + TaskItem_type+ age.c+(1|subID) + (1|TaskItem_num),
+fit_nn2_log <- glmer(Accuracy ~ TaskItem_type + ihc.c*Productivity + age.c+(1|LadlabID) + (1|TaskItem_num),
                      data = nn.long, family = binomial , 
                      glmerControl(optimizer = "bobyqa"))
-anova(fit_nn2_log, fit_nn_log, test="LR")
-fit_nn2_log_int <- glmer(Accuracy ~Productivity*ihc.c +  Productivity*TaskItem_type + age.c+(1|subID) + (1|TaskItem_num),
+anova(fit_nn_log, fit_nn2_log, test="LR")
+
+fit_nn2_log_int <- glmer(Accuracy ~Productivity*ihc.c +  Productivity*TaskItem_type + age.c+(1|LadlabID) + (1|TaskItem_num),
                      data = nn.long, family = binomial, 
                      glmerControl(optimizer = "bobyqa"))
 anova(fit_nn2_log, fit_nn2_log_int, test="LR") # interaction n.s.
@@ -219,7 +221,7 @@ nn.long <- nn.long %>% mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels
 wec <- mean(as.numeric(nn.long$WithinOutsideIHC)-1)
 contrasts(nn.long$WithinOutsideIHC) <- c(-wec,1-wec)
 # construct models
-fit_nn3_log <- glmer(Accuracy ~ Productivity*WithinOutsideIHC + ihc.c + (1|subID) + (1|TaskItem_num),
+fit_nn3_log <- glmer(Accuracy ~ Productivity*WithinOutsideIHC + ihc.c + age.c + (1|LadlabID) + (1|TaskItem_num),
                      data = nn.long , family = binomial, glmerControl(optimizer = "bobyqa"))
 # interaction sig.
 Anova(fit_nn3_log)
@@ -229,14 +231,14 @@ emmeans(fit_nn3_log,"Productivity", by="WithinOutsideIHC", type="response")
 
 ## t-tests for contrasts
 nn.long %>% 
-  group_by(subID, Productivity, WithinOutsideIHC) %>%
+  group_by(LadlabID, Productivity, WithinOutsideIHC) %>%
   summarise(score=mean(Accuracy, na.rm=T)) %>%
   filter(WithinOutsideIHC=="within") %>%
   t.test(score ~ 
            Productivity, data = ., var.equal = TRUE) %>% tidy()
 # outside
 nn.long %>% 
-  group_by(subID, Productivity, WithinOutsideIHC) %>%
+  group_by(LadlabID, Productivity, WithinOutsideIHC) %>%
   summarise(score=mean(Accuracy, na.rm=T)) %>%
   filter(WithinOutsideIHC=="outside") %>%
   t.test(score ~ 
