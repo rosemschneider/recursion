@@ -189,7 +189,7 @@ full.data %<>%
 
 # Save and Export ----
 # Remove identifiable info & unnecessary variables & Rename
-data.full <- full.data %>% dplyr::select(-c("LadlabID", "DOT", "ExclusionGroup"))
+data.full <- full.data %>% dplyr::select(-c("DOT", "ExclusionGroup"))
 data.hcerrors <- hc.errorscoded %>% dplyr::select(-c("LadlabID", "SortedID"))
 # Make dataframe for subject-level highest count measurements (without errors)
 data.hcunique <- full.data %>%
