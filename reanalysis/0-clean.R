@@ -22,10 +22,6 @@ full.data %<>%
                                    LadlabID == "022516-ML", "fail wcn", levels(ExclusionGroup)[ExclusionGroup]),
          ExclusionGroup = as.factor(ExclusionGroup))
 
-##RMS: I think we can get rid of below
-full.data %>%
-  filter(LadlabID == "022616-JM")
-
 ## Exclusion ns and reasons
 # Subject counts
 table(distinct(full.data, LadlabID, ExclusionGroup)$ExclusionGroup)
@@ -79,15 +75,6 @@ reminders.data <- read.csv('raw data/recursion_hc-reminders-wide.csv') %>%
   dplyr::select(LadlabID, reminders.total, reminders.recovered)
 full.data <- dplyr::left_join(full.data, reminders.data, by="LadlabID")
 
-##RMS: We don't use productivity gradient anymore, right? So we can get rid of below
-## Add in productivity gradient calculation
-full.data %<>%
-  mutate(delta.hc = FHC-IHC, 
-         prod.gradient = case_when(
-           IHC>=99 ~1,
-           IHC <99 & FHC>=100 ~ 1,
-           IHC <99 & FHC<100 ~delta.hc/(99-IHC)))
-
 ## Read in data file with counting errors individually labeled
 ### This is wide format separate long data frame for highst count errors, for analysis and Fig 2
 hc.errorscoded <- read.csv('raw data/recursion_hc-errors_long.csv', stringsAsFactors = F)
@@ -109,7 +96,7 @@ wcn.data <- full.data %>%
   filter(Task == "WCN", TaskType == "immediate") %>%
   dplyr::select(LadlabID, Task, TaskType, TaskItem, Response, Accuracy, 
          Productivity, Productivity.tertiary, ProductivityStrict, ProductivityStrict.tertiary,
-         prod.gradient, Age, AgeGroup, AgeMonths, IHC, FHC, DCE) %>%
+         Age, AgeGroup, AgeMonths, IHC, FHC, DCE) %>%
   mutate(Response_num = as.numeric(as.character(Response)), 
          TaskItem_num = as.numeric(as.character(TaskItem))) %>%
   mutate(Response_num =  replace_na(Response_num, 0),
@@ -138,35 +125,7 @@ wcn.accuracy <- wcn.data %>%
 
 wcn.data <- left_join(wcn.data, wcn.accuracy, by="LadlabID")
 
-##RMS: We don't need this anymore - everything is in wcn.data
-# + Code if WCN trial is Within / beyond IHC ----
-# first, get initial highest count for each kiddo
-# Make a lookup table with SID and initial highest count
-# lookup <- full.data %>%
-#   distinct(LadlabID, IHC)
-
-# For each trial, check the number queried.
-# If number queried is above the child's initial highest count, marks that trial as beyond count range.
-# determine_count_range <- function(df) {
-#   tmp <- df
-#   for (row in 1:nrow(tmp)) {
-#     sub = as.character(tmp[row, "subID"])
-#     count_range = as.numeric(as.character(subset(lookup, subID == sub)$IHC))
-#     tmp[row, "IHC"] = as.numeric(as.character(count_range))
-#     if (tmp[row, "TaskItem_num"] > count_range) {
-#       tmp[row, "WithinOutsideIHC"] = "outside"
-#     } else {
-#       tmp[row, "WithinOutsideIHC"] = "within"
-#     }
-#   }
-#   return(tmp)
-# }
-
-# # Run for wcn data
-# wcn.data <- determine_count_range(wcn.data)
-# summary(wcn.data$Accuracy_valid) # ok
-
-##RMS: This is replacing the code above
+# Code if WCN trial is Within / beyond IHC
 wcn.data %<>%
   mutate(WithinOutsideIHC = ifelse(TaskItem_num < IHC, "within", "outside"))
 

@@ -56,9 +56,9 @@ theme_set(theme_bw() + theme(text = element_text(size=9),
 ## ... Descriptives ----
 ## Binary productivity
 data.full%>%
-  dplyr::distinct(LadlabID, Productivity, Age, IHC, DCE, FHC, delta.hc, prod.gradient, suptimes.final)%>%
+  dplyr::distinct(LadlabID, Productivity, Age, IHC, DCE, FHC, delta.hc, suptimes.final)%>%
   group_by(Productivity) %>%
-  dplyr::summarise_at(c('Age','IHC','DCE','FHC','delta.hc', 'prod.gradient','suptimes.final'),
+  dplyr::summarise_at(c('Age','IHC','DCE','FHC','delta.hc', 'suptimes.final'),
                       list(~mean(., na.rm=T), 
                            ~sd(., na.rm=T),
                            ~median(., na.rm=T),
@@ -72,9 +72,9 @@ data.full%>%
 
 ## now by 3-way productivity
 data.full%>%
-  dplyr::distinct(subID, Productivity.tertiary, Age, IHC, DCE, FHC, delta.hc, prod.gradient, suptimes.final)%>%
+  dplyr::distinct(subID, Productivity.tertiary, Age, IHC, DCE, FHC, delta.hc, suptimes.final)%>%
   group_by(Productivity.tertiary) %>%
-  dplyr::summarise_at(c('Age', 'IHC','DCE','FHC','delta.hc', 'prod.gradient','suptimes.final'),
+  dplyr::summarise_at(c('Age', 'IHC','DCE','FHC','delta.hc', 'suptimes.final'),
                       list(~mean(., na.rm=T), 
                            ~sd(., na.rm=T),
                            ~median(., na.rm=T),
@@ -249,7 +249,7 @@ nn.long %>%
 model.df <- data.full %>%
   dplyr::distinct(LadlabID, Age, AgeGroup, Gender, 
                   SuccessorKnower, EndlessKnower, InfinityKnower, NonKnower,
-                  IHC, Productivity, Productivity.tertiary, prod.gradient, Category) %>%
+                  IHC, Productivity, Productivity.tertiary, Category) %>%
   left_join(select(nn.wide, "LadlabID", wcnscore=score), by="LadlabID") %>%
   mutate(SuccessorKnower = factor(SuccessorKnower, levels = c(0,1)), 
          EndlessKnower = factor(EndlessKnower, levels = c(0,1)),
@@ -260,7 +260,6 @@ model.df2 <- model.df %>%
   filter(Productivity.tertiary != "Productive (IHC \u2265 99)") %>%
   mutate(IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)),
          Age.c = as.vector(scale(Age, center = TRUE, scale=TRUE)),
-         prod.gradient.c = as.vector(scale(prod.gradient, center=TRUE, scale=TRUE)),
          wcnscore.c = as.vector(scale(wcnscore, center = TRUE, scale=TRUE)))
 # weighted effect coding for productivity
 wec <- mean(as.numeric(model.df2$Productivity)-1)
@@ -312,8 +311,6 @@ Anova(glm(Productivity ~ IHC,
     family=binomial()))
 # IHC predicts productivity status (controlling for age)
 Anova(fit_prod)
-# IHC predicts gradient measure of productivity
-tidy(cor.test(model.df2$IHC, model.df2$prod.gradient))
 # IHC predicts NN
 tidy(cor.test(model.df2$IHC, model.df2$wcnscore))
 

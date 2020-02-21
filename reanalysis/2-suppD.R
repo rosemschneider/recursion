@@ -86,7 +86,7 @@ ggsave("graphs/suppd-fig1d-prod-by-age-ihc.png",
 nn.wide <- data.wcn.wide[data.wcn.wide$IHC<99,]
 nn.long <- data.wcn.long[data.wcn.long$IHC<99,]
 
-# ... descriptives ----
+# ... descriptives (all) ----
 data.wcn.wide %>% group_by(ProductivityStrict) %>%
   summarise(mean=mean(score), sd=sd(score), meanperc=mean(perc), n=n())
 t.test(perc ~ 
@@ -111,7 +111,7 @@ ggplot(nn.wide, aes(x=score)) +
         panel.grid.minor = element_blank())
 ggsave('graphs/suppd-nn-hist.png', width=6, dpi=600)
 
-## Accuracy by item-level covariates ----
+## Accuracy by item-level covariates (IHC < 99) ----
 ## Note: Age should be centered and scaled across participants. 
 nn.wide %<>% mutate(age.c = scale(Age, center=TRUE, scale=TRUE),
                      ihc.c = scale(IHC, center=TRUE, scale=TRUE))
@@ -147,6 +147,8 @@ ggsave("graphs/suppd-fig3b-nn-by-prod-ihc.png",
        height=4, width=5)
 
 ## ... b) prod*mid/cross decade +age ----
+nn.long %>% group_by(subID, TaskItem_type) %>% summarise(score = mean(Accuracy)) %>%
+  ungroup() %>% group_by(TaskItem_type) %>% summarise(mean = mean(score), sd=sd(score))
 ## (are decade transitions more difficult?)
 set.seed(1234)
 fit_nn2_log <- glmer(Accuracy ~ ProductivityStrict*ihc.c + TaskItem_type+ age.c+(1|subID) + (1|TaskItem_num),
