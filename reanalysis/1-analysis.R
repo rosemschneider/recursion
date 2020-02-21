@@ -56,7 +56,7 @@ theme_set(theme_bw() + theme(text = element_text(size=9),
 ## ... Descriptives ----
 ## Binary productivity
 data.full%>%
-  dplyr::distinct(subID, Productivity, Age, IHC, DCE, FHC, delta.hc, prod.gradient, suptimes.final)%>%
+  dplyr::distinct(LadlabID, Productivity, Age, IHC, DCE, FHC, delta.hc, prod.gradient, suptimes.final)%>%
   group_by(Productivity) %>%
   dplyr::summarise_at(c('Age','IHC','DCE','FHC','delta.hc', 'prod.gradient','suptimes.final'),
                       list(~mean(., na.rm=T), 
@@ -247,14 +247,14 @@ nn.long %>%
 
 ## ---- 3) PREDICTORS OF INFINITY ----
 model.df <- data.full %>%
-  dplyr::distinct(subID, Age, AgeGroup, Gender, 
+  dplyr::distinct(LadlabID, Age, AgeGroup, Gender, 
                   SuccessorKnower, EndlessKnower, InfinityKnower, NonKnower,
                   IHC, Productivity, Productivity.tertiary, prod.gradient, Category) %>%
-  left_join(select(nn.wide, "subID", wcnscore=score), by="subID") %>%
+  left_join(select(nn.wide, "LadlabID", wcnscore=score), by="LadlabID") %>%
   mutate(SuccessorKnower = factor(SuccessorKnower, levels = c(0,1)), 
          EndlessKnower = factor(EndlessKnower, levels = c(0,1)),
          IHC = as.integer(IHC), 
-         subID = factor(subID))
+         LadlabID = factor(LadlabID))
 # scale and center
 model.df2 <- model.df %>%
   filter(Productivity.tertiary != "Productive (IHC \u2265 99)") %>%
@@ -495,3 +495,4 @@ write.mtable(memisc::mtable('Base' = inf.age,
                             'Prod' =inf.age.prod,
                             summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'), digits=4),
              format="HTML", file="tables/main-table4.html")
+
