@@ -17,7 +17,7 @@
 ## 3) Finally we test if the two measures of productive knowledge predicts infinity knowledge above and beyond rote counting familiarity (IHC).
 
 # SETUP ----
-source("0-clean.R") # data cleaning script, produces recursionOSF.RData
+# source("0-clean.R") # data cleaning script, produces recursionOSF.RData
 # Load cleaned data - 3 data frames
 rm(list = ls())
 load("CountingToInfinity-data.RData")
@@ -116,12 +116,6 @@ ggsave('graphs/fig1d-prod-by-age-ihc.png', ggarrange(
   nrow = 2), width=4, height=4.5)
 
 ## ---- 2) NEXT NUMBER ----
-## First create relevant dataframes for plotting and analysis
-# To obtain more conservative test of hypothesis that productivity predicts NN performance, 
-# we create dataframes that exclude IHC=99
-nn.wide <- data.wcn.wide[data.wcn.wide$IHC<99,]
-nn.long <- data.wcn.long[data.wcn.long$IHC<99,]
-
 # ... descriptives ----
 data.wcn.wide %>% group_by(Productivity) %>%
   summarise(mean=mean(score), sd=sd(score), meanperc=mean(perc), n=n())
@@ -132,6 +126,11 @@ data.wcn.wide %>% group_by(Productivity.tertiary) %>%
   summarise(mean=mean(score), sd=sd(score), meanperc=mean(perc), n=n())
 t.test(perc ~ 
          Productivity, data = nn.wide, var.equal = TRUE) %>% tidy()
+
+# To obtain more conservative test of hypothesis that productivity predicts NN performance, 
+# we create dataframes that exclude IHC=99
+nn.wide <- data.wcn.wide[data.wcn.wide$IHC<99,]
+nn.long <- data.wcn.long[data.wcn.long$IHC<99,]
 
 # ... plot accuracy histogram ----
 ggplot(nn.wide, aes(x=score)) + 
@@ -226,8 +225,14 @@ fit_nn3_log <- glmer(Accuracy ~ Productivity*WithinOutsideIHC + ihc.c + age.c + 
 # interaction sig.
 Anova(fit_nn3_log)
 tidy(fit_nn3_log, conf.int = TRUE, effects="fixed") %>% mutate_at(c("estimate", "conf.low", "conf.high"), list(EXP=exp))
-# estimated marginal means
-emmeans(fit_nn3_log,"Productivity", by="WithinOutsideIHC", type="response")
+# estimated marginal means for single trial accuracy
+# emmeans(fit_nn3_log,"Productivity", by="WithinOutsideIHC", type="response")
+
+nn.long %>% 
+  group_by(LadlabID, Productivity, WithinOutsideIHC) %>%
+  summarise(score=mean(Accuracy, na.rm=T)) %>% 
+  group_by(WithinOutsideIHC, Productivity) %>% 
+  summarise(m=mean(score), sd=sd(score))
 
 ## t-tests for contrasts
 nn.long %>% 
@@ -250,7 +255,7 @@ model.df <- data.full %>%
   dplyr::distinct(LadlabID, Age, AgeGroup, Gender, 
                   SuccessorKnower, EndlessKnower, InfinityKnower, NonKnower,
                   IHC, Productivity, Productivity.tertiary, Category) %>%
-  left_join(select(nn.wide, "LadlabID", wcnscore=score), by="LadlabID") %>%
+  left_join(dplyr::select(nn.wide, "LadlabID", wcnscore=score), by="LadlabID") %>%
   mutate(SuccessorKnower = factor(SuccessorKnower, levels = c(0,1)), 
          EndlessKnower = factor(EndlessKnower, levels = c(0,1)),
          IHC = as.integer(IHC), 
@@ -309,8 +314,6 @@ chisq.test(table(model.df$Productivity, model.df$Category=="D Full-knower"))
 Anova(glm(Productivity ~ IHC, 
     data=data.hcunique[data.hcunique$IHC<99,],
     family=binomial()))
-# IHC predicts productivity status (controlling for age)
-Anova(fit_prod)
 # IHC predicts NN
 tidy(cor.test(model.df2$IHC, model.df2$wcnscore))
 
@@ -356,48 +359,6 @@ anova(succ.age, succ.age.prod, test="LRT") # Prod n.s.
 #   theme_bw() + ggplot2::geom_hline(yintercept = 0.5, linetype="dashed")
 # ggsave("graphs/successor-regression1.png", width=6,height=4)
 
-# ## A.2) Combined predictors
-# # NN with ihc
-# succ.age.nn.ihc <- glm(SuccessorKnower ~ wcnscore.c + IHC.c + Age.c, family = "binomial", data = model.df2)
-# succ.age.nnXihc <- glm(SuccessorKnower ~ wcnscore.c * IHC.c + Age.c, family = "binomial", data = model.df2)
-# Anova(succ.age.nnXihc) # NN n.s. when controlling for ihc and age
-# # Productivity with ihc
-# succ.age.prod.ihc <- glm(SuccessorKnower ~ Productivity + IHC.c + Age.c, family = "binomial", data = model.df2)
-# succ.age.prodXihc <- glm(SuccessorKnower ~ Productivity * IHC.c + Age.c, family = "binomial", data = model.df2)
-# Anova(succ.age.prodXihc) # Prod significant when controlling for ihc and age
-# # Productivity with NN and IHC
-# succ.age.ihc.prod.nn <- glm(SuccessorKnower ~ Productivity * IHC.c + wcnscore.c+ Age.c, family = "binomial",data = model.df2)
-# Anova(succ.age.ihc.prod.nn) # Prod significant when controlling for ihc, age, wcn
-# succ.full <- glm(SuccessorKnower ~ IHC.c * Productivity * wcnscore.c + Age.c, family = "binomial",data = model.df2)
-# Anova(succ.full)
-# plot_model(succ.full)
-
-# AIC(succ.null, succ.age, succ.age.ihc, succ.age.prod, succ.age.nn,
-#     succ.age.nn.ihc, succ.age.nnXihc, succ.age.prod.ihc, succ.age.prodXihc,
-#     succ.age.ihc.prod.nn, succ.full) # best: succ.age.prod.ihc
-
-## ... best successor model
-# Anova(succ.age.prod.ihc)
-# glance(succ.age.prod.ihc)
-# tidy(succ.age.prod.ihc, conf.int = TRUE) %>% mutate_at(c("estimate", "conf.low", "conf.high"), list(EXP=exp))
-# # kind of weird that IHC is negative! That showed up in original plots too. Hmm.
-# 
-# # outliers? 
-# sort(hatvalues(model.prodihc.successor))          ## most influential 3 obs: subj 8, 89, 82
-# outlierTest(model.prodihc.successor)   ## prints out the worst observation only, subj84 (Bonferroni p not significant)
-# influenceIndexPlot(model.prodihc.successor)# subj84 again
-# influencePlot(model.prodihc.successor, ylim = c(-2.5, 4))  ## subj 84!!
-# 
-# # Robust regression
-# rmodel.prodihc.successor <- glmRob(SuccessorKnower ~ IHC.c * Productivity + Age.c, family = "binomial",data = model.df2)
-# summary(rmodel.prodihc.successor) # similar results
-# ## compare coefficients with non-robust fit
-# coef(rmodel.prodihc.successor)
-# coef(model.prodihc.successor)
-# # Effects plot
-# plot_model(rmodel.prodihc.successor)
-
-
 ## B) Endless knowledge ----
 ## B.1) Single-predictor
 set.seed(1234)
@@ -433,7 +394,7 @@ anova(end.age.prod.ihc, end.age.prodXihc, test="LR")
 
 ## ... best endless model ----
 Anova(end.age.prod)
-summary(end.age.prod)
+tidy(end.age.prod, conf.int=T) %>% mutate_at(c("estimate", "conf.low", "conf.high"), list(EXP=exp))
 
 ## C) Full Infinity knowledge ----
 ## C.1) Single-predictor

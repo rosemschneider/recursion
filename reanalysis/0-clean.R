@@ -15,11 +15,11 @@ full.data <- read.csv('raw data/recursion_full.csv', na.strings=c(""," ","NA", "
 # final decision: remove kids who fail 1 trial out of 3 trials, with no additional information about whether E reran the failed trial. Removing 8 kids in total
 # added 022516-ML on 2018-09-03 to the exclusion list. kid had NA data for wcn practice trials and 0 correct on test. assume kid failed wcn.
 full.data %<>%
-  mutate(ExclusionGroup = ifelse(LadlabID == "022616-JM"| LadlabID == "030216-AD"|
-                                   LadlabID == "031516-A" | LadlabID == "041316-AR"|
-                                   LadlabID == "041316-VN" | LadlabID == "032216-RC"|
-                                   LadlabID == "012316-BO"| LadlabID == "041316-NC"|
-                                   LadlabID == "022516-ML", "fail wcn", levels(ExclusionGroup)[ExclusionGroup]),
+  mutate(ExclusionGroup = ifelse(LadlabID == "infinity-032"| LadlabID == "infinity-047"|
+                                   LadlabID == "infinity-060" | LadlabID == "infinity-089"|
+                                   LadlabID == "infinity-093" | LadlabID == "infinity-069"|
+                                   LadlabID == "infinity-009"| LadlabID == "infinity-091"|
+                                   LadlabID == "infinity-025", "fail wcn", levels(ExclusionGroup)[ExclusionGroup]),
          ExclusionGroup = as.factor(ExclusionGroup))
 
 ## Exclusion ns and reasons
