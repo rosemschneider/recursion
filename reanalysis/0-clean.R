@@ -35,7 +35,7 @@ full.data %<>%
 ## productivity, fhc, ihc coding from pc, jc, and rms
 
 ## Read in data and keep final coding decisions
-hc.data <- read.csv('raw data/recursion_hc-coding-wide.csv') %>%
+hc.data <- read.csv('raw data/recursion_hc_coding_wide.csv') %>%
   dplyr::select(LadlabID, prod_tomerge, ihc_final, fhc_final, dce, why_productive, suptimes.final=suptimes_final,
                 ProductivityStrict)
 
@@ -53,7 +53,8 @@ full.data %<>%
                 ProductivityStrict = factor(ProductivityStrict, levels = c("nonprod", "prod"), 
                                       labels = c("Nonproductive", "Productive")),
                 IHC = ifelse(IHC > 99, 99, IHC), # max is 99
-                FHC = ifelse(FHC > 99, 99, FHC)) %>%
+                FHC = ifelse(FHC > 99, 99, FHC),
+                delta.hc = FHC-IHC) %>%
   mutate(Productivity.tertiary = ifelse(IHC >= 99, "Productive (IHC \u2265 99)", 
                                         ifelse(Productivity == "Productive", "Productive (IHC < 99)", "Nonproductive")),
          ProductivityStrict.tertiary = ifelse(IHC >= 99, "Productive (IHC \u2265 99)", 
@@ -71,13 +72,13 @@ tmp <- hc.data %>%
 subjectlist <- unique(full.data$LadlabID)
 
 ## Add in coding for reminder prompts and recovery from reminders
-reminders.data <- read.csv('raw data/recursion_hc-reminders-wide.csv') %>%
+reminders.data <- read.csv('raw data/recursion_hc_reminders_wide.csv') %>%
   dplyr::select(LadlabID, reminders.total, reminders.recovered)
 full.data <- dplyr::left_join(full.data, reminders.data, by="LadlabID")
 
 ## Read in data file with counting errors individually labeled
 ### This is wide format separate long data frame for highst count errors, for analysis and Fig 2
-hc.errorscoded <- read.csv('raw data/recursion_hc-errors_long.csv', stringsAsFactors = F)
+hc.errorscoded <- read.csv('raw data/recursion_hc_errors_long.csv', stringsAsFactors = F)
 hc.errorscoded %<>% filter(LadlabID %in% subjectlist)
 
 ### Replace subject IDs

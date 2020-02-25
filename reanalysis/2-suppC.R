@@ -54,9 +54,9 @@ theme_set(theme_bw() + theme(text = element_text(size=9),
 
 ## ... Descriptives ----
 data.full%>%
-  dplyr::distinct(subID, Productivity, Age, IHC, DCE, FHC, delta.hc, prod.gradient, suptimes.final)%>%
+  dplyr::distinct(LadlabID, Productivity, Age, IHC, DCE, FHC, delta.hc, suptimes.final)%>%
   group_by(Productivity) %>%
-  dplyr::summarise_at(c('Age','IHC','DCE','FHC','delta.hc', 'prod.gradient','suptimes.final'),
+  dplyr::summarise_at(c('Age','IHC','DCE','FHC','delta.hc', 'suptimes.final'),
                       list(~mean(., na.rm=T), 
                            ~sd(., na.rm=T),
                            ~median(., na.rm=T),
@@ -124,7 +124,7 @@ ggsave('graphs/suppc-nn-hist.png', width=6, dpi=600)
 ## Note: Age should be centered and scaled across participants. 
 data.wcn.wide %<>% mutate(age.c = scale(Age, center=TRUE, scale=TRUE),
                      ihc.c = scale(IHC, center=TRUE, scale=TRUE))
-data.wcn.long <- left_join(data.wcn.long, dplyr::select(data.wcn.wide, subID, age.c, ihc.c), by="subID")
+data.wcn.long <- left_join(data.wcn.long, dplyr::select(data.wcn.wide, LadlabID, age.c, ihc.c), by="LadlabID")
 ## Note: weighted effect coding allows regression estimates to be interpreted as differences from grand mean,
 ## even though samples are unbalanced
 wec <- mean(as.numeric(data.wcn.long$Productivity)-1)
@@ -134,14 +134,14 @@ contrasts(data.wcn.long$TaskItem_type) <- c(-wec,1-wec)
 
 ## ... a) prod*ihc +age ----
 set.seed(1234)
-fit_nn_log <- glmer(Accuracy ~ ihc.c * Productivity + age.c + (1|subID) + (1|TaskItem_num),
+fit_nn_log <- glmer(Accuracy ~ ihc.c * Productivity + age.c + (1|LadlabID) + (1|TaskItem_num),
                      data = data.wcn.long, family = binomial, 
                     glmerControl(optimizer = "bobyqa")) # optimizer to deal with convergence error
 glance(fit_nn_log)
 # LRT tests
 Anova(fit_nn_log) # interaction n.s., only age sig.
 # no interaction
-fit_nn_log_noint <- glmer(Accuracy ~ ihc.c + Productivity + age.c + (1|subID) + (1|TaskItem_num),
+fit_nn_log_noint <- glmer(Accuracy ~ ihc.c + Productivity + age.c + (1|LadlabID) + (1|TaskItem_num),
                           data = data.wcn.long, family = binomial, 
                           glmerControl(optimizer = "bobyqa")) # optimizer to deal with convergence error
 Anova(fit_nn_log_noint) # ihc sig.
@@ -163,11 +163,11 @@ ggsave("graphs/suppc-fig3b-nn-by-prod-ihc.png",
 ## ... b) prod*mid/cross decade +age ----
 ## (are decade transitions more difficult?)
 set.seed(1234)
-fit_nn2_log <- glmer(Accuracy ~ Productivity*ihc.c + TaskItem_type+ age.c+(1|subID) + (1|TaskItem_num),
+fit_nn2_log <- glmer(Accuracy ~ Productivity*ihc.c + TaskItem_type+ age.c+(1|LadlabID) + (1|TaskItem_num),
                      data = data.wcn.long, family = binomial , 
                      glmerControl(optimizer = "bobyqa"))
 anova(fit_nn2_log, fit_nn_log, test="LR") # sig.
-fit_nn2_log_int <- glmer(Accuracy ~Productivity*ihc.c +  Productivity*TaskItem_type + age.c+(1|subID) + (1|TaskItem_num),
+fit_nn2_log_int <- glmer(Accuracy ~Productivity*ihc.c +  Productivity*TaskItem_type + age.c+(1|LadlabID) + (1|TaskItem_num),
                      data = data.wcn.long, family = binomial, 
                      glmerControl(optimizer = "bobyqa"))
 anova(fit_nn2_log, fit_nn2_log_int, test="LR") # interaction n.s.
@@ -196,7 +196,7 @@ data.wcn.long <- data.wcn.long %>% mutate(WithinOutsideIHC = factor(WithinOutsid
 wec <- mean(as.numeric(data.wcn.long$WithinOutsideIHC)-1)
 contrasts(data.wcn.long$WithinOutsideIHC) <- c(-wec,1-wec)
 # construct models
-fit_nn3_log <- glmer(Accuracy ~ Productivity*WithinOutsideIHC + ihc.c + (1|subID) + (1|TaskItem_num),
+fit_nn3_log <- glmer(Accuracy ~ Productivity*WithinOutsideIHC + ihc.c + (1|LadlabID) + (1|TaskItem_num),
                      data = data.wcn.long , family = binomial, glmerControl(optimizer = "bobyqa"))
 Anova(fit_nn3_log) # interaction sig.
 tidy(fit_nn3_log, conf.int = TRUE, effects="fixed") %>% mutate_at(c("estimate", "conf.low", "conf.high"), list(EXP=exp))
@@ -206,14 +206,14 @@ emmeans(fit_nn3_log,"Productivity", by="WithinOutsideIHC", type="response")
 ## t-tests for contrasts
 # within, productivity n.s.
 data.wcn.long %>% 
-  group_by(subID, Productivity, WithinOutsideIHC) %>%
+  group_by(LadlabID, Productivity, WithinOutsideIHC) %>%
   summarise(score=mean(Accuracy, na.rm=T)) %>%
   filter(WithinOutsideIHC=="within") %>%
   t.test(score ~ 
            Productivity, data = ., var.equal = TRUE) %>% tidy()
 # outside, productivity sig.
 data.wcn.long %>% 
-  group_by(subID, Productivity, WithinOutsideIHC) %>%
+  group_by(LadlabID, Productivity, WithinOutsideIHC) %>%
   summarise(score=mean(Accuracy, na.rm=T)) %>%
   filter(WithinOutsideIHC=="outside") %>%
   t.test(score ~ 
@@ -222,17 +222,16 @@ data.wcn.long %>%
 
 ## ---- 3) PREDICTORS OF INFINITY ----
 model.df <- data.full %>%
-  dplyr::distinct(subID, Age, AgeGroup, Gender, 
+  dplyr::distinct(LadlabID, Age, AgeGroup, Gender, 
                   SuccessorKnower, EndlessKnower, InfinityKnower, NonKnower,
-                  IHC, Productivity, prod.gradient, Category) %>%
-  left_join(dplyr::select(data.wcn.wide, "subID", wcnscore=score), by="subID") %>%
+                  IHC, Productivity, Category) %>%
+  left_join(dplyr::select(data.wcn.wide, "LadlabID", wcnscore=score), by="LadlabID") %>%
   mutate(SuccessorKnower = factor(SuccessorKnower, levels = c(0,1)), 
          EndlessKnower = factor(EndlessKnower, levels = c(0,1)),
          IHC = as.integer(IHC), 
-         subID = factor(subID)) %>%
+         LadlabID = factor(LadlabID)) %>%
   mutate(IHC.c = as.vector(scale(IHC, center = TRUE, scale=TRUE)),
          Age.c = as.vector(scale(Age, center = TRUE, scale=TRUE)),
-         prod.gradient.c = as.vector(scale(prod.gradient, center=TRUE, scale=TRUE)),
          wcnscore.c = as.vector(scale(wcnscore, center = TRUE, scale=TRUE)))
 # weighted effect coding for productivity
 wec <- mean(as.numeric(model.df$Productivity)-1)
@@ -284,8 +283,6 @@ Anova(glm(Productivity ~ IHC,
     family=binomial()))
 # IHC predicts productivity status (controlling for age)
 Anova(fit_prod)
-# IHC predicts gradient measure of productivity
-tidy(cor.test(model.df$IHC, model.df$prod.gradient))
 # IHC predicts NN
 tidy(cor.test(model.df$IHC, model.df$wcnscore))
 

@@ -165,13 +165,13 @@ ggsave('graphs/fig3-wcn-trial-accuracy.png',dpi=600,
 
 ## ---- PLOT Fig 4 ----
 nn.long <- fig3.data %>%
-  dplyr::select(c(subID, IHC, FHC, Age, Productivity, Productivity.tertiary,
+  dplyr::select(c(LadlabID, IHC, FHC, Age, Productivity, Productivity.tertiary,
                   TaskItem_num, TaskItem_type, Accuracy, WithinOutsideIHC)) %>%
-  mutate(IHC = as.integer(IHC), subID=as.factor(subID), TaskItem_type=as.factor(TaskItem_type))
+  mutate(IHC = as.integer(IHC), subID=as.factor(LadlabID), TaskItem_type=as.factor(TaskItem_type))
 nn.long %>%
   mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels = c("within", "outside"), 
                                    labels = c("Within IHC", "Beyond IHC")))%>%
-  dplyr::group_by(Productivity.tertiary, WithinOutsideIHC, subID) %>%
+  dplyr::group_by(Productivity.tertiary, WithinOutsideIHC, LadlabID) %>%
   dplyr::summarize(meansubj = mean(Accuracy, na.rm = TRUE)) %>%
   ggplot(aes(x=WithinOutsideIHC, y=meansubj, colour = Productivity.tertiary, group= Productivity.tertiary)) +
   stat_summary(fun.y="mean", geom="line")+#, position = position_dodge(width=0.3)) +
