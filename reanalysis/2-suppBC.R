@@ -1,25 +1,9 @@
-## This analysis is organized into 3 sets of research questions about counting ability and beliefs about infinity. 
-## The primary measures are:
-## - Initial Highest Count (1-99), also Final Highest Count (1-99) after decade prompts
-## - Productivity (yes/no)
-## - Next Number Accuracy (score out of 8 items), also interested in item-level effects
-## - Successor knowledge (yes/no)
-## - Endless knowledge (yes/no)
-## - Full Infinity knowledge (yes/no) -- this is any child who has both Successor & Endless knowledge
-## GLM regressions control for subject age (range 4.0 - 5.9)
-## GLMMs additionally include random intercepts for subject and relevant trial-level variables
-
-## Scientific background / hypotheses:
-## Previous work finds that children who can count higher are more likely to endorse beliefs about infinity (i.e. that you can always add one, & that numbers go on forever)
-## We hypothesize that this relationship is moderated by an insight into the structure of the count list: that it is a recursive list that can keep generating new numbers based on morphosyntactic rules
-## 1) We first seek evidence for individual differences in acquisition of a productive decade+unit rule for generating successive numbers.
-## 2) Then we validate the Productivity classifications on a separate task (Next Number), which asks for successors on arbitary numbers outside the counting up context
-## 3) Finally we test if the two measures of productive knowledge predicts infinity knowledge above and beyond rote counting familiarity (IHC).
+# Reanalyses using all participants for 3.1.2 and 3.3
 
 # SETUP ----
 # source("0-clean.R") # data cleaning script, produces recursionOSF.RData
 # Load cleaned data - 3 data frames
-# rm(list = ls())
+rm(list = ls())
 load("CountingToInfinity-data.RData")
 
 # load packages ----
@@ -50,53 +34,7 @@ theme_set(theme_bw() + theme(text = element_text(size=9),
                              axis.title=element_text(size=8),
                              strip.text = element_text(margin=margin(2,0,2,0))))
 
-## ---- 1) HIGHEST COUNT ----
-
-## ... Descriptives ----
-data.full%>%
-  dplyr::distinct(LadlabID, Productivity, Age, IHC, DCE, FHC, delta.hc, suptimes.final)%>%
-  group_by(Productivity) %>%
-  dplyr::summarise_at(c('Age','IHC','DCE','FHC','delta.hc', 'suptimes.final'),
-                      list(~mean(., na.rm=T), 
-                           ~sd(., na.rm=T),
-                           ~median(., na.rm=T),
-                           ~min(., na.rm=T),
-                           ~max(., na.rm=T),
-                           ~sum(!is.na(.)))) %>%
-  gather(stat, val, -Productivity) %>%
-  separate(stat, into = c("var", "stat"), sep = "_") %>%
-  spread(stat, val) %>%
-  dplyr::select(Productivity, var, n=sum, mean, sd,  median, min, max)
-
-# ... IHC ~ Age ----
-## ihc and age are correlated
-tidy(cor.test(data.hcunique$IHC, data.hcunique$AgeMonths))
-## regression shows significant beta
-fit_ihc <- lm(IHC~ scale(AgeMonths, scale = F), data=data.hcunique)
-summary(fit_ihc)
-coeftest(fit_ihc, vcov = vcovHC(fit_ihc))  # similar; sandwich estimator helps correct for se when outliers
-
-# ... IHC ~ Age ----
-fit_ihc2 <- lm(IHC ~ scale(AgeMonths, scale=F), data=data.hcunique)
-summary(fit_ihc2)
-coeftest(fit_ihc2, vcov = vcovHC(fit_ihc2))   # similar; sandwich estimator helps correct for se when outliers
-## conclude: AGE predicts IHC
-
-# ... Prod ~ Age * IHC ----
-fit_prod <- glm(Productivity ~ IHC * AgeMonths, 
-                data=data.hcunique,
-                family=binomial())
-glance(fit_prod)
-Anova(fit_prod) # interaction n.s, sig. main effects of Age and IHC
-tidy(fit_prod, conf.int=T) %>% mutate_at(c("estimate", "conf.low", "conf.high"), list(EXP=exp))
-# effects plots
-ggsave('graphs/suppc-fig1d-prod-by-age-ihc.png', ggarrange(
-  ggarrange(plotlist=plot_model(fit_prod, type="pred", title = ""), align="h"),
-  plot_model(fit_prod, type = "int", terms="IHC [all]", title = "interaction n.s.")+
-    legend_style(inside=TRUE, pos="bottom right"),
-  nrow = 2), width=4, height=4.5)
-
-## ---- 2) NEXT NUMBER ----
+## ---- 3.1.2) NEXT NUMBER ----
 
 # ... descriptives ----
 data.wcn.wide %>% group_by(Productivity) %>%
@@ -140,13 +78,8 @@ fit_nn_log <- glmer(Accuracy ~ ihc.c * Productivity + age.c + (1|LadlabID) + (1|
 glance(fit_nn_log)
 # LRT tests
 Anova(fit_nn_log) # interaction n.s., only age sig.
-# no interaction
-fit_nn_log_noint <- glmer(Accuracy ~ ihc.c + Productivity + age.c + (1|LadlabID) + (1|TaskItem_num),
-                          data = data.wcn.long, family = binomial, 
-                          glmerControl(optimizer = "bobyqa")) # optimizer to deal with convergence error
-Anova(fit_nn_log_noint) # ihc sig.
 # Model summary, with 95%CI and exponentiated for odds ratios
-tidy(fit_nn_log_noint, conf.int = TRUE, effects="fixed") %>% mutate_at(c("estimate", "conf.low", "conf.high"), list(EXP=exp))
+tidy(fit_nn_log, conf.int = TRUE, effects="fixed") %>% mutate_at(c("estimate", "conf.low", "conf.high"), list(EXP=exp))
 # post hoc conditional slopes with 95%CI, and exponentiated ORs.
 tidy(emtrends(fit_nn_log, ~Productivity, var="ihc.c")) %>% mutate_at(c(-1,-3,-4), list(EXP=exp))
 ## effects plots
@@ -188,39 +121,8 @@ ggsave("graphs/suppc-fig3c-nn-by-prod-middecade.png",
          align="h", ncol=2, nrow=2),
        height=4, width=4)
 
-## ... c) within vs beyond ----
-# Hypothesis: productive counters equally good when items outside counting range. Non-productive counters should be bad.
-set.seed(1234)
-# do weighted effect coding
-data.wcn.long <- data.wcn.long %>% mutate(WithinOutsideIHC = factor(WithinOutsideIHC, levels=c("within", "outside")))
-wec <- mean(as.numeric(data.wcn.long$WithinOutsideIHC)-1)
-contrasts(data.wcn.long$WithinOutsideIHC) <- c(-wec,1-wec)
-# construct models
-fit_nn3_log <- glmer(Accuracy ~ Productivity*WithinOutsideIHC + ihc.c + (1|LadlabID) + (1|TaskItem_num),
-                     data = data.wcn.long , family = binomial, glmerControl(optimizer = "bobyqa"))
-Anova(fit_nn3_log) # interaction sig.
-tidy(fit_nn3_log, conf.int = TRUE, effects="fixed") %>% mutate_at(c("estimate", "conf.low", "conf.high"), list(EXP=exp))
-# estimated marginal means (probability correct)
-emmeans(fit_nn3_log,"Productivity", by="WithinOutsideIHC", type="response")
 
-## t-tests for contrasts
-# within, productivity n.s.
-data.wcn.long %>% 
-  group_by(LadlabID, Productivity, WithinOutsideIHC) %>%
-  summarise(score=mean(Accuracy, na.rm=T)) %>%
-  filter(WithinOutsideIHC=="within") %>%
-  t.test(score ~ 
-           Productivity, data = ., var.equal = TRUE) %>% tidy()
-# outside, productivity sig.
-data.wcn.long %>% 
-  group_by(LadlabID, Productivity, WithinOutsideIHC) %>%
-  summarise(score=mean(Accuracy, na.rm=T)) %>%
-  filter(WithinOutsideIHC=="outside") %>%
-  t.test(score ~ 
-           Productivity, data = ., var.equal = TRUE) %>% tidy()
-
-
-## ---- 3) PREDICTORS OF INFINITY ----
+## ---- 3.3) PREDICTORS OF INFINITY ----
 model.df <- data.full %>%
   dplyr::distinct(LadlabID, Age, AgeGroup, Gender, 
                   SuccessorKnower, EndlessKnower, InfinityKnower, NonKnower,
@@ -281,8 +183,10 @@ chisq.test(table(model.df$Productivity, model.df$Category=="D Full-knower"))
 Anova(glm(Productivity ~ IHC, 
     data=data.hcunique,
     family=binomial()))
-# IHC predicts productivity status (controlling for age)
-Anova(fit_prod)
+# IHC still predicts productivity status (controlling for age)
+Anova(glm(Productivity ~ IHC * Age, 
+          data=data.hcunique,
+          family=binomial()))
 # IHC predicts NN
 tidy(cor.test(model.df$IHC, model.df$wcnscore))
 
@@ -347,21 +251,25 @@ anova(end.age, end.age.prod, test="LRT") # Prod sig.
 # NN with ihc
 end.age.nn.ihc <- glm(EndlessKnower ~ wcnscore.c + IHC.c + Age.c, family = "binomial", data = model.df)
 end.age.nnXihc <- glm(EndlessKnower ~ wcnscore.c * IHC.c + Age.c, family = "binomial", data = model.df)
-Anova(end.age.nnXihc) # no improvement when adding ihc or the interaction 
+anova(end.age.nn, end.age.nn.ihc, end.age.nnXihc, "LR") # more complex models do not improve fit
+anova(end.age.nn, end.age.nnXihc, "LR")
 summary(end.age.nnXihc) # NN n.s. when controlling for ihc and age
+
 # Productivity with ihc
 end.age.prod.ihc <- glm(EndlessKnower ~ Productivity + IHC.c + Age.c, family = "binomial", data = model.df)
 end.age.prodXihc <- glm(EndlessKnower ~ Productivity * IHC.c + Age.c, family = "binomial", data = model.df)
-Anova(end.age.prodXihc) # no improvement when aadding ihc or the interaction 
+anova(end.age.prod, end.age.prod.ihc, end.age.prodXihc, test="LR") # more complex models do not improve fit
 summary(end.age.prodXihc) # prod n.s.
-# Productivity with NN
-end.age.prod.nn <- glm(EndlessKnower ~ Productivity + wcnscore.c + Age.c, family = "binomial", data = model.df)
-end.age.prodXnn <- glm(EndlessKnower ~ Productivity * wcnscore.c + Age.c, family = "binomial", data = model.df)
-Anova(end.age.prodXnn) # no improvement when adding additional term or the interaction 
-summary(end.age.prodXnn) # prod n.s.
+
 # three way
 end.age.prod.nn.ihc <- glm(EndlessKnower ~ Productivity + wcnscore.c + IHC.c + Age.c, family = "binomial", data = model.df)
 Anova(end.age.prod.nn.ihc) # all n.s. -- likely overlapping variance
+anova(end.age.prod, end.age.prod.nn.ihc, test="LRT") #n.s.
+anova(end.age.nn, end.age.prod.nn.ihc, test="LRT") #n.s.
+anova(end.age.ihc, end.age.prod.nn.ihc, test="LRT") #n.s.
+anova(end.age, end.age.prod.nn.ihc, test="LRT") #sig
+summary(end.age.prod.nn.ihc)
+
 end.three.prodXihc <- glm(EndlessKnower ~ Productivity * IHC.c + wcnscore.c + Age.c, family = "binomial", data = model.df)
 end.three.nnXihc <- glm(EndlessKnower ~ wcnscore.c * IHC.c + Productivity + Age.c, family = "binomial", data = model.df)
 end.three.twoint <- glm(EndlessKnower ~ wcnscore.c * IHC.c + Productivity* IHC.c + Age.c, family = "binomial", data = model.df)
@@ -370,9 +278,9 @@ AIC(end.null, end.age, end.age.ihc, end.age.prod, end.age.nn,
     end.age.nn.ihc, end.age.nnXihc, end.age.prod.ihc, end.age.prodXihc,
     end.three.prodXihc, end.three.nnXihc, end.three.twoint) # best: end.age.prod, end.age.prod.ihc
 # more complex models (with ihc) n.s.:
-anova(end.age.prod, end.age.prod.ihc, test="LR") # n.s.
-anova(end.age.prod, end.age.prodXihc, test="LR") # n.s.
-anova(end.age.prod.ihc, end.age.prodXihc, test="LR") # n.s.
+anova(end.age.prod, end.age.prod.ihc, test="LRT") # n.s.
+anova(end.age.prod, end.age.prodXihc, test="LRT") # n.s.
+anova(end.age.prod.ihc, end.age.prodXihc, test="LRT") # n.s.
 
 ## ... best endless model ----
 Anova(end.age.prod)
@@ -421,7 +329,7 @@ write.mtable(memisc::mtable('Base' = succ.age,
                             'NN' = succ.age.nn,
                             'Prod' =succ.age.prod,
                             summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'), digits=4),
-             format="HTML", file="tables/supp-C-table2.html")
+             format="HTML", file="tables/supp-C-tableS1.html")
 
 write.mtable(memisc::mtable('Base' = end.age,
        'IHC' = end.age.ihc,
@@ -435,7 +343,7 @@ write.mtable(memisc::mtable('Base' = end.age,
        'Prod*NN'=end.age.nnXihc,
        'Prod+NN+IHC'=end.age.nn.ihc,
        summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'), digits=4),
-       format="HTML", file="tables/supp-C-table3.html")
+       format="HTML", file="tables/supp-C-tableS2.html")
 
 write.mtable(memisc::mtable('Base' = inf.age,
                             'IHC' = inf.age.ihc,
@@ -444,4 +352,4 @@ write.mtable(memisc::mtable('Base' = inf.age,
                             'NN+IHC'=inf.age.nn.ihc,
                             'NN*IHC'=inf.age.nnXihc,
                             summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'), digits=4),
-             format="HTML", file="tables/supp-C-table4.html")
+             format="HTML", file="tables/supp-C-tableS3.html")

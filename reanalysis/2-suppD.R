@@ -1,3 +1,5 @@
+# Reanalyses using stricter productivity cutoff
+
 # SETUP ----
 # source("0-clean.R") # data cleaning script, produces recursionOSF.RData
 # Load cleaned data - 3 data frames
@@ -181,7 +183,9 @@ contrasts(nn.long$WithinOutsideIHC) <- c(-wec,1-wec)
 # construct models
 fit_nn3_log <- glmer(Accuracy ~ ProductivityStrict*WithinOutsideIHC + ihc.c + (1|LadlabID) + (1|TaskItem_num),
                      data = nn.long , family = binomial, glmerControl(optimizer = "bobyqa"))
-# interaction sig.
+fit_nn3_log_noint <- glmer(Accuracy ~ ProductivityStrict + WithinOutsideIHC + ihc.c + (1|LadlabID) + (1|TaskItem_num),
+                     data = nn.long , family = binomial, glmerControl(optimizer = "bobyqa"))
+anova(fit_nn3_log_noint, fit_nn3_log, test="LR")# interaction sig.
 Anova(fit_nn3_log)
 tidy(fit_nn3_log, conf.int = TRUE, effects="fixed") %>% mutate_at(c("estimate", "conf.low", "conf.high"), list(EXP=exp))
 # estimated marginal means
