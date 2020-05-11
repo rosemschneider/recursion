@@ -4,7 +4,7 @@
 # source("0-clean.R") # data cleaning script, produces recursionOSF.RData
 # Load cleaned data - 3 data frames
 rm(list = ls())
-load("CountingToInfinity-data.RData")
+load("data/CountingToInfinity-data.RData")
 
 # load packages ----
 library(tidyverse)
@@ -74,7 +74,7 @@ glance(fit_prod)
 Anova(fit_prod) # no interaction, just main effects of both Age and IHC
 tidy(fit_prod, conf.int = TRUE, digits=4) %>% mutate_at(c("estimate", "conf.low", "conf.high"), list(EXP=exp)) # report odds ratios
 # effects plots
-ggsave("graphs/suppd-fig1d-prod-by-age-ihc.png",
+ggsave("figures/supplemental materials/suppD-stricterproductivity-by-age-ihc.png",
        ggarrange(
          ggarrange(plotlist=plot_model(fit_prod, type="pred", title = ""), align="h"),
          plot_model(fit_prod, type = "int", terms="IHC [all]", title = "")+legend_style(inside=TRUE, pos="bottom right"),
@@ -111,7 +111,7 @@ ggplot(nn.wide, aes(x=score)) +
   theme(legend.position="bottom", 
         legend.title = element_blank(), 
         panel.grid.minor = element_blank())
-ggsave('graphs/suppd-nn-hist.png', width=6, dpi=600)
+ggsave('figures/supplemental materials/suppD-nextnumber-historgram-bystricterproductivity.png', width=6, dpi=600)
 
 ## Accuracy by item-level covariates (IHC < 99) ----
 ## Note: Age should be centered and scaled across participants. 
@@ -138,7 +138,7 @@ tidy(fit_nn_log, conf.int = TRUE, effects="fixed") %>% mutate_at(c("estimate", "
 # post hoc conditional slopes with 95%CI, and exponentiated ORs.
 tidy(emtrends(fit_nn_log, ~ProductivityStrict, var="ihc.c")) %>% mutate_at(c(-1,-4), list(EXP=exp))
 ## effects plots
-ggsave("graphs/suppd-fig3b-nn-by-prod-ihc.png",
+ggsave("figures/supplemental materials/suppD-nextnumber-glmer-by-strictprod-ihc-age.png",
        ggarrange(
          plot_model(fit_nn_log, type = "int", title="NN ~ prod * ihc.c + age.c + (1|subj)", axis.lim = c(0,1)),
          ggarrange(plot_model(fit_nn_log, type="pred", terms="ihc.c [all]", axis.lim = c(0,1), title = "")+theme(plot.margin=margin(t=1)),
@@ -164,7 +164,7 @@ anova(fit_nn2_log, fit_nn2_log_int, test="LR") # interaction n.s.
 # both Productive Counters and Non-Productive Counters found decade transition items harder than mid-decade
 # Report model
 tidy(fit_nn2_log, conf.int = TRUE, effects="fixed") %>% mutate_at(c("estimate", "conf.low", "conf.high"), list(EXP=exp))
-ggsave("graphs/suppd-fig3c-nn-by-prod-middecade.png",
+ggsave("figures/supplemental materials/suppD-nextnumber-glmer-by-strictprod-itemtype-age.png",
        ggarrange(
          plot_model(fit_nn2_log, type = "int", title="NN ~ prod * item type + age.c + (1|subj)", axis.lim = c(0,1)),
          plot_model(fit_nn2_log, type="pred", terms="ihc.c [all]", axis.lim = c(0,1), title = "")+theme(plot.margin=margin(t=1)),
@@ -322,7 +322,7 @@ write.mtable(memisc::mtable('Base' = succ.age,
                             'NN' = succ.age.nn,
                             'Prod.strict' =succ.age.prod,
                             summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'), digits=4),
-             format="HTML", file="tables/supp-D-table2.html")
+             format="HTML", file="figures/supplemental materials/supp-D-tableS5.html")
 
 write.mtable(memisc::mtable('Base' = end.age,
                             'IHC' = end.age.ihc,
@@ -331,7 +331,7 @@ write.mtable(memisc::mtable('Base' = end.age,
 #                            'Prod+IHC'=end.age.prod.ihc,
 #                            'Prod*IHC'=end.age.prodXihc,
                             summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'), digits=4),
-             format="HTML", file="tables/supp-D-table3.html")
+             format="HTML", file="figures/supplemental materials/supp-D-tableS6.html")
 
 write.mtable(memisc::mtable('Base' = inf.age,
                             'IHC' = inf.age.ihc,
@@ -340,4 +340,4 @@ write.mtable(memisc::mtable('Base' = inf.age,
                             'Prod.strict+IHC'=inf.age.prod.ihc,
                             'Prod.strict*IHC'=inf.age.prodXihc,
                             summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'), digits=4),
-             format="HTML", file="tables/supp-D-table4.html")
+             format="HTML", file="figures/supplemental materials/supp-D-tableS7.html")

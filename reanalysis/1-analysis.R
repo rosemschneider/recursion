@@ -20,7 +20,7 @@
 # source("0-clean.R") # data cleaning script, produces recursionOSF.RData
 # Load cleaned data - 3 data frames
 rm(list = ls())
-load("CountingToInfinity-data.RData")
+load("data/CountingToInfinity-data.RData")
 
 # load packages ----
 library(tidyverse)
@@ -109,7 +109,7 @@ glance(fit_prod)
 Anova(fit_prod) # interaction n.s, sig. main effects of Age and IHC
 tidy(fit_prod, conf.int=T) %>% mutate_at(c("estimate", "conf.low", "conf.high"), list(EXP=exp))
 # effects plots
-ggsave('graphs/fig1d-prod-by-age-ihc.png', ggarrange(
+ggsave('figures/extra/productivity-by-age-ihc.png', ggarrange(
   ggarrange(plotlist=plot_model(fit_prod, type="pred", title = ""), align="h"),
   plot_model(fit_prod, type = "int", terms="IHC [all]", title = "interaction n.s.")+
     legend_style(inside=TRUE, pos="bottom right"),
@@ -125,7 +125,8 @@ t.test(perc ~
 data.wcn.wide %>% group_by(Productivity.tertiary) %>%
   summarise(mean=mean(score), sd=sd(score), meanperc=mean(perc), n=n())
 t.test(perc ~ 
-         Productivity, data = nn.wide, var.equal = TRUE) %>% tidy()
+         Productivity.tertiary, data = filter(data.wcn.wide, IHC<99),
+       var.equal = TRUE) %>% tidy()
 
 # To obtain more conservative test of hypothesis that productivity predicts NN performance, 
 # we create dataframes that exclude IHC=99
@@ -145,7 +146,7 @@ ggplot(nn.wide, aes(x=score)) +
   theme(legend.position="bottom", 
         legend.title = element_blank(), 
         panel.grid.minor = element_blank())
-ggsave('graphs/nn-hist.png', width=6, dpi=600)
+ggsave('figures/extra/nextnumber-histogram.png', width=6, dpi=600)
 
 
 ## Accuracy by item-level covariates ----
@@ -173,7 +174,7 @@ tidy(fit_nn_log, conf.int = TRUE, effects="fixed") %>% mutate_at(c("estimate", "
 # post hoc conditional slopes with 95%CI, and exponentiated ORs.
 tidy(emtrends(fit_nn_log, ~Productivity, var="ihc.c")) %>% mutate_at(c(-1,-3,-4), list(EXP=exp))
 ## effects plots
-ggsave("graphs/fig3b-nn-by-prod-ihc.png",
+ggsave("figures/extra/nextnumber-glmer-by-prod-ihc-age.png",
        ggarrange(
          plot_model(fit_nn_log, type = "int", title="NN ~ prod * ihc.c + age.c + (1|subj)", axis.lim = c(0,1)),
          ggarrange(plot_model(fit_nn_log, type="pred", terms="ihc.c [all]", axis.lim = c(0,1), title = "")+theme(plot.margin=margin(t=1)),
@@ -203,14 +204,14 @@ tidy(fit_nn2_log, conf.int = TRUE, effects="fixed") %>% mutate_at(c("estimate", 
 nn.long %>% group_by(TaskItem_type) %>% summarise(mean(Accuracy), sd(Accuracy))
 nn.long %>% group_by(Productivity, TaskItem_type) %>% summarise(mean(Accuracy), sd(Accuracy))
 
-ggsave("graphs/fig3c-nn-by-prod-middecade.png",
+ggsave("figures/extra/nextnumber-glmer-by-prod-itemtype-age.png",
        ggarrange(
          plot_model(fit_nn2_log, type = "int", title="NN ~ prod * item type + age.c + (1|subj)", axis.lim = c(0,1)),
-         plot_model(fit_nn2_log, type="pred", terms="ihc.c [all]", axis.lim = c(0,1), title = "")+theme(plot.margin=margin(t=1)),
+         ggarrange(plot_model(fit_nn2_log, type="pred", terms="ihc.c [all]", axis.lim = c(0,1), title = "")+theme(plot.margin=margin(t=1)),
          plot_model(fit_nn2_log, type="pred", terms="Productivity", axis.lim = c(0,1), title = "")+theme(plot.margin=margin(t=1))+rremove("ylab"),
          plot_model(fit_nn2_log, type="pred", terms="TaskItem_type", axis.lim = c(0,1), title = "")+theme(plot.margin=margin(t=1))+rremove("ylab"),
-         align="h", ncol=2, nrow=2),
-       height=4, width=4)
+         align="h", ncol=3),
+         nrow=2),height=4, width=4)
 
 ## ... c) within vs beyond ----
 # Hypothesis: productive counters equally good when items outside counting range. Non-productive counters should be bad.
@@ -252,7 +253,7 @@ nn.long %>%
 
 ## ---- 3) PREDICTORS OF INFINITY ----
 model.df <- data.full %>%
-  dplyr::distinct(LadlabID, Age, AgeGroup, Gender, 
+  dplyr::distinct(LadlabID, Age, AgeGroup, Sex, 
                   SuccessorKnower, EndlessKnower, InfinityKnower, NonKnower,
                   IHC, Productivity, Productivity.tertiary, Category) %>%
   left_join(dplyr::select(nn.wide, "LadlabID", wcnscore=score), by="LadlabID") %>%
@@ -291,7 +292,7 @@ scatterNoInf <-ggplot(model.df2, aes(x=Age, y=IHC)) +
   theme_minimal()+theme(legend.position="top")
 
 infscatter<- ggarrange(scatterSucc, scatterEnd, scatterFullInf, scatterNoInf)
-ggsave("graphs/infscatter.png", infscatter, width=8, height=8)
+ggsave("figures/extra/infinity-scatterplots.png", infscatter, width=8, height=8)
 
 ## ... Table 1 ----
 # Infinity classification
@@ -357,7 +358,7 @@ anova(succ.age, succ.age.prod, test="LRT") # Prod n.s.
 #             axis.title = "Endorsement Probability",
 #             axis.lim=c(0,1)) +
 #   theme_bw() + ggplot2::geom_hline(yintercept = 0.5, linetype="dashed")
-# ggsave("graphs/successor-regression1.png", width=6,height=4)
+# ggsave("figures/successor-regression1.png", width=6,height=4)
 
 ## B) Endless knowledge ----
 ## B.1) Single-predictor
@@ -436,7 +437,7 @@ write.mtable(memisc::mtable('Base' = succ.age,
                             'NN' = succ.age.nn,
                             'Prod' =succ.age.prod,
                             summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'), digits=4),
-             format="HTML", file="tables/main-table2.html")
+             format="HTML", file="figures/manuscript/main-table2.html")
 
 write.mtable(memisc::mtable('Base' = end.age,
        'IHC' = end.age.ihc,
@@ -445,12 +446,12 @@ write.mtable(memisc::mtable('Base' = end.age,
        'Prod+IHC'=end.age.prod.ihc,
        'Prod*IHC'=end.age.prodXihc,
        summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'), digits=4),
-       format="HTML", file="tables/main-table3.html")
+       format="HTML", file="figures/manuscript/main-table3.html")
 
 write.mtable(memisc::mtable('Base' = inf.age,
                             'IHC' = inf.age.ihc,
                             'NN' = inf.age.nn,
                             'Prod' =inf.age.prod,
                             summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'), digits=4),
-             format="HTML", file="tables/main-table4.html")
+             format="HTML", file="figures/manuscript/main-table4.html")
 

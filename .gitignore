@@ -9,3 +9,4 @@ reanalysis/1-analysis_files
 *.gz
 drafts
 analysis
+reanalysis/data/dataMaid*/

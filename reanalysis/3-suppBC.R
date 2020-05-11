@@ -4,7 +4,7 @@
 # source("0-clean.R") # data cleaning script, produces recursionOSF.RData
 # Load cleaned data - 3 data frames
 rm(list = ls())
-load("CountingToInfinity-data.RData")
+load("data/CountingToInfinity-data.RData")
 
 # load packages ----
 library(tidyverse)
@@ -55,7 +55,7 @@ ggplot(data.wcn.wide, aes(x=score)) +
   theme(legend.position="bottom", 
         legend.title = element_blank(), 
         panel.grid.minor = element_blank())
-ggsave('graphs/suppc-nn-hist.png', width=6, dpi=600)
+ggsave('figures/supplemental materials/suppC-nextnumber-histogram-byproductivity.png', width=6, dpi=600)
 
 
 ## Accuracy by item-level covariates ----
@@ -83,7 +83,7 @@ tidy(fit_nn_log, conf.int = TRUE, effects="fixed") %>% mutate_at(c("estimate", "
 # post hoc conditional slopes with 95%CI, and exponentiated ORs.
 tidy(emtrends(fit_nn_log, ~Productivity, var="ihc.c")) %>% mutate_at(c(-1,-3,-4), list(EXP=exp))
 ## effects plots
-ggsave("graphs/suppc-fig3b-nn-by-prod-ihc.png",
+ggsave("figures/supplemental materials/suppC-nextnumber-glmer-by-prod-ihc-age.png",
        ggarrange(
          plot_model(fit_nn_log, type = "int", title="NN ~ prod * ihc.c + age.c + (1|subj)", axis.lim = c(0,1)),
          ggarrange(plot_model(fit_nn_log, type="pred", terms="ihc.c [all]", axis.lim = c(0,1), title = "")+theme(plot.margin=margin(t=1)),
@@ -112,7 +112,7 @@ tidy(fit_nn2_log, conf.int = TRUE, effects="fixed") %>% mutate_at(c("estimate", 
 data.wcn.long %>% group_by(TaskItem_type) %>% summarise(mean(Accuracy), sd(Accuracy))
 data.wcn.long %>% group_by(Productivity, TaskItem_type) %>% summarise(mean(Accuracy), sd(Accuracy))
 
-ggsave("graphs/suppc-fig3c-nn-by-prod-middecade.png",
+ggsave("figures/supplemental materials/suppC-nextnumber-glmer-by-prod-itemtype-age.png",
        ggarrange(
          plot_model(fit_nn2_log, type = "int", title="NN ~ prod * item type + age.c + (1|subj)", axis.lim = c(0,1)),
          plot_model(fit_nn2_log, type="pred", terms="ihc.c [all]", axis.lim = c(0,1), title = "")+theme(plot.margin=margin(t=1)),
@@ -160,7 +160,7 @@ scatterNoInf <-ggplot(model.df, aes(x=Age, y=IHC)) +
   theme_minimal()+theme(legend.position="top")
 
 infscatter<- ggarrange(scatterSucc, scatterEnd, scatterFullInf, scatterNoInf)
-ggsave("graphs/suppc-infscatter.png", infscatter, width=8, height=8)
+ggsave("figures/supplemental materials/suppC-infinity-scatterplots.png", infscatter, width=8, height=8)
 
 ## ... Table 1 ----
 # Infinity classification
@@ -329,7 +329,7 @@ write.mtable(memisc::mtable('Base' = succ.age,
                             'NN' = succ.age.nn,
                             'Prod' =succ.age.prod,
                             summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'), digits=4),
-             format="HTML", file="tables/supp-C-tableS1.html")
+             format="HTML", file="figures/supplemental materials/supp-C-tableS1.html")
 
 write.mtable(memisc::mtable('Base' = end.age,
        'IHC' = end.age.ihc,
@@ -343,7 +343,7 @@ write.mtable(memisc::mtable('Base' = end.age,
        'Prod*NN'=end.age.nnXihc,
        'Prod+NN+IHC'=end.age.nn.ihc,
        summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'), digits=4),
-       format="HTML", file="tables/supp-C-tableS2.html")
+       format="HTML", file="figures/supplemental materials/supp-C-tableS2.html")
 
 write.mtable(memisc::mtable('Base' = inf.age,
                             'IHC' = inf.age.ihc,
@@ -352,4 +352,4 @@ write.mtable(memisc::mtable('Base' = inf.age,
                             'NN+IHC'=inf.age.nn.ihc,
                             'NN*IHC'=inf.age.nnXihc,
                             summary.stats = c('Nagelkerke R-sq.','Log-likelihood','AIC','N'), digits=4),
-             format="HTML", file="tables/supp-C-tableS3.html")
+             format="HTML", file="figures/supplemental materials/supp-C-tableS3.html")

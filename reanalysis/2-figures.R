@@ -1,6 +1,6 @@
 rm(list = ls())
 # Load cleaned data
-load("CountingToInfinity-data.RData")
+load("data/CountingToInfinity-data.RData")
 
 # Custom global variables
 # colorblind friendly red blue green
@@ -13,9 +13,10 @@ library(ggpubr)
 theme_set(theme_bw() + theme(text = element_text(size=9), 
                              axis.title=element_text(size=8),
                              strip.text = element_text(margin=margin(2,0,2,0))))
-# --- PLOT: Histogram of IHC, by productivity ----
+# --- Fig 2 ----
+# PLOT: Histogram of IHC, by productivity
 ## three-way productivity
-fig1 <- ggplot(data.hcunique, aes(x=IHC)) + 
+fig2 <- ggplot(data.hcunique, aes(x=IHC)) + 
   geom_dotplot(aes(fill = Productivity.tertiary),
                binwidth=1, stackgroups=TRUE, binpositions="all",method="dotdensity", dotsize = 1) +
   scale_fill_manual(values=myRGBpalette, name="Productivity Group") +
@@ -26,11 +27,11 @@ fig1 <- ggplot(data.hcunique, aes(x=IHC)) +
        y="Frequency") +
   theme(legend.position="bottom", 
         panel.grid.minor = element_blank())
-ggsave('graphs/fig1.png',fig1,dpi=600,
+ggsave('figures/manuscript/fig2.eps',fig2,dpi=600,
        width=6, height=3)
 
-# --- PLOT: Productivity by Age ----
-fig1b <- ggplot(data.hcunique, aes(x=AgeMonths)) + 
+# --- Extra plot: Productivity by Age
+fig2b <- ggplot(data.hcunique, aes(x=AgeMonths)) + 
   geom_dotplot(aes(fill = Productivity.tertiary), color="black",
                binwidth = 1,
                stackgroups=TRUE, binpositions="all") +
@@ -42,11 +43,11 @@ fig1b <- ggplot(data.hcunique, aes(x=AgeMonths)) +
   labs( x="Age in Months", 
         y="Frequency") +
   theme(legend.position="right")
-ggsave('graphs/fig1b-prod-by-age.png', fig1b,
+ggsave('figures/extra/productivity-by-age.png', fig2b,
        width=6, height=3, dpi=600)
 
-# --- PLOT: IHC by Age ----
-fig1c <- data.hcunique %>% ggplot(aes(x=AgeMonths, y=IHC, color=Productivity.tertiary, fill=Productivity.tertiary)) +
+# --- Extra plot: IHC by Age
+fig2c <- data.hcunique %>% ggplot(aes(x=AgeMonths, y=IHC, color=Productivity.tertiary, fill=Productivity.tertiary)) +
   geom_smooth(method="lm") +
   geom_point(alpha=0.5, position=position_dodge2(width=.3)) +
   scale_color_manual(values=myRGBpalette, name="Productivity Classification",
@@ -56,16 +57,16 @@ fig1c <- data.hcunique %>% ggplot(aes(x=AgeMonths, y=IHC, color=Productivity.ter
   labs(x="Age in Months", y="Initial Highest Count") +
   scale_x_continuous(breaks=seq(48,73,by=6)) +
   theme(legend.position="right")
-ggsave('graphs/fig1c-ihc-by-age-prod.png', fig1c, width=6, height=3, dpi=600)
+ggsave('figures/extra/ihc-by-age-productivity.png', fig2c, width=6, height=3, dpi=600)
 
-## --- FIG 2----
+## --- Fig 3----
 ## First let's plot productive counters
-fig2a <- data.hcerrors %>% filter(prod_tomerge=="prod") %>%
+fig3a <- data.hcerrors %>% filter(productivity=="prod") %>%
   ggplot(aes(x=subID)) +
   geom_linerange(aes(ymin=ihc, ymax=fhc, color="Accurate Sequence", linetype="Accurate Sequence"), size=.5) +
   geom_linerange(aes(ymin=error.start-.5, ymax=error.end+.5, color="Skipped Sequence", linetype="Skipped Sequence"), size=1) +
   geom_point(aes(y=error.start, fill="Error - uncorrected", shape="Error - uncorrected"), size=2, stroke = 0) +
-  geom_point(aes(y=decadesprompted, fill="Error - got Decade Prompt", shape="Error - got Decade Prompt"), size=3, stroke = 0) +
+  geom_point(aes(y=decadeprompt, fill="Error - got Decade Prompt", shape="Error - got Decade Prompt"), size=3, stroke = 0) +
   geom_point(aes(y=fhc, fill="Final Highest Count", shape="Final Highest Count"), size=2, stroke = 0) +
   geom_point(aes(y=ihc, fill="Initial Highest Count", shape="Initial Highest Count"), size=2, stroke = 0) +
   #  geom_point(aes(y=dce, color="#D95F02", shape="6"), size=2.5) +
@@ -93,12 +94,12 @@ fig2a <- data.hcerrors %>% filter(prod_tomerge=="prod") %>%
         axis.text.x = element_text(angle = 90, vjust=0.5, size=8))
 
 # Same plot, for Non-productive kids
-fig2b <- data.hcerrors %>% filter(prod_tomerge=="nonprod") %>%
+fig3b <- data.hcerrors %>% filter(productivity=="nonprod") %>%
   ggplot(aes(x=subID)) +
   geom_linerange(aes(ymin=ihc, ymax=fhc, color="Accurate Sequence", linetype="Accurate Sequence"), size=.5) +
   geom_linerange(aes(ymin=error.start-.5, ymax=error.end+.5, color="Skipped Sequence", linetype="Skipped Sequence"), size=1) +
   geom_point(aes(y=error.start, fill="Error - uncorrected", shape="Error - uncorrected"), size=2, stroke = 0) +
-  geom_point(aes(y=decadesprompted, fill="Error - got Decade Prompt", shape="Error - got Decade Prompt"), size=3, stroke = 0) +
+  geom_point(aes(y=decadeprompt, fill="Error - got Decade Prompt", shape="Error - got Decade Prompt"), size=3, stroke = 0) +
   geom_point(aes(y=fhc, fill="Final Highest Count", shape="Final Highest Count"), size=2, stroke = 0) +
   geom_point(aes(y=ihc, fill="Initial Highest Count", shape="Initial Highest Count"), size=2, stroke = 0) +
   #  geom_point(aes(y=dce, color="#D95F02", shape="6"), size=2.5) +
@@ -129,17 +130,15 @@ fig2b <- data.hcerrors %>% filter(prod_tomerge=="nonprod") %>%
   theme(legend.position="right", panel.grid.major.x = element_blank(),legend.margin=margin(0,0,0,0),
         axis.text.x = element_text(angle = 90, vjust=0.5, size=8))
 # save
-ggsave('graphs/fig2a-distance-prod-sorted-allprompts.png', fig2a, width=7, height=3, dpi=600)
-ggsave('graphs/fig2b-distance-nonprod-sorted-allprompts.png', fig2b, width=7, height=3, dpi=600)
-ggsave('graphs/fig2-distance.png', ggarrange(fig2a, fig2b, nrow=2), width=7, height=5)
+ggsave('figures/manuscript/fig3.eps', ggarrange(fig3a, fig3b, nrow=2), width=7, height=5)
 
-## Fig 3----
-fig3.data <- data.wcn %>%
+## Fig 4----
+# NN accuracy by item & prod
+fig4.data <- data.wcn %>%
   filter(TaskType == "immediate")%>%
   mutate(TaskItem_type= ifelse(mod(TaskItem_num,10)==9, "Item Type: Decade transition", "Item Type: Mid-decade")) %>%
   mutate(TaskItem_type_ordered = ordered(TaskItem_type, levels=c("Item Type: Mid-decade", "Item Type: Decade transition")))
-# PLOT: NN accuracy by item & prod ----
-fig3.data %>%
+fig4.data %>%
   #  mutate(Productivity.tertiary = factor(Productivity.tertiary, levels = c("Nonproductive", "Productive (IHC ≥ 99)", "Productive (IHC < 99)")))%>%
   group_by(TaskItem_type_ordered, TaskItem, Productivity.tertiary)%>%
   summarise(mean = mean(Accuracy, na.rm = TRUE), 
@@ -160,11 +159,11 @@ fig3.data %>%
   theme(legend.position = "right") +
   labs(x = "Item magnitude", y = "Accuracy") +
   theme(axis.text.x = element_text(hjust = 0.5))
-ggsave('graphs/fig3-wcn-trial-accuracy.png',dpi=600,
+ggsave('figures/manuscript/fig4.eps',dpi=600,
        width=6, height=3)
 
-## ---- PLOT Fig 4 ----
-nn.long <- fig3.data %>%
+## ---- Fig 5 ----
+nn.long <- fig4.data %>%
   dplyr::select(c(LadlabID, IHC, FHC, Age, Productivity, Productivity.tertiary,
                   TaskItem_num, TaskItem_type, Accuracy, WithinOutsideIHC)) %>%
   mutate(IHC = as.integer(IHC), subID=as.factor(LadlabID), TaskItem_type=as.factor(TaskItem_type))
@@ -190,4 +189,5 @@ nn.long %>%
   theme(panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank())
 #ggsave('graphs/fig4-nnn-within-beyond-final.png', width=5, height=3)
-ggsave('graphs/fig4-nnn-within-beyond-final-nojitter.png', width=5, height=3)
+# ggsave('graphs/fig4-nnn-within-beyond-final-nojitter.png', width=5, height=3)
+ggsave('figures/manuscript/fig5.eps', width=5, height=3)

@@ -1,0 +1,123 @@
+"","LadlabID","IHC","Age","Productivity","Productivity.tertiary","ProductivityStrict","ProductivityStrict.tertiary","score","perc"
+"1","infinity-001",13,4.17,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",0,0
+"2","infinity-002",99,4.78,"Productive","Productive (IHC ≥ 99)","Productive","Productive (IHC ≥ 99)",8,1
+"3","infinity-003",5,4,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",0,0
+"4","infinity-004",15,4.44,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",1,0.125
+"5","infinity-006",39,4.12,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",2,0.25
+"6","infinity-007",29,4.41,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",0,0
+"7","infinity-008",38,4.75,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",6,0.75
+"8","infinity-012",39,5.42,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",8,1
+"9","infinity-014",29,4.25,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",3,0.375
+"10","infinity-017",13,4.6,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",0,0
+"11","infinity-018",77,4.77,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",7,0.875
+"12","infinity-019",99,4.48,"Productive","Productive (IHC ≥ 99)","Productive","Productive (IHC ≥ 99)",8,1
+"13","infinity-020",40,4.37,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",4,0.5
+"14","infinity-021",99,4.96,"Productive","Productive (IHC ≥ 99)","Productive","Productive (IHC ≥ 99)",8,1
+"15","infinity-022",99,4.21,"Productive","Productive (IHC ≥ 99)","Productive","Productive (IHC ≥ 99)",8,1
+"16","infinity-024",14,4.27,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",2,0.25
+"17","infinity-026",28,4.79,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",3,0.375
+"18","infinity-027",50,4.95,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",5,0.625
+"19","infinity-028",18,4.01,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",2,0.25
+"20","infinity-029",40,4.32,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",6,0.75
+"21","infinity-030",99,4.69,"Productive","Productive (IHC ≥ 99)","Productive","Productive (IHC ≥ 99)",6,0.75
+"22","infinity-031",14,4.47,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",0,0
+"23","infinity-033",10,4.49,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",0,0
+"24","infinity-034",49,4.66,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",6,0.75
+"25","infinity-035",99,5.09,"Productive","Productive (IHC ≥ 99)","Productive","Productive (IHC ≥ 99)",7,0.875
+"26","infinity-036",54,4.35,"Productive","Productive (IHC < 99)","Nonproductive","Nonproductive",7,0.875
+"27","infinity-037",12,4.61,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",5,0.625
+"28","infinity-040",29,4.7,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",5,0.625
+"29","infinity-041",12,4.48,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",5,0.625
+"30","infinity-042",13,4.51,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",0,0
+"31","infinity-045",99,5.39,"Productive","Productive (IHC ≥ 99)","Productive","Productive (IHC ≥ 99)",8,1
+"32","infinity-046",99,5.79,"Productive","Productive (IHC ≥ 99)","Productive","Productive (IHC ≥ 99)",8,1
+"33","infinity-048",65,4.82,"Productive","Productive (IHC < 99)","Nonproductive","Nonproductive",2,0.25
+"34","infinity-049",19,4.39,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",0,0
+"35","infinity-052",6,4.06,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",6,0.75
+"36","infinity-053",12,4.22,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",1,0.125
+"37","infinity-054",10,4.56,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",1,0.125
+"38","infinity-055",99,4.65,"Productive","Productive (IHC ≥ 99)","Productive","Productive (IHC ≥ 99)",7,0.875
+"39","infinity-056",99,4.18,"Productive","Productive (IHC ≥ 99)","Productive","Productive (IHC ≥ 99)",6,0.75
+"40","infinity-057",76,4.94,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",7,0.875
+"41","infinity-058",99,5.35,"Productive","Productive (IHC ≥ 99)","Productive","Productive (IHC ≥ 99)",8,1
+"42","infinity-059",39,4.62,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",7,0.875
+"43","infinity-062",19,4.84,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",3,0.375
+"44","infinity-066",15,4.76,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",0,0
+"45","infinity-067",20,4.34,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",0,0
+"46","infinity-068",39,4.89,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",4,0.5
+"47","infinity-070",38,4.8,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",5,0.625
+"48","infinity-071",39,4.45,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",4,0.5
+"49","infinity-073",15,4.61,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",1,0.125
+"50","infinity-074",14,4.25,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",2,0.25
+"51","infinity-075",29,5.35,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",6,0.75
+"52","infinity-076",69,5.41,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",5,0.625
+"53","infinity-077",14,4.84,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",3,0.375
+"54","infinity-078",30,4.79,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",4,0.5
+"55","infinity-079",12,4.39,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",2,0.25
+"56","infinity-080",36,4.82,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",2,0.25
+"57","infinity-081",33,4.36,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",1,0.125
+"58","infinity-084",77,5.21,"Productive","Productive (IHC < 99)","Nonproductive","Nonproductive",5,0.625
+"59","infinity-085",29,5.04,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",5,0.625
+"60","infinity-086",49,5.63,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",6,0.75
+"61","infinity-087",99,4.51,"Productive","Productive (IHC ≥ 99)","Productive","Productive (IHC ≥ 99)",8,1
+"62","infinity-088",29,4.31,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",3,0.375
+"63","infinity-090",9,4.36,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",1,0.125
+"64","infinity-092",14,4.42,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",0,0
+"65","infinity-096",99,5.86,"Productive","Productive (IHC ≥ 99)","Productive","Productive (IHC ≥ 99)",8,1
+"66","infinity-097",14,4.84,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",1,0.125
+"67","infinity-098",14,4.41,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",3,0.375
+"68","infinity-099",16,4.15,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",0,0
+"69","infinity-100",59,5.75,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",6,0.75
+"70","infinity-101",39,5.18,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",2,0.25
+"71","infinity-103",63,5.5,"Productive","Productive (IHC < 99)","Nonproductive","Nonproductive",6,0.75
+"72","infinity-105",99,5.5,"Productive","Productive (IHC ≥ 99)","Productive","Productive (IHC ≥ 99)",8,1
+"73","infinity-106",99,5.84,"Productive","Productive (IHC ≥ 99)","Productive","Productive (IHC ≥ 99)",8,1
+"74","infinity-107",49,5.01,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",2,0.25
+"75","infinity-108",29,5.28,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",1,0.125
+"76","infinity-109",29,5.4,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",0,0
+"77","infinity-110",49,5.28,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",6,0.75
+"78","infinity-111",29,5.96,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",5,0.625
+"79","infinity-112",99,5.31,"Productive","Productive (IHC ≥ 99)","Productive","Productive (IHC ≥ 99)",7,0.875
+"80","infinity-113",99,5.89,"Productive","Productive (IHC ≥ 99)","Productive","Productive (IHC ≥ 99)",8,1
+"81","infinity-114",29,5.58,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",5,0.625
+"82","infinity-115",99,5.06,"Productive","Productive (IHC ≥ 99)","Productive","Productive (IHC ≥ 99)",8,1
+"83","infinity-116",16,5.19,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",1,0.125
+"84","infinity-117",14,5.31,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",1,0.125
+"85","infinity-118",99,5.02,"Productive","Productive (IHC ≥ 99)","Productive","Productive (IHC ≥ 99)",7,0.875
+"86","infinity-119",49,5.24,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",2,0.25
+"87","infinity-120",29,5.36,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",7,0.875
+"88","infinity-121",40,5.35,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",5,0.625
+"89","infinity-122",49,5.52,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",2,0.25
+"90","infinity-123",49,5.17,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",4,0.5
+"91","infinity-124",22,5.08,"Productive","Productive (IHC < 99)","Nonproductive","Nonproductive",3,0.375
+"92","infinity-125",49,4.51,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",4,0.5
+"93","infinity-126",13,4.66,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",1,0.125
+"94","infinity-127",99,5.92,"Productive","Productive (IHC ≥ 99)","Productive","Productive (IHC ≥ 99)",5,0.625
+"95","infinity-128",99,5.36,"Productive","Productive (IHC ≥ 99)","Productive","Productive (IHC ≥ 99)",6,0.75
+"96","infinity-129",54,5.02,"Productive","Productive (IHC < 99)","Nonproductive","Nonproductive",6,0.75
+"97","infinity-130",12,5.02,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",2,0.25
+"98","infinity-131",25,4.21,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",2,0.25
+"99","infinity-132",39,5.22,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",5,0.625
+"100","infinity-133",99,5.18,"Productive","Productive (IHC ≥ 99)","Productive","Productive (IHC ≥ 99)",8,1
+"101","infinity-134",99,5.14,"Productive","Productive (IHC ≥ 99)","Productive","Productive (IHC ≥ 99)",3,0.375
+"102","infinity-135",65,5.72,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",5,0.625
+"103","infinity-136",13,4.05,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",3,0.375
+"104","infinity-138",49,5.49,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",5,0.625
+"105","infinity-140",20,5.61,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",0,0
+"106","infinity-141",99,5.91,"Productive","Productive (IHC ≥ 99)","Productive","Productive (IHC ≥ 99)",7,0.875
+"107","infinity-142",42,5.93,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",6,0.75
+"108","infinity-143",99,5.61,"Productive","Productive (IHC ≥ 99)","Productive","Productive (IHC ≥ 99)",6,0.75
+"109","infinity-144",58,5.59,"Nonproductive","Nonproductive","Nonproductive","Nonproductive",5,0.625
+"110","infinity-145",49,5.72,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",1,0.125
+"111","infinity-146",49,5.87,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",5,0.625
+"112","infinity-147",99,5.69,"Productive","Productive (IHC ≥ 99)","Productive","Productive (IHC ≥ 99)",8,1
+"113","infinity-148",99,5.8,"Productive","Productive (IHC ≥ 99)","Productive","Productive (IHC ≥ 99)",8,1
+"114","infinity-149",99,5.69,"Productive","Productive (IHC ≥ 99)","Productive","Productive (IHC ≥ 99)",8,1
+"115","infinity-150",99,5.84,"Productive","Productive (IHC ≥ 99)","Productive","Productive (IHC ≥ 99)",8,1
+"116","infinity-151",99,5.84,"Productive","Productive (IHC ≥ 99)","Productive","Productive (IHC ≥ 99)",6,0.75
+"117","infinity-152",49,5.71,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",8,1
+"118","infinity-153",99,5.57,"Productive","Productive (IHC ≥ 99)","Productive","Productive (IHC ≥ 99)",7,0.875
+"119","infinity-154",59,5.87,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",5,0.625
+"120","infinity-155",79,5.99,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",4,0.5
+"121","infinity-156",49,5.53,"Productive","Productive (IHC < 99)","Productive","Productive (IHC < 99)",1,0.125
+"122","infinity-157",99,5.99,"Productive","Productive (IHC ≥ 99)","Productive","Productive (IHC ≥ 99)",8,1
